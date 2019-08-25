@@ -1,5 +1,7 @@
 # Prerenderer
 
+[![Build Status](https://travis-ci.org/duartealexf/spa-seo-prerenderer.svg?branch=master)](https://travis-ci.org/duartealexf/spa-seo-prerenderer)
+
 Pluggable puppeteer prerenderer - make your SPA SEO-friendly.
 
 - No signup needed - host it yourself.
