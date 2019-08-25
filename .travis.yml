@@ -1,0 +1,15 @@
+language: node_js
+node_js:
+  - "6.4.0"
+  - "7"
+  - "8"
+  - "9"
+  - "10"
+  - "11"
+  - "12"
+script:
+  - export NODE_VERSION=$(node --version)
+  - nvm install stable
+  - npm run build
+  - nvm use $NODE_VERSION
+  - npm run test

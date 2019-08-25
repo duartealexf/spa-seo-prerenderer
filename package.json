@@ -1,0 +1,48 @@
+{
+  "name": "spa-seo-prerenderer",
+  "version": "0.0.1",
+  "description": "Pluggable puppeteer prerenderer - to make SPAs SEO-friendly.",
+  "author": "Alexandre Duarte <duartealexf@gmail.com> (https://github.com/duartealexf)",
+  "main": "server.js",
+  "maintainers": [
+    "Alexandre Duarte <duartealexf@gmail.com> (https://github.com/duartealexf)"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/duartealexf/spa-seo-prerenderer"
+  },
+  "homepage": "https://github.com/duartealexf/spa-seo-prerenderer",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/duartealexf/spa-seo-prerenderer/issues"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "test": "echo 'TODO: implement tests'"
+  },
+  "dependencies": {
+    "express": "^4.17.1",
+    "puppeteer": "^1.19.0"
+  },
+  "devDependencies": {
+    "ava": "^2.3.0",
+    "commitizen": "^4.0.3",
+    "cz-conventional-changelog": "^3.0.2",
+    "eslint": "^6.2.2",
+    "eslint-config-airbnb": "^18.0.1",
+    "eslint-config-prettier": "^6.1.0",
+    "eslint-plugin-prettier": "^3.1.0",
+    "nodemon": "^1.19.1",
+    "nyc": "^14.1.1",
+    "prettier": "^1.18.2",
+    "standard-version": "^7.0.0"
+  },
+  "config": {
+    "commitizen": {
+      "path": "./node_modules/cz-conventional-changelog"
+    }
+  },
+  "engines": {
+    "node": ">=6.4.0"
+  }
+}

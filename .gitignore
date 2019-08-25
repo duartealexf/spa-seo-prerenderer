@@ -1,0 +1,26 @@
+# -------------------------
+# OS files
+# -------------------------
+ehthumbs.db
+Thumbs.db
+.DS.Store
+.DS.Store/*
+**/.DS.Store
+
+# -------------------------
+# Editor files
+# -------------------------
+*.sublime-project
+*.sublime-workspace
+*.sublime-projectcompletions
+*.komodoproject
+.vscode/chrome
+
+# -------------------------
+# Blacklisted
+# -------------------------
+/node_modules
+npm-debug.log
+update-notifier-nodemon.json
+coverage.*
+.nyc_output
