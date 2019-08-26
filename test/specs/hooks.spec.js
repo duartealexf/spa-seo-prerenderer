@@ -1,5 +1,5 @@
 const mocha = require('mocha');
-const server = require('../helpers/node-server');
+const server = require('../static-server');
 
 mocha.before(() => {
   server.start();
