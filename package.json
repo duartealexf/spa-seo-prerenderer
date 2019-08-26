@@ -17,21 +17,32 @@
     "url": "https://github.com/duartealexf/spa-seo-prerenderer/issues"
   },
   "scripts": {
+    "standard-version": "standard-version",
+    "nodemon": "nodemon",
+    "eslint": "eslint",
+    "ava": "ava",
+    "nyc": "nyc",
+    "nodemon-watch": "nodemon -w src -w test -e js",
+    "coverage": "npm run nyc ava test/**/*.spec.js",
+    "lint": "eslint src test",
     "start": "node server.js",
-    "test": "echo 'TODO: implement tests'"
+    "test": "ava --color ./test/spec/**/*.js",
+    "test:watch": "npm run test -- --watch"
   },
   "dependencies": {
+    "dotenv": "^8.1.0",
     "express": "^4.17.1",
     "puppeteer": "^1.19.0"
   },
   "devDependencies": {
     "ava": "^2.3.0",
+    "cheerio": "^1.0.0-rc.3",
     "commitizen": "^4.0.3",
     "cz-conventional-changelog": "^3.0.2",
     "eslint": "^6.1.0",
     "eslint-config-airbnb-base": "^14.0.0",
-    "eslint-plugin-import": "^2.18.2",
     "eslint-config-prettier": "^6.1.0",
+    "eslint-plugin-import": "^2.18.2",
     "eslint-plugin-prettier": "^3.1.0",
     "nodemon": "^1.19.1",
     "nyc": "^14.1.1",
