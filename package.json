@@ -26,7 +26,7 @@
     "coverage": "npm run nyc ava test/**/*.spec.js",
     "lint": "eslint src test",
     "start": "node server.js",
-    "test": "ava --color ./test/spec/**/*.js",
+    "test": "ava --color ./test/specs/**/*.js",
     "test:watch": "npm run test -- --watch"
   },
   "dependencies": {
@@ -55,6 +55,6 @@
     }
   },
   "engines": {
-    "node": ">=7.6.0"
+    "node": ">=8.6.0"
   }
 }
