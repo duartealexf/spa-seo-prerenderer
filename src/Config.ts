@@ -59,6 +59,5 @@ class Config {
   }
 }
 
-module.exports = {
-  Config: new Config(),
-};
+const singleton = new Config();
+export { singleton as Config };

@@ -2,12 +2,14 @@ require('./dotenv');
 const { join } = require('path');
 const express = require('express');
 
+const prerenderer = require('../../dist/Middleware');
 const app = express();
 
 /** @type {import('serve-static').ServeStaticOptions} */
 const options = {};
 
 app.use(express.static(join(__dirname, 'static'), options));
+app.use(prerenderer.default);
 
 /** @type {import('http').Server} */
 let server;
@@ -21,5 +23,5 @@ module.exports = {
     if (server) {
       server.close();
     }
-  }
+  },
 };

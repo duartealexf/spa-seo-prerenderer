@@ -23,6 +23,5 @@ class Prerenderer {
   }
 }
 
-module.exports = {
-  Prerenderer: new Prerenderer(),
-};
+const singleton = new Prerenderer();
+export { singleton as Prerenderer };
