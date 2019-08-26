@@ -25,7 +25,8 @@
     "start": "node server.js",
     "lint": "eslint src test",
     "coverage": "nyc npm run test",
-    "test": "mocha test/**/*.spec.js"
+    "test": "mocha test/**/*.spec.js",
+    "release": "standard-version && git push --follow-tags"
   },
   "dependencies": {
     "dotenv": "^8.1.0",
