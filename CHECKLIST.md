@@ -4,6 +4,7 @@
 
 - [x] Setup repository
 - [x] Create tests, work with TDD
+- [ ] Make it pluggable to an nginx instance
 - [ ] Simple prerenderer, save in file
 - [ ] Keep headless browser open, create new pages per request
 - [ ] Debug
