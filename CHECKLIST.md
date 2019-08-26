@@ -2,9 +2,9 @@
 
 ## Basic setup
 
-- [ ] Setup repository
+- [x] Setup repository
+- [x] Create tests, work with TDD
 - [ ] Simple prerenderer, save in file
-- [ ] Create tests, work with TDD
 - [ ] Keep headless browser open, create new pages per request
 - [ ] Debug
 - [ ] Filter user agents
