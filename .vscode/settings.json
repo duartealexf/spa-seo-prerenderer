@@ -2,8 +2,7 @@
   "editor.formatOnSave": true,
   "prettier.arrowParens": "always",
   "prettier.singleQuote": true,
-  "editor.formatOnType": true,
-  "eslint.autoFixOnSave": true,
-  "eslint.enable": true,
+  "prettier.trailingComma": "all",
+  "eslint.enable": false,
   "javascript.implicitProjectConfig.checkJs": true
 }

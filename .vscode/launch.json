@@ -16,7 +16,7 @@
         "--timeout",
         "8640000",
         "--colors",
-        "${workspaceFolder}/test/**/*.spec.js"
+        "${workspaceFolder}/test/specs/**/*.spec.js"
       ],
       "internalConsoleOptions": "openOnSessionStart"
     }
