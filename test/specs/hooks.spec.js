@@ -1,10 +1,10 @@
-const ava = require('ava');
+const mocha = require('mocha');
 const server = require('../helpers/server');
 
-ava.before(async () => {
+mocha.before(() => {
   server.start();
 });
 
-ava.after(async () => {
+mocha.after(() => {
   server.close();
 });

@@ -20,14 +20,12 @@
     "standard-version": "standard-version",
     "nodemon": "nodemon",
     "eslint": "eslint",
-    "ava": "ava",
+    "mocha": "mocha",
     "nyc": "nyc",
-    "nodemon-watch": "nodemon -w src -w test -e js",
-    "coverage": "npm run nyc ava test/**/*.spec.js",
-    "lint": "eslint src test",
     "start": "node server.js",
-    "test": "ava --color ./test/specs/**/*.js",
-    "test:watch": "npm run test -- --watch"
+    "lint": "eslint src test",
+    "coverage": "nyc npm run test",
+    "test": "mocha test/**/*.spec.js"
   },
   "dependencies": {
     "dotenv": "^8.1.0",
@@ -35,7 +33,7 @@
     "puppeteer": "^1.19.0"
   },
   "devDependencies": {
-    "ava": "^2.3.0",
+    "chai": "^4.2.0",
     "cheerio": "^1.0.0-rc.3",
     "commitizen": "^4.0.3",
     "cz-conventional-changelog": "^3.0.2",
@@ -44,17 +42,27 @@
     "eslint-config-prettier": "^6.1.0",
     "eslint-plugin-import": "^2.18.2",
     "eslint-plugin-prettier": "^3.1.0",
+    "mocha": "^6.2.0",
     "nodemon": "^1.19.1",
     "nyc": "^14.1.1",
     "prettier": "^1.18.2",
     "standard-version": "^7.0.0"
+  },
+  "engines": {
+    "node": ">=8.3.0"
   },
   "config": {
     "commitizen": {
       "path": "./node_modules/cz-conventional-changelog"
     }
   },
-  "engines": {
-    "node": ">=8.3.0"
+  "nyc": {
+    "all": true,
+    "include": [
+      "src/**/*.js"
+    ],
+    "exclude": [
+      "**/*.spec.js"
+    ]
   }
 }

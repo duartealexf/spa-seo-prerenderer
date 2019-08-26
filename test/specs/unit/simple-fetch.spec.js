@@ -1,5 +1,8 @@
-const ava = require('ava');
+const { describe, it } = require('mocha');
+const { assert } = require('chai');
 
-ava.default('my passing test', (test) => {
-  test.pass();
+describe('simple fetch', () => {
+  it('should pass simple test', () => {
+    assert.equal(true, true);
+  });
 });
