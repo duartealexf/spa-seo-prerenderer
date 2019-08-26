@@ -5,9 +5,9 @@
 - [x] Setup repository
 - [x] Create tests, work with TDD
 - [ ] Make it pluggable to an nginx instance
-- [ ] Simple prerenderer, save in file
-- [ ] Keep headless browser open, create new pages per request
+- [ ] Simple prerenderer, save local file
 - [ ] Debug
+- [ ] Keep headless browser open, create new pages per request
 - [ ] Filter user agents
 - [ ] Filter extensions
 - [ ] Blacklisting tracking scripts
@@ -27,7 +27,9 @@
 - [ ] Preserve status codes (deliver 404, 500, etc)
 - [ ] Upload to S3 / make needed changes / .env setup
 - [ ] See how to automatically clear prerendered pages (by commit, or something)
+- [ ] Create a recipe for using it with nginx
 - [ ] **Add to public NPM registry - release as 1.0.0**
+- [ ] **Publish as a docker image**
 
 ## Nice-to-have
 
