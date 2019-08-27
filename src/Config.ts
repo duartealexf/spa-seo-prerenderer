@@ -4,6 +4,8 @@ import { join } from 'path';
 import { MissingEnvException } from './Exceptions/MissingEnvException';
 import { InvalidEnvException } from './Exceptions/InvalidEnvException';
 
+export type SnapshotsDriver = 'fs' | 's3';
+
 class Config {
   private snapshotsDriver: string;
   private snapshotsDirectory: string;
@@ -17,9 +19,8 @@ class Config {
       }
     });
 
-    const SNAPSHOTS_DRIVER: 'fs' | 's3' = process.env.SNAPSHOTS_DRIVER as
-      | 'fs'
-      | 's3';
+    const SNAPSHOTS_DRIVER: SnapshotsDriver = process.env
+      .SNAPSHOTS_DRIVER as SnapshotsDriver;
     let SNAPSHOTS_DIRECTORY: string = process.env.SNAPSHOTS_DIRECTORY;
 
     if (!['fs', 's3'].includes(SNAPSHOTS_DRIVER)) {
@@ -56,6 +57,96 @@ class Config {
    */
   public getSnapshotsDirectory(): string {
     return this.snapshotsDirectory;
+  }
+
+  public getTimeout() {
+    return 10000;
+  }
+
+  public getBotUserAgents() {
+    return [
+      'googlebot',
+      'yahoo! slurp',
+      'bingbot',
+      'yandex',
+      'baiduspider',
+      'facebookexternalhit',
+      'twitterbot',
+      'rogerbot',
+      'linkedinbot',
+      'embedly',
+      'quora link preview',
+      'showyoubot',
+      'outbrain',
+      'pinterest/0.',
+      'developers.google.com/+/web/snippet',
+      'slackbot',
+      'vkshare',
+      'w3c_validator',
+      'redditbot',
+      'applebot',
+      'whatsapp',
+      'flipboard',
+      'tumblr',
+      'bitlybot',
+      'skypeuripreview',
+      'nuzzel',
+      'discordbot',
+      'google page speed',
+      'qwantify',
+      'pinterestbot',
+      'bitrix link preview',
+      'xing-contenttabreceiver',
+      'chrome-lighthouse',
+      'x-bufferbot',
+    ];
+  }
+
+  public getIgnoredExtensions() {
+    return [
+      '.js',
+      '.css',
+      '.xml',
+      '.less',
+      '.png',
+      '.jpg',
+      '.jpeg',
+      '.gif',
+      '.pdf',
+      '.doc',
+      '.txt',
+      '.ico',
+      '.rss',
+      '.zip',
+      '.mp3',
+      '.rar',
+      '.exe',
+      '.wmv',
+      '.doc',
+      '.avi',
+      '.ppt',
+      '.mpg',
+      '.mpeg',
+      '.tif',
+      '.wav',
+      '.mov',
+      '.psd',
+      '.ai',
+      '.xls',
+      '.mp4',
+      '.m4a',
+      '.swf',
+      '.dat',
+      '.dmg',
+      '.iso',
+      '.flv',
+      '.m4v',
+      '.torrent',
+      '.woff',
+      '.ttf',
+      '.svg',
+      '.webmanifest',
+    ];
   }
 }
 

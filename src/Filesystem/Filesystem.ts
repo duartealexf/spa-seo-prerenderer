@@ -1,11 +1,12 @@
 import fsExtra, { WriteFileOptions, CopyOptions } from 'fs-extra';
 import { join, dirname, basename, extname } from 'path';
+import { SnapshotsDriver } from 'Config';
 
-class Filesystem {
+export class Filesystem {
   private driver: string;
   private directory: string;
 
-  constructor(driver: 'fs' | 's3', directory: string) {
+  constructor(driver: SnapshotsDriver, directory: string) {
     this.driver = driver;
     this.directory = directory;
   }
@@ -281,5 +282,3 @@ class Filesystem {
     return files;
   }
 }
-
-module.exports = { Filesystem };
