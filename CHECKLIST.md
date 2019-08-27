@@ -4,7 +4,6 @@
 
 - [x] Setup repository
 - [x] Create tests, work with TDD
-- [ ] Make it pluggable to an nginx instance
 - [ ] Simple prerenderer, save local file
 - [ ] Debug
 - [ ] Keep headless browser open, create new pages per request
@@ -28,6 +27,9 @@
 - [ ] Upload to S3 / make needed changes / .env setup
 - [ ] See how to automatically clear prerendered pages (by commit, or something)
 - [ ] Create a recipe for using it with nginx
+- [ ] Create whitelist
+- [ ] Create blacklist
+- [ ] Extend bots list
 - [ ] **Add to public NPM registry - release as 1.0.0**
 - [ ] **Publish as a docker image**
 
