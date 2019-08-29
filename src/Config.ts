@@ -63,6 +63,8 @@ class Config {
     return 10000;
   }
 
+  // TODO: compare this list and extensions list with the one in
+  // https://gist.github.com/thoop/8072354
   public getBotUserAgents() {
     return [
       'googlebot',

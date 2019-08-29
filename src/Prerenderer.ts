@@ -43,10 +43,53 @@ class Prerenderer {
 
   public async prerender(url: string): Promise<PrerenderedResponse> {
     try {
+      // TODO: as in https://github.com/brijeshpant83/bp-pre-puppeteer-node/blob/master/index.js#L200
+      // might need to change the url to x-forwarded-host
+
       const renderStart = Date.now();
       const page = await this.browser.newPage();
 
       page.setUserAgent(Prerenderer.USER_AGENT);
+
+      // TODO: handle certificate error and continue
+      // TODO: follow redirects
+
+      // TODO: create list of url patterns to block request to (i.e. analytics)
+      page.on('request', (req) => {
+        // Don't load Google Analytics lib requests so pageviews aren't 2x.
+        const blacklist = [
+          'www.google-analytics.com',
+          '/gtag/js',
+          'ga.js',
+          'analytics.js',
+        ];
+
+        /* This is from https://github.com/prerender/prerender/blob/master/lib/server.js
+         * Do we need it?
+        //if the original server had a chunked encoding, we should
+        //remove it since we aren't sending a chunked response
+        res.removeHeader('Transfer-Encoding');
+        //if the original server wanted to keep the connection alive, let's close it
+        res.removeHeader('Connection');
+        //getting 502s for sites that return these headers
+        res.removeHeader('X-Content-Security-Policy');
+        res.removeHeader('Content-Security-Policy');
+        res.removeHeader('Content-Encoding');
+
+        res.status(req.prerender.statusCode);
+         */
+
+        if (blacklist.find((pattern: string) => req.url().match(pattern))) {
+          req.abort();
+          return;
+        }
+        req.continue();
+      });
+
+      // tslint:disable-next-line: max-line-length
+      // Page.addScriptToEvaluateOnNewDocument({source: 'if (window.customElements) customElements.forcePolyfill = true'})
+      // Page.addScriptToEvaluateOnNewDocument({source: 'ShadyDOM = {force: true}'})
+      // Page.addScriptToEvaluateOnNewDocument({source: 'ShadyCSS = {shimcssproperties: true}'})
 
       let response: Response | null = null;
 
