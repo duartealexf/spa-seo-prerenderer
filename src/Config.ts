@@ -63,6 +63,15 @@ class Config {
     return 10000;
   }
 
+  public getBlacklistedRequestURLRegExps(): RegExp[] {
+    return [
+      /www\.google-analytics\.com/,
+      /\/gtag\/js/,
+      /ga\.js/,
+      /analytics\.js/,
+    ];
+  }
+
   // TODO: compare this list and extensions list with the one in
   // https://gist.github.com/thoop/8072354
   public getBotUserAgents() {
