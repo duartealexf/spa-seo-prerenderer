@@ -106,7 +106,9 @@ export class Prerenderer {
    */
   public async stop() {
     if (this.browser) {
+      this.getLogger().info('Stopping Puppeteer...', 'prerenderer');
       await this.browser.close();
+      this.getLogger().info('Stopped Puppeteer!', 'prerenderer');
     }
   }
 
