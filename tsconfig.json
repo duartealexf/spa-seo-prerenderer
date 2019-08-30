@@ -4,7 +4,7 @@
     "module": "none",
     "esModuleInterop": true,
     "moduleResolution": "node",
-    "sourceMap": false,
+    "sourceMap": true,
     "outDir": "dist/lib",
     "declarationDir": "dist/types",
     "baseUrl": "src/index.ts",

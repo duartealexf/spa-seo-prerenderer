@@ -78,7 +78,11 @@ export class Prerenderer {
   /**
    * Getter for prerenderer logger singleton.
    */
-  public getLogger(): Logger | undefined {
+  public getLogger(): Logger {
+    if (!this.logger) {
+      this.logger = new Logger(this.config);
+    }
+
     return this.logger;
   }
 
@@ -91,7 +95,10 @@ export class Prerenderer {
         'Prerenderer needs to be initialized before starting. Did you call prerenderer.initialize()?',
       );
     }
+
+    this.getLogger().info('Launching Puppeteer...', 'prerenderer');
     this.browser = await puppeteer.launch({ args: ['--no-sandbox'] });
+    this.getLogger().info('Launched Puppeteer!', 'prerenderer');
   }
 
   /**
