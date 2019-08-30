@@ -1,6 +1,5 @@
 const { writeFileSync, readFileSync } = require('fs');
 const { join } = require('path');
-const shell = require('shelljs');
 
 // @ts-ignore
 const { version: VERSION } = require('../package.json');
@@ -11,10 +10,16 @@ const CWD = join(__dirname, '..');
  * @param {string} version Version to be set.
  */
 const setPrerenderVersion = (version) => {
-  const PRERENDERER_FILE = join(CWD, 'dist', 'Prerenderer.js');
-  let output = readFileSync(PRERENDERER_FILE).toString();
-  output = output.replace('{{version}}', version);
-  writeFileSync(PRERENDERER_FILE, output);
+  const OUT_FILES = [
+    join(CWD, 'dist', 'lib', 'Prerenderer.js'),
+    join(CWD, 'dist', 'types', 'Prerenderer.d.ts'),
+  ];
+
+  OUT_FILES.forEach((OUT_FILE) => {
+    let output = readFileSync(OUT_FILE).toString();
+    output = output.replace('{{version}}', version);
+    writeFileSync(OUT_FILE, output);
+  });
 };
 
 setPrerenderVersion(VERSION);

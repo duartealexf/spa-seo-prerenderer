@@ -1,7 +1,8 @@
 /**
- * Exception thrown when an environment variable has an invalid value.
+ * Exception thrown when attempting to prerender or
+ * start the prerenderer when it is not ready yet.
  */
-export class InvalidEnvException extends Error {
+export class PrerendererNotReadyException extends Error {
   public message: string;
 
   constructor(message: string) {

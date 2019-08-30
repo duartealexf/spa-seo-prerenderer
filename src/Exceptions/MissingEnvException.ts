@@ -1,3 +1,6 @@
+/**
+ * Exception thrown when an environment variable is missing.
+ */
 export class MissingEnvException extends Error {
   public message: string;
 

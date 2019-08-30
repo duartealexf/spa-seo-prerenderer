@@ -1,21 +1,20 @@
 import fsExtra, { WriteFileOptions, CopyOptions } from 'fs-extra';
 import { join, dirname, basename, extname } from 'path';
-import { SnapshotsDriver } from 'Config';
+
+import { SnapshotsDriver } from '../Config';
 
 export class Filesystem {
   private driver: string;
-  private directory: string;
 
-  constructor(driver: SnapshotsDriver, directory: string) {
+  constructor(driver: SnapshotsDriver) {
     this.driver = driver;
-    this.directory = directory;
   }
 
   /**
    * Return given file's extension name.
    * @param filepath
    */
-  public extname(filepath: string): string {
+  public static extname(filepath: string): string {
     return extname(filepath).toLowerCase();
   }
 
@@ -23,7 +22,7 @@ export class Filesystem {
    * Return given file's filename, without extension.
    * @param filepath
    */
-  basename(filepath: string): string {
+  public static basename(filepath: string): string {
     const ext = extname(filepath);
     let base = basename(filepath);
     base = base.substr(0, base.length - ext.length);
@@ -34,7 +33,7 @@ export class Filesystem {
    * Return given file's directory, without filename or extension.
    * @param filepath
    */
-  dirname(filepath: string): string {
+  public static dirname(filepath: string): string {
     return dirname(filepath);
   }
 
@@ -42,7 +41,7 @@ export class Filesystem {
    * Return given file's name, with extension.
    * @param filepath
    */
-  filename(filepath: string): string {
+  public static filename(filepath: string): string {
     return basename(filepath);
   }
 
@@ -50,7 +49,7 @@ export class Filesystem {
    * Return whether or not the path is a directory.
    * @param path Path to file or directory.
    */
-  async isDirectory(path: string) {
+  public async isDirectory(path: string) {
     const isDir = await new Promise((resolve) => {
       fsExtra.stat(path, (err, stat) => {
         if (err) {
@@ -68,7 +67,7 @@ export class Filesystem {
    * Ensure directory is created.
    * @param pathParts
    */
-  async ensureDir(...pathParts: string[]): Promise<void> {
+  public async ensureDir(...pathParts: string[]): Promise<void> {
     const path = join(...pathParts);
     await new Promise(async (resolve) => {
       const exists = await this.exists(...pathParts);
@@ -91,19 +90,23 @@ export class Filesystem {
   }
 
   /**
-   * Ensure directory is created.
-   * @param pathParts
+   * Create a blank file if it does not exist. If file exists, it does nothing.
+   * Can throw an error if file is not writeable.
+   * @param filepath
    */
-  async ensureDirectory(...pathParts: string[]): Promise<void> {
-    const newPath = [this.directory, ...pathParts];
-    await this.ensureDir(...newPath);
+  public async ensureFile(filepath: string): Promise<void> {
+    if (!(await this.exists(filepath))) {
+      await this.write(filepath, '');
+    } else {
+      await this.append(filepath, '');
+    }
   }
 
   /**
    * Where file or directory exists.
    * @param pathParts
    */
-  async exists(...pathParts: string[]): Promise<boolean> {
+  public async exists(...pathParts: string[]): Promise<boolean> {
     const path = join(...pathParts);
 
     const exists = await new Promise<boolean>(async (resolve) => {
@@ -129,7 +132,7 @@ export class Filesystem {
    * Delete file or directory.
    * @param path
    */
-  async delete(path: string): Promise<void> {
+  public async delete(path: string): Promise<void> {
     await new Promise(async (resolve) => {
       fsExtra.stat(path, (statErr, stat) => {
         if (statErr) {
@@ -173,7 +176,7 @@ export class Filesystem {
    * Empties directory in given path by deleting it and recreating.
    * @param path
    */
-  async emptyDirectory(path: string): Promise<void> {
+  public async emptyDirectory(path: string): Promise<void> {
     await this.delete(path);
     return this.ensureDir(path);
   }
@@ -182,7 +185,7 @@ export class Filesystem {
    * Read file and return its contents as string.
    * @param filepath
    */
-  async read(filepath: string): Promise<string> {
+  public async read(filepath: string): Promise<string> {
     return new Promise((resolve) => {
       fsExtra.readFile(filepath, (err, contents) => {
         if (err) {
@@ -203,12 +206,12 @@ export class Filesystem {
    * @param data Data to write to file.
    * @param options Write options.
    */
-  async write(
+  public async write(
     file: string,
     data: any,
     options: string | WriteFileOptions = {},
   ): Promise<void> {
-    const directory = this.dirname(file);
+    const directory = Filesystem.dirname(file);
     await this.ensureDir(directory);
 
     return new Promise((resolve) => {
@@ -222,11 +225,30 @@ export class Filesystem {
   }
 
   /**
+   * Append data to file.
+   * @param file Filepath to be written to.
+   * @param data Data to write to file.
+   */
+  public async append(file: string, data: any): Promise<void> {
+    const directory = Filesystem.dirname(file);
+    await this.ensureDir(directory);
+
+    return new Promise((resolve) => {
+      fsExtra.appendFile(file, data, (err) => {
+        if (err) {
+          throw new Error(`Error when writing file: ${JSON.stringify(err)}`);
+        }
+        resolve();
+      });
+    });
+  }
+
+  /**
    * Move file in disk.
    * @param oldPath Current path of file.
    * @param newPath New path to move to.
    */
-  async move(oldPath: string, newPath: string): Promise<void> {
+  public async move(oldPath: string, newPath: string): Promise<void> {
     return new Promise((r) => {
       fsExtra.move(oldPath, newPath, (err) => {
         if (err) {
@@ -243,7 +265,7 @@ export class Filesystem {
    * @param dest New path to copy to.
    * @param options Copy options.
    */
-  async copy(
+  public async copy(
     src: string,
     dest: string,
     options: CopyOptions = {},
@@ -266,7 +288,7 @@ export class Filesystem {
    * Read and return contents of given directory.
    * @param directory
    */
-  async ls(directory: string): Promise<string[]> {
+  public async ls(directory: string): Promise<string[]> {
     const files = await new Promise<string[]>((resolve) => {
       fsExtra.readdir(directory, (err, contents) => {
         if (err) {

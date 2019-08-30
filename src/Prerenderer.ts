@@ -2,8 +2,10 @@ import puppeteer, { Browser, Response } from 'puppeteer';
 import { Request } from 'express';
 
 import { Config } from './Config';
+import { Logger } from './Logger';
+import { PrerendererNotReadyException } from './Exceptions/PrerendererNotReadyException';
 
-interface PrerenderedResponse {
+interface PrerendererResponse {
   /**
    * Rendered HTML.
    */
@@ -22,27 +24,100 @@ interface PrerenderedResponse {
 /**
  * Based on https://github.com/GoogleChrome/rendertron
  */
-class Prerenderer {
+export class Prerenderer {
   /**
    * Puppeteer browser.
    */
-  private browser: Browser;
+  private browser?: Browser;
 
+  /**
+   * Prerenderer configuration singleton.
+   */
+  private config: Config;
+
+  /**
+   * Prerenderer logger singleton.
+   */
+  private logger?: Logger;
+
+  /**
+   * Whether prerenderer has been initialized.
+   */
+  private initialized = false;
+
+  /**
+   * Get last prerender response object.
+   */
+  private lastResponse?: PrerendererResponse;
+
+  /**
+   * Prerenderer user agent including version.
+   */
   public static readonly USER_AGENT = 'prerenderer/{{version}}';
 
-  constructor() {}
+  constructor() {
+    this.config = new Config();
+  }
 
+  /**
+   * Initialize prerenderer setup, which is required before starting it.
+   */
+  public async initialize(): Promise<void> {
+    await this.config.initialize();
+    this.logger = new Logger(this.config);
+    this.initialized = true;
+  }
+
+  /**
+   * Getter for prerenderer configuration singleton.
+   */
+  public getConfig(): Config {
+    return this.config;
+  }
+
+  /**
+   * Getter for prerenderer logger singleton.
+   */
+  public getLogger(): Logger | undefined {
+    return this.logger;
+  }
+
+  /**
+   * Start prerenderer headless browser.
+   */
   public async start() {
+    if (!this.initialized) {
+      throw new PrerendererNotReadyException(
+        'Prerenderer needs to be initialized before starting. Did you call prerenderer.initialize()?',
+      );
+    }
     this.browser = await puppeteer.launch({ args: ['--no-sandbox'] });
   }
 
+  /**
+   * Stop prerenderer headless browser.
+   */
   public async stop() {
-    await this.browser.close();
+    if (this.browser) {
+      await this.browser.close();
+    }
   }
 
-  public async prerender(url: string): Promise<PrerenderedResponse> {
+  /*
+   * Handle prerender of given request, to generate a prerender response from it.
+   * @param request Request containing data needed to prerender.
+   */
+  public async prerender(request: Request): Promise<void> {
+    if (!this.browser) {
+      throw new PrerendererNotReadyException(
+        'Prerenderer needs to be started before prerendering an url. Did you call prerenderer.start()?',
+      );
+    }
+
+    const url = request.url;
+
     try {
-      // TODO: as in https://github.com/brijeshpant83/bp-pre-puppeteer-node/blob/master/index.js#L200
+      // https://github.com/brijeshpant83/bp-pre-puppeteer-node/blob/master/index.js#L200
       // might need to change the url to x-forwarded-host
 
       const renderStart = Date.now();
@@ -105,7 +180,7 @@ class Prerenderer {
       try {
         // Navigate to page. Wait until there are no oustanding network requests.
         response = await page.goto(url, {
-          timeout: Config.getTimeout(),
+          timeout: this.config.getTimeout(),
           waitUntil: 'networkidle0',
         });
       } catch (e) {
@@ -119,26 +194,30 @@ class Prerenderer {
         // https://github.com/GoogleChrome/puppeteer/blob/v1.5.0/docs/api.md#pagegotourl-options.
         await page.close();
 
-        return {
+        this.lastResponse = {
           headers: {
             status: 400,
             'X-Prerendered-Ms': Date.now() - renderStart,
           },
           body: '',
         };
+
+        return;
       }
 
       // Disable access to compute metadata. See
       // https://cloud.google.com/compute/docs/storing-retrieving-metadata.
       if (response.headers()['metadata-flavor'] === 'Google') {
         await page.close();
-        return {
+        this.lastResponse = {
           headers: {
             status: 403,
             'X-Prerendered-Ms': Date.now() - renderStart,
           },
           body: '',
         };
+
+        return;
       }
 
       // Set status to the initial server's response code. Check for a <meta
@@ -171,7 +250,7 @@ class Prerenderer {
 
       await page.close();
 
-      return {
+      this.lastResponse = {
         body,
         headers: {
           status,
@@ -179,14 +258,25 @@ class Prerenderer {
           'X-Prerendered-Ms': Date.now() - renderStart,
         },
       };
+
+      return;
     } catch (err) {
       console.error(err);
       throw new Error('page.goto/waitForSelector timed out.');
     }
   }
 
-  public async createSnapshot(responseData: PrerenderedResponse) {}
+  /**
+   * Get response from last call to prerender().
+   */
+  public getLastResponse(): PrerendererResponse | undefined {
+    return this.lastResponse;
+  }
 
+  /**
+   * Get whether given URL is a valid URL to prerender.
+   * @param url URL to validate.
+   */
   public isValidURL(url: string): boolean {
     if (!url.match(/^http/)) {
       return true;
@@ -195,6 +285,10 @@ class Prerenderer {
     return false;
   }
 
+  /**
+   * Get whether given request should be prerendered.
+   * @param request NodeJS request.
+   */
   public async shouldPrerender(request: Request) {
     const userAgent = request.headers['user-agent'];
 
@@ -203,7 +297,7 @@ class Prerenderer {
     }
 
     // TODO: parse url and get only extension
-    if (Config.getIgnoredExtensions().includes(request.url)) {
+    if (this.config.getIgnoredExtensions().includes(request.url)) {
       return false;
     }
 
@@ -212,7 +306,7 @@ class Prerenderer {
 
     if (
       request.method === 'GET' &&
-      Config.getBotUserAgents().includes(userAgent.toLowerCase())
+      this.config.getBotUserAgents().includes(userAgent.toLowerCase())
     ) {
       return true;
     }
@@ -220,6 +314,3 @@ class Prerenderer {
     return false;
   }
 }
-
-const singleton = new Prerenderer();
-export { singleton as Prerenderer };

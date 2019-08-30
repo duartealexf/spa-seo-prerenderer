@@ -3,46 +3,202 @@ import { join } from 'path';
 
 import { MissingEnvException } from './Exceptions/MissingEnvException';
 import { InvalidEnvException } from './Exceptions/InvalidEnvException';
+import { MismatchingEnvException } from './Exceptions/MismatchingEnvException';
+import { Filesystem } from './Filesystem/Filesystem';
 
+/**
+ * Possible values for SNAPSHOTS_DRIVER environment config.
+ */
 export type SnapshotsDriver = 'fs' | 's3';
 
-class Config {
-  private snapshotsDriver: string;
-  private snapshotsDirectory: string;
+/**
+ * Possible values for SNAPSHOTS_DIRECTORY environment config.
+ */
+export type NodeEnvironment = 'development' | 'production';
+
+/**
+ * Interface for needed values as in process.env.
+ */
+export interface EnvironmentVariables {
+  [key: string]: string;
+  /**
+   * Prerenderer log file location.
+   */
+  PRERENDERER_LOG_FILE: string;
+
+  /**
+   * Node environment.
+   */
+  NODE_ENV: string;
+
+  /**
+   * Chosen snapshots driver.
+   */
+  SNAPSHOTS_DRIVER: string;
+
+  /**
+   * Directory to store snapshots in.
+   */
+  SNAPSHOTS_DIRECTORY: string;
+}
+
+export class Config {
+  /**
+   * Prerenderer log file location.
+   */
+  private prerendererLogFile: string = '';
+
+  /**
+   * Node environment.
+   */
+  private nodeEnvironment: NodeEnvironment = 'production';
+
+  /**
+   * Chosen snapshots driver.
+   */
+  private snapshotsDriver: SnapshotsDriver = 'fs';
+
+  /**
+   * Directory to store snapshots in.
+   */
+  private snapshotsDirectory: string = '../snapshots';
+
+  /**
+   * Values as in process.env.
+   */
+  private processEnv: EnvironmentVariables;
+
+  /**
+   * Whether config has been initialized.
+   */
+  private initialized = false;
 
   constructor() {
     dotenv.config();
 
-    ['SNAPSHOTS_DRIVER', 'SNAPSHOTS_DIRECTORY'].forEach((env) => {
-      if (!process.env[env] || !process.env[env].length) {
+    this.processEnv = {
+      PRERENDERER_LOG_FILE: process.env.PRERENDERER_LOG_FILE || '',
+      NODE_ENV: process.env.NODE_ENV || 'production',
+      SNAPSHOTS_DRIVER: process.env.SNAPSHOTS_DRIVER || 'fs',
+      SNAPSHOTS_DIRECTORY: process.env.SNAPSHOTS_DIRECTORY || '../snapshots',
+    };
+  }
+
+  /**
+   * Initialize configuration, which is required before starting app.
+   */
+  public async initialize(): Promise<void> {
+    await this.checkRequiredConfig();
+    await this.initSnapshotConfig();
+    await this.initLoggingConfig();
+    await this.initEnvironmentConfig();
+
+    this.initialized = true;
+  }
+
+  /**
+   * Check that all required configuration is set.
+   */
+  private checkRequiredConfig(): void {
+    ['NODE_ENV', 'SNAPSHOTS_DRIVER', 'SNAPSHOTS_DIRECTORY'].forEach((env) => {
+      if (!this.processEnv[env] || !this.processEnv[env].length) {
         throw new MissingEnvException(env);
       }
     });
+  }
 
-    const SNAPSHOTS_DRIVER: SnapshotsDriver = process.env
+  /**
+   * Initialize snapshots configuration.
+   */
+  private async initSnapshotConfig(): Promise<void> {
+    const snapshotsDriver: SnapshotsDriver = this.processEnv
       .SNAPSHOTS_DRIVER as SnapshotsDriver;
-    let SNAPSHOTS_DIRECTORY: string = process.env.SNAPSHOTS_DIRECTORY;
+    let snapshotsDirectory: string = this.processEnv.SNAPSHOTS_DIRECTORY;
 
-    if (!['fs', 's3'].includes(SNAPSHOTS_DRIVER)) {
-      throw new InvalidEnvException(`
-        SNAPSHOTS_DRIVER must be either 'fs' or 's3'. It is currently set as '${SNAPSHOTS_DRIVER}', which is not correct.
-      `);
+    const correctDrivers = ['fs', 's3'];
+
+    if (!correctDrivers.includes(snapshotsDriver)) {
+      throw new MismatchingEnvException(
+        'SNAPSHOTS_DRIVER',
+        this.processEnv.NODE_ENV,
+        correctDrivers,
+      );
     }
 
-    if (SNAPSHOTS_DRIVER === 's3') {
-      if (/^\.|^\//.test(SNAPSHOTS_DIRECTORY)) {
-        throw new InvalidEnvException(`
-          SNAPSHOTS_DIRECTORY cannot start with '.' or '/' when SNAPSHOTS_DRIVER is 's3'. Adjust it to choose to a valid relative directory in S3.
-      `);
+    if (snapshotsDriver === 's3') {
+      if (/^\.|^\//.test(snapshotsDirectory)) {
+        throw new InvalidEnvException(
+          "SNAPSHOTS_DIRECTORY cannot start with '.' or '/' when SNAPSHOTS_DRIVER is 's3'. Adjust it to choose to a valid relative directory in S3.",
+        );
       }
     } else {
-      SNAPSHOTS_DIRECTORY = SNAPSHOTS_DIRECTORY.startsWith('/')
-        ? SNAPSHOTS_DIRECTORY
-        : join(process.cwd(), SNAPSHOTS_DIRECTORY);
+      /**
+       * Make the directory absolute.
+       */
+      snapshotsDirectory = snapshotsDirectory.startsWith('/')
+        ? snapshotsDirectory
+        : join(process.cwd(), snapshotsDirectory);
     }
 
-    this.snapshotsDriver = SNAPSHOTS_DRIVER;
-    this.snapshotsDirectory = SNAPSHOTS_DIRECTORY;
+    /**
+     * Ensure directory exists.
+     */
+    const filesystem = new Filesystem('fs');
+    await filesystem.ensureDir(snapshotsDirectory);
+
+    this.snapshotsDriver = snapshotsDriver;
+    this.snapshotsDirectory = snapshotsDirectory;
+  }
+
+  /**
+   * Initialize logging configuration.
+   */
+  private async initLoggingConfig(): Promise<void> {
+    if (!this.processEnv.PRERENDERER_LOG_FILE) {
+      return;
+    }
+
+    /**
+     * Make the directory absolute.
+     */
+    const logFile = this.processEnv.PRERENDERER_LOG_FILE.startsWith('/')
+      ? this.processEnv.PRERENDERER_LOG_FILE
+      : join(process.cwd(), this.processEnv.PRERENDERER_LOG_FILE);
+
+    /**
+     * Ensure file is exists and is writeable.
+     */
+    const filesystem = new Filesystem('fs');
+    await filesystem.ensureFile(logFile);
+
+    this.prerendererLogFile = logFile;
+  }
+
+  /**
+   * Initialize other environment configurations.
+   */
+  private initEnvironmentConfig(): void {
+    const nodeEnv: NodeEnvironment = this.processEnv
+      .NODE_ENV as NodeEnvironment;
+
+    const correctEnvironments = ['production', 'development'];
+
+    if (!correctEnvironments.includes(nodeEnv)) {
+      throw new MismatchingEnvException(
+        'NODE_ENV',
+        this.processEnv.NODE_ENV,
+        correctEnvironments,
+      );
+    }
+
+    this.nodeEnvironment = nodeEnv;
+  }
+
+  /**
+   * Whether configuration has been initialized.
+   */
+  public isInitialized(): boolean {
+    return this.initialized;
   }
 
   /**
@@ -59,10 +215,30 @@ class Config {
     return this.snapshotsDirectory;
   }
 
+  /**
+   * Whether this is running in production environment.
+   */
+  public isProductionEnv(): boolean {
+    return this.nodeEnvironment === 'production';
+  }
+
+  /**
+   * Get prerenderer log file location.
+   */
+  public getPrerendererLogFile(): string {
+    return this.prerendererLogFile;
+  }
+
+  /**
+   * TODO: document me.
+   */
   public getTimeout() {
     return 10000;
   }
 
+  /**
+   * TODO: document me.
+   */
   public getBlacklistedRequestURLRegExps(): RegExp[] {
     return [
       /www\.google-analytics\.com/,
@@ -113,6 +289,9 @@ class Config {
     ];
   }
 
+  /**
+   * TODO: document me.
+   */
   public getIgnoredExtensions() {
     return [
       '.js',
@@ -160,6 +339,3 @@ class Config {
     ];
   }
 }
-
-const singleton = new Config();
-export { singleton as Config };

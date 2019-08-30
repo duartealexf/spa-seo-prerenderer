@@ -14,12 +14,18 @@ let server;
 
 module.exports = {
   server: app,
-  start: () => {
-    server = app.listen(process.env.TEST_STATIC_SERVER_PORT || 7800);
-  },
-  close: () => {
-    if (server) {
-      server.close();
-    }
-  },
+  start: async () =>
+    new Promise((resolve) => {
+      server = app.listen(
+        process.env.TEST_STATIC_SERVER_PORT || 7800,
+        () => {},
+      );
+    }),
+  close: async () =>
+    new Promise((resolve) => {
+      if (server) {
+        return server.close(resolve);
+      }
+      resolve();
+    }),
 };

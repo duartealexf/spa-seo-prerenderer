@@ -26,3 +26,4 @@ coverage.*
 .nyc_output
 .env
 /dist
+prerenderer.log
