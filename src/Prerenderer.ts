@@ -1,6 +1,5 @@
 import puppeteer, { Browser, Response } from 'puppeteer';
 import { Request } from 'express';
-import { version } from '../package.json';
 
 import { Config } from './Config';
 
@@ -29,7 +28,7 @@ class Prerenderer {
    */
   private browser: Browser;
 
-  public static readonly USER_AGENT = `prerenderer/${version}`;
+  public static readonly USER_AGENT = 'prerenderer/{{version}}';
 
   constructor() {}
 

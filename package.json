@@ -21,15 +21,15 @@
     "nodemon": "nodemon",
     "tslint": "tslint",
     "mocha": "mocha",
-    "nyc": "nyc",
     "tsc": "tsc",
+    "nyc": "nyc",
     "lint": "tslint -c tslint.json -p tsconfig.json src test",
     "coverage": "nyc npm run test",
     "test": "mocha test/specs/**/*.spec.js",
     "release": "standard-version && git push --follow-tags",
     "build": "tsc",
-    "start": "node dist/index.js",
-    "debug": "nodemon --inspect=9220 -e ts -w src --exec \"npm run build && node\" dist/index.js"
+    "postbuild": "node scripts/postbuild.js",
+    "build:watch": "nodemon -e ts -w src --exec 'npm run build'"
   },
   "dependencies": {
     "dotenv": "^8.1.0",
@@ -63,6 +63,9 @@
     "commitizen": {
       "path": "./node_modules/cz-conventional-changelog"
     }
+  },
+  "mocha": {
+    "timeout": 60000
   },
   "nyc": {
     "all": true,
