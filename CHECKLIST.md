@@ -5,7 +5,7 @@
 - [x] Setup repository
 - [x] Create tests, work with TDD
 - [ ] Simple prerenderer, save local file
-- [ ] Debug
+- [x] Debug
 - [ ] Keep headless browser open, create new pages per request
 - [ ] Filter user agents
 - [ ] Filter extensions

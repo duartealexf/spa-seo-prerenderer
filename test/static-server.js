@@ -16,10 +16,9 @@ module.exports = {
   server: app,
   start: async () =>
     new Promise((resolve) => {
-      server = app.listen(
-        process.env.TEST_STATIC_SERVER_PORT || 7800,
-        () => {},
-      );
+      server = app.listen(process.env.TEST_STATIC_SERVER_PORT || 7800, () => {
+        resolve();
+      });
     }),
   close: async () =>
     new Promise((resolve) => {

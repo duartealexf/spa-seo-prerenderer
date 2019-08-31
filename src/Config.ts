@@ -20,11 +20,11 @@ export type NodeEnvironment = 'development' | 'production';
  * Interface for needed values as in process.env.
  */
 export interface PrerendererConfigParams {
-  [key: string]: string;
+  [key: string]: string | undefined;
   /**
    * Prerenderer log file location.
    */
-  PRERENDERER_LOG_FILE: string;
+  PRERENDERER_LOG_FILE?: string;
 
   /**
    * Node environment.
@@ -104,7 +104,11 @@ export class Config {
    */
   private checkRequiredConfig(): void {
     ['NODE_ENV', 'SNAPSHOTS_DRIVER', 'SNAPSHOTS_DIRECTORY'].forEach((env) => {
-      if (!this.processEnv[env] || !this.processEnv[env].length) {
+      if (
+        !this.processEnv[env] ||
+        (typeof this.processEnv[env] === 'string' &&
+          !(this.processEnv[env] as string).length)
+      ) {
         throw new MissingEnvException(env);
       }
     });
@@ -131,7 +135,7 @@ export class Config {
     if (snapshotsDriver === 's3') {
       if (/^\.|^\//.test(snapshotsDirectory)) {
         throw new InvalidEnvException(
-          "SNAPSHOTS_DIRECTORY cannot start with '.' or '/' when SNAPSHOTS_DRIVER is 's3'. Adjust it to choose to a valid relative directory in S3.",
+          "SNAPSHOTS_DIRECTORY cannot start with '.' or '/' when SNAPSHOTS_DRIVER is 's3'. Adjust it to choose to a valid relative directory in s3.",
         );
       }
     } else {
@@ -143,11 +147,13 @@ export class Config {
         : join(process.cwd(), snapshotsDirectory);
     }
 
-    /**
-     * Ensure directory exists.
-     */
-    const filesystem = new Filesystem('fs');
-    await filesystem.ensureDir(snapshotsDirectory);
+    if (snapshotsDriver === 'fs') {
+      /**
+       * Ensure directory exists.
+       */
+      const filesystem = new Filesystem('fs');
+      await filesystem.ensureDir(snapshotsDirectory);
+    }
 
     this.snapshotsDriver = snapshotsDriver;
     this.snapshotsDirectory = snapshotsDirectory;

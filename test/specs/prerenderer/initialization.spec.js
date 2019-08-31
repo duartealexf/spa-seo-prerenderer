@@ -1,6 +1,10 @@
 const { describe, it } = require('mocha');
 const { assert } = require('chai');
+
 const { Prerenderer } = require('../../../dist/lib/Prerenderer');
+const {
+  PrerendererNotReadyException,
+} = require('../../../dist/lib/Exceptions/PrerendererNotReadyException');
 
 describe('non-initialization errors', () => {
   it('should throw an error if starting server without initialization.', async () => {
@@ -10,7 +14,7 @@ describe('non-initialization errors', () => {
       await p.start();
       assert.ok(false);
     } catch (e) {
-      assert.ok(true);
+      assert.instanceOf(e, PrerendererNotReadyException);
     }
   });
 
@@ -21,7 +25,7 @@ describe('non-initialization errors', () => {
       await p.getLogger();
       assert.ok(false);
     } catch (e) {
-      assert.ok(true);
+      assert.instanceOf(e, PrerendererNotReadyException);
     }
   });
 
@@ -32,7 +36,7 @@ describe('non-initialization errors', () => {
       await p.start();
       assert.ok(false);
     } catch (e) {
-      assert.ok(true);
+      assert.instanceOf(e, PrerendererNotReadyException);
     }
   });
 
@@ -43,7 +47,7 @@ describe('non-initialization errors', () => {
       await p.prerender(null);
       assert.ok(false);
     } catch (e) {
-      assert.ok(true);
+      assert.instanceOf(e, PrerendererNotReadyException);
     }
   });
 });

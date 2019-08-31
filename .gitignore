@@ -26,4 +26,9 @@ coverage.*
 .nyc_output
 .env
 /dist
+
+# -------------------------
+# Project Files
+# -------------------------
 prerenderer.log
+test/tmp
