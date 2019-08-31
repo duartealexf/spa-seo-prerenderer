@@ -19,7 +19,7 @@ export type NodeEnvironment = 'development' | 'production';
 /**
  * Interface for needed values as in process.env.
  */
-export interface EnvironmentVariables {
+export interface PrerendererConfigParams {
   [key: string]: string;
   /**
    * Prerenderer log file location.
@@ -29,12 +29,12 @@ export interface EnvironmentVariables {
   /**
    * Node environment.
    */
-  NODE_ENV: string;
+  NODE_ENV: NodeEnvironment;
 
   /**
    * Chosen snapshots driver.
    */
-  SNAPSHOTS_DRIVER: string;
+  SNAPSHOTS_DRIVER: SnapshotsDriver;
 
   /**
    * Directory to store snapshots in.
@@ -66,22 +66,25 @@ export class Config {
   /**
    * Values as in process.env.
    */
-  private processEnv: EnvironmentVariables;
+  private processEnv: PrerendererConfigParams;
 
   /**
    * Whether config has been initialized.
    */
   private initialized = false;
 
-  constructor() {
+  constructor(config: PrerendererConfigParams) {
     dotenv.config();
 
-    this.processEnv = {
-      PRERENDERER_LOG_FILE: process.env.PRERENDERER_LOG_FILE || '',
-      NODE_ENV: process.env.NODE_ENV || 'production',
-      SNAPSHOTS_DRIVER: process.env.SNAPSHOTS_DRIVER || 'fs',
-      SNAPSHOTS_DIRECTORY: process.env.SNAPSHOTS_DIRECTORY || '../snapshots',
-    };
+    this.processEnv = Object.assign(
+      {
+        PRERENDERER_LOG_FILE: process.env.PRERENDERER_LOG_FILE || '',
+        NODE_ENV: process.env.NODE_ENV || 'production',
+        SNAPSHOTS_DRIVER: process.env.SNAPSHOTS_DRIVER || 'fs',
+        SNAPSHOTS_DIRECTORY: process.env.SNAPSHOTS_DIRECTORY || '../snapshots',
+      },
+      config,
+    );
   }
 
   /**

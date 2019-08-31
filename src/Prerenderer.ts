@@ -1,7 +1,7 @@
 import puppeteer, { Browser, Response } from 'puppeteer';
 import { Request } from 'express';
 
-import { Config } from './Config';
+import { Config, PrerendererConfigParams } from './Config';
 import { Logger } from './Logger';
 import { PrerendererNotReadyException } from './Exceptions/PrerendererNotReadyException';
 
@@ -55,8 +55,8 @@ export class Prerenderer {
    */
   public static readonly USER_AGENT = 'prerenderer/{{version}}';
 
-  constructor() {
-    this.config = new Config();
+  constructor(config: PrerendererConfigParams) {
+    this.config = new Config(config);
   }
 
   /**
