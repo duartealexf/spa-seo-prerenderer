@@ -19,7 +19,7 @@ export class MismatchingEnvException extends Error {
     )}]. It is currently set as '${currentValue}', which is not correct.`;
   }
 
-  toString() {
+  toString(): string {
     return this.message;
   }
 }

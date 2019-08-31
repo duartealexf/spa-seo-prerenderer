@@ -89,7 +89,7 @@ export class Prerenderer {
   /**
    * Start prerenderer headless browser.
    */
-  public async start() {
+  public async start(): Promise<void> {
     if (!this.initialized) {
       throw new PrerendererNotReadyException(
         'Prerenderer needs to be initialized before starting. Did you call prerenderer.initialize()?',
@@ -104,7 +104,7 @@ export class Prerenderer {
   /**
    * Stop prerenderer headless browser.
    */
-  public async stop() {
+  public async stop(): Promise<void> {
     if (this.browser) {
       this.getLogger().info('Stopping Puppeteer...', 'prerenderer');
       await this.browser.close();
@@ -112,10 +112,6 @@ export class Prerenderer {
     }
   }
 
-  /*
-   * Handle prerender of given request, to generate a prerender response from it.
-   * @param request Request containing data needed to prerender.
-   */
   public async prerender(request: Request): Promise<void> {
     if (!this.browser) {
       throw new PrerendererNotReadyException(
@@ -140,12 +136,7 @@ export class Prerenderer {
       // TODO: create list of url patterns to block request to (i.e. analytics)
       page.on('request', (req) => {
         // Don't load Google Analytics lib requests so pageviews aren't 2x.
-        const blacklist = [
-          'www.google-analytics.com',
-          '/gtag/js',
-          'ga.js',
-          'analytics.js',
-        ];
+        const blacklist = ['www.google-analytics.com', '/gtag/js', 'ga.js', 'analytics.js'];
 
         /* This is from https://github.com/prerender/prerender/blob/master/lib/server.js
          * Do we need it?
@@ -169,8 +160,8 @@ export class Prerenderer {
         req.continue();
       });
 
-      // tslint:disable-next-line: max-line-length
-      // Page.addScriptToEvaluateOnNewDocument({source: 'if (window.customElements) customElements.forcePolyfill = true'})
+      // Page.addScriptToEvaluateOnNewDocument({source: 'if (window.customElements) {
+      // customElements.forcePolyfill = true'}); }
       // Page.addScriptToEvaluateOnNewDocument({source: 'ShadyDOM = {force: true}'})
       // Page.addScriptToEvaluateOnNewDocument({source: 'ShadyCSS = {shimcssproperties: true}'})
 
@@ -189,16 +180,16 @@ export class Prerenderer {
       try {
         // Navigate to page. Wait until there are no oustanding network requests.
         response = await page.goto(url, {
-          timeout: this.config.getTimeout(),
+          timeout: Config.getTimeout(),
           waitUntil: 'networkidle0',
         });
       } catch (e) {
         // TODO: do something other than console error.
-        console.error(e);
+        // console.error(e);
       }
 
       if (!response) {
-        console.error('response does not exist');
+        // console.error('response does not exist');
         // This should only occur when the page is about:blank. See
         // https://github.com/GoogleChrome/puppeteer/blob/v1.5.0/docs/api.md#pagegotourl-options.
         await page.close();
@@ -235,7 +226,7 @@ export class Prerenderer {
       let status = response.status();
 
       const newStatusCode = await page
-        .$eval('meta[name="render:status_code"]', (element: Element) =>
+        .$eval('meta[name="render:status_code"]', (element) =>
           parseInt(element.getAttribute('content') || '', 10),
         )
         .catch(() => undefined);
@@ -270,7 +261,7 @@ export class Prerenderer {
 
       return;
     } catch (err) {
-      console.error(err);
+      // console.error(err);
       throw new Error('page.goto/waitForSelector timed out.');
     }
   }
@@ -286,7 +277,7 @@ export class Prerenderer {
    * Get whether given URL is a valid URL to prerender.
    * @param url URL to validate.
    */
-  public isValidURL(url: string): boolean {
+  public static isValidURL(url: string): boolean {
     if (!url.match(/^http/)) {
       return true;
     }
@@ -298,7 +289,7 @@ export class Prerenderer {
    * Get whether given request should be prerendered.
    * @param request NodeJS request.
    */
-  public async shouldPrerender(request: Request) {
+  public static async shouldPrerender(request: Request): Promise<boolean> {
     const userAgent = request.headers['user-agent'];
 
     if (!userAgent) {
@@ -306,7 +297,7 @@ export class Prerenderer {
     }
 
     // TODO: parse url and get only extension
-    if (this.config.getIgnoredExtensions().includes(request.url)) {
+    if (Config.getIgnoredExtensions().includes(request.url)) {
       return false;
     }
 
@@ -314,8 +305,8 @@ export class Prerenderer {
     // TODO: add blacklist check
 
     if (
-      request.method === 'GET' &&
-      this.config.getBotUserAgents().includes(userAgent.toLowerCase())
+      request.method === 'GET'
+      && Config.getBotUserAgents().includes(userAgent.toLowerCase())
     ) {
       return true;
     }

@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import { WriteStream, createWriteStream } from 'fs';
 import debug from 'debug';
 
@@ -17,12 +18,19 @@ export class Logger {
   ];
 
   private static readonly LOG_LEVEL_EMERG = 0;
+
   private static readonly LOG_LEVEL_ALERT = 1;
+
   private static readonly LOG_LEVEL_CRIT = 2;
+
   private static readonly LOG_LEVEL_ERROR = 3;
+
   private static readonly LOG_LEVEL_WARNING = 4;
+
   private static readonly LOG_LEVEL_NOTICE = 5;
+
   private static readonly LOG_LEVEL_INFO = 6;
+
   private static readonly LOG_LEVEL_DEBUG = 7;
 
   /**
@@ -58,7 +66,7 @@ export class Logger {
         encoding: 'utf-8',
       });
 
-      this.logFile.on('error', (error: Error) => {
+      this.logFile.on('error', (error) => {
         if (this.logFile) {
           this.logFile.close();
         }
@@ -135,7 +143,7 @@ export class Logger {
       return;
     }
 
-    const formattedMessage = this.formatMessage(logLevel, message, context);
+    const formattedMessage = Logger.formatMessage(logLevel, message, context);
 
     if (this.logFile) {
       this.logFile.write(formattedMessage);
@@ -145,14 +153,12 @@ export class Logger {
       console.error(formattedMessage);
     } else if (logLevel === Logger.LOG_LEVEL_WARNING) {
       console.warn(formattedMessage);
-    } else {
+    } else if (debug.enabled('prerenderer')) {
       /**
        * Workaround for debug's bug of not printing when
        * debugging, forward message to console.
        */
-      if (debug.enabled('prerenderer')) {
-        console.log(formattedMessage);
-      }
+      console.log(formattedMessage);
     }
   }
 
@@ -162,12 +168,8 @@ export class Logger {
    * @param message
    * @param context
    */
-  private formatMessage(
-    logLevel: number,
-    message: string,
-    context: string,
-  ): string {
-    return `${new Date().toISOString()} prerenderer:${context} ${Logger
-      .LOG_LEVELS[logLevel] || ''}: ${message}`;
+  private static formatMessage(logLevel: number, message: string, context: string): string {
+    return `${new Date().toISOString()} prerenderer:${context} ${Logger.LOG_LEVELS[logLevel]
+      || ''}: ${message}`;
   }
 }

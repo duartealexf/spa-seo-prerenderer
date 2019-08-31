@@ -1,0 +1,36 @@
+{
+  "extends": [
+    "airbnb-base",
+    "prettier/@typescript-eslint",
+    "plugin:@typescript-eslint/recommended"
+  ],
+  "env": {
+    "es6": true,
+    "node": true
+  },
+  "plugins": ["@typescript-eslint", "prettier", "import"],
+  "parser": "@typescript-eslint/parser",
+  "parserOptions": {
+    "ecmaVersion": 2018,
+    "sourceType": "module",
+    "project": ["./tsconfig.json"],
+    "tsconfigRootDir": "./"
+  },
+  "settings": {
+    "import/resolver": {
+      "typescript": {}
+    }
+  },
+  "rules": {
+    "import/prefer-default-export": 0,
+    "prefer-destructuring": 0,
+    "implicit-arrow-linebreak": 0,
+    "function-paren-newline": 0,
+    "operator-linebreak": 0,
+    "object-curly-newline": 0,
+    "no-async-promise-executor": 0,
+    "@typescript-eslint/explicit-function-return-type": ["error", { "allowExpressions": true }],
+    "@typescript-eslint/no-explicit-any": ["error", { "ignoreRestArgs": false }],
+    "@typescript-eslint/semi": ["error"]
+  }
+}

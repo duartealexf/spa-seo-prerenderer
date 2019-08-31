@@ -11,7 +11,7 @@ export class PrerendererNotReadyException extends Error {
     this.message = message;
   }
 
-  toString() {
+  toString(): string {
     return this.message;
   }
 }

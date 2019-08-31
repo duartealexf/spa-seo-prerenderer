@@ -46,7 +46,7 @@ export class Config {
   /**
    * Prerenderer log file location.
    */
-  private prerendererLogFile: string = '';
+  private prerendererLogFile = '';
 
   /**
    * Node environment.
@@ -61,7 +61,7 @@ export class Config {
   /**
    * Directory to store snapshots in.
    */
-  private snapshotsDirectory: string = '../snapshots';
+  private snapshotsDirectory = '../snapshots';
 
   /**
    * Values as in process.env.
@@ -76,25 +76,23 @@ export class Config {
   constructor(config: PrerendererConfigParams) {
     dotenv.config();
 
-    this.processEnv = Object.assign(
-      {
-        PRERENDERER_LOG_FILE: process.env.PRERENDERER_LOG_FILE || '',
-        NODE_ENV: process.env.NODE_ENV || 'production',
-        SNAPSHOTS_DRIVER: process.env.SNAPSHOTS_DRIVER || 'fs',
-        SNAPSHOTS_DIRECTORY: process.env.SNAPSHOTS_DIRECTORY || '../snapshots',
-      },
-      config,
-    );
+    this.processEnv = {
+      PRERENDERER_LOG_FILE: process.env.PRERENDERER_LOG_FILE || '',
+      NODE_ENV: process.env.NODE_ENV || 'production',
+      SNAPSHOTS_DRIVER: process.env.SNAPSHOTS_DRIVER || 'fs',
+      SNAPSHOTS_DIRECTORY: process.env.SNAPSHOTS_DIRECTORY || '../snapshots',
+      ...config,
+    };
   }
 
   /**
    * Initialize configuration, which is required before starting app.
    */
   public async initialize(): Promise<void> {
-    await this.checkRequiredConfig();
+    this.checkRequiredConfig();
     await this.initSnapshotConfig();
     await this.initLoggingConfig();
-    await this.initEnvironmentConfig();
+    this.initEnvironmentConfig();
 
     this.initialized = true;
   }
@@ -105,9 +103,8 @@ export class Config {
   private checkRequiredConfig(): void {
     ['NODE_ENV', 'SNAPSHOTS_DRIVER', 'SNAPSHOTS_DIRECTORY'].forEach((env) => {
       if (
-        !this.processEnv[env] ||
-        (typeof this.processEnv[env] === 'string' &&
-          !(this.processEnv[env] as string).length)
+        !this.processEnv[env]
+        || (typeof this.processEnv[env] === 'string' && !(this.processEnv[env] as string).length)
       ) {
         throw new MissingEnvException(env);
       }
@@ -118,8 +115,7 @@ export class Config {
    * Initialize snapshots configuration.
    */
   private async initSnapshotConfig(): Promise<void> {
-    const snapshotsDriver: SnapshotsDriver = this.processEnv
-      .SNAPSHOTS_DRIVER as SnapshotsDriver;
+    const snapshotsDriver: SnapshotsDriver = this.processEnv.SNAPSHOTS_DRIVER as SnapshotsDriver;
     let snapshotsDirectory: string = this.processEnv.SNAPSHOTS_DIRECTORY;
 
     const correctDrivers = ['fs', 's3'];
@@ -187,17 +183,12 @@ export class Config {
    * Initialize other environment configurations.
    */
   private initEnvironmentConfig(): void {
-    const nodeEnv: NodeEnvironment = this.processEnv
-      .NODE_ENV as NodeEnvironment;
+    const nodeEnv: NodeEnvironment = this.processEnv.NODE_ENV as NodeEnvironment;
 
     const correctEnvironments = ['production', 'development'];
 
     if (!correctEnvironments.includes(nodeEnv)) {
-      throw new MismatchingEnvException(
-        'NODE_ENV',
-        this.processEnv.NODE_ENV,
-        correctEnvironments,
-      );
+      throw new MismatchingEnvException('NODE_ENV', this.processEnv.NODE_ENV, correctEnvironments);
     }
 
     this.nodeEnvironment = nodeEnv;
@@ -241,25 +232,20 @@ export class Config {
   /**
    * TODO: document me.
    */
-  public getTimeout() {
+  public static getTimeout(): number {
     return 10000;
   }
 
   /**
    * TODO: document me.
    */
-  public getBlacklistedRequestURLRegExps(): RegExp[] {
-    return [
-      /www\.google-analytics\.com/,
-      /\/gtag\/js/,
-      /ga\.js/,
-      /analytics\.js/,
-    ];
+  public static getBlacklistedRequestURLRegExps(): RegExp[] {
+    return [/www\.google-analytics\.com/, /\/gtag\/js/, /ga\.js/, /analytics\.js/];
   }
 
   // TODO: compare this list and extensions list with the one in
   // https://gist.github.com/thoop/8072354
-  public getBotUserAgents() {
+  public static getBotUserAgents(): string[] {
     return [
       'googlebot',
       'yahoo! slurp',
@@ -301,7 +287,7 @@ export class Config {
   /**
    * TODO: document me.
    */
-  public getIgnoredExtensions() {
+  public static getIgnoredExtensions(): string[] {
     return [
       '.js',
       '.css',

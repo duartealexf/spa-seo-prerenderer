@@ -10,7 +10,7 @@ export class InvalidEnvException extends Error {
     this.message = message;
   }
 
-  toString() {
+  toString(): string {
     return this.message;
   }
 }
