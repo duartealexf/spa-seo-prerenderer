@@ -147,8 +147,7 @@ export class Config {
       /**
        * Ensure directory exists.
        */
-      const filesystem = new Filesystem('fs');
-      await filesystem.ensureDir(snapshotsDirectory);
+      await Filesystem.ensureDir(snapshotsDirectory);
     }
 
     this.snapshotsDriver = snapshotsDriver;
@@ -173,8 +172,7 @@ export class Config {
     /**
      * Ensure file is exists and is writeable.
      */
-    const filesystem = new Filesystem('fs');
-    await filesystem.ensureFile(logFile);
+    await Filesystem.ensureFile(logFile);
 
     this.prerendererLogFile = logFile;
   }
