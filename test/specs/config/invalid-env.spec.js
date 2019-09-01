@@ -3,13 +3,13 @@ const { assert } = require('chai');
 const { join } = require('path');
 const { v4: uuidv4 } = require('uuid');
 
-const { Prerenderer } = require('../../../dist/lib/Prerenderer');
+const { Prerenderer } = require('../../../dist/lib/prerenderer');
 const {
   InvalidEnvException,
-} = require('../../../dist/lib/Exceptions/InvalidEnvException');
+} = require('../../../dist/lib/exceptions/invalid-env-exception');
 const {
   MismatchingEnvException,
-} = require('../../../dist/lib/Exceptions/MismatchingEnvException');
+} = require('../../../dist/lib/exceptions/mismatching-env-exception');
 
 describe('invalid env vars', () => {
   /**

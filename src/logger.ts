@@ -2,8 +2,8 @@
 import { WriteStream, createWriteStream } from 'fs';
 import debug from 'debug';
 
-import { Config } from './Config';
-import { PrerendererNotReadyException } from './Exceptions/PrerendererNotReadyException';
+import { Config } from './config';
+import { PrerendererNotReadyException } from './exceptions/prerenderer-not-ready-exception';
 
 export class Logger {
   private static readonly LOG_LEVELS = [

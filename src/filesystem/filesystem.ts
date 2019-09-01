@@ -1,7 +1,7 @@
 import fsExtra, { WriteFileOptions, CopyOptions } from 'fs-extra';
 import { join, dirname, basename, extname } from 'path';
 
-import { SnapshotsDriver } from '../Config';
+import { SnapshotsDriver } from '../config';
 
 export class Filesystem {
   private driver: string;

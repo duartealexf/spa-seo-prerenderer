@@ -1,10 +1,10 @@
 const { describe, it } = require('mocha');
 const { assert } = require('chai');
 
-const { Prerenderer } = require('../../../dist/lib/Prerenderer');
+const { Prerenderer } = require('../../../dist/lib/prerenderer');
 const {
   PrerendererNotReadyException,
-} = require('../../../dist/lib/Exceptions/PrerendererNotReadyException');
+} = require('../../../dist/lib/exceptions/prerenderer-not-ready-exception');
 
 describe('non-initialization errors', () => {
   it('should throw an error if starting server without initialization.', async () => {

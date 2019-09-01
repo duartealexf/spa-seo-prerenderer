@@ -6,7 +6,7 @@ const { v4: uuidv4 } = require('uuid');
 const { Prerenderer } = require('../../../dist/lib/Prerenderer');
 const {
   MissingEnvException,
-} = require('../../../dist/lib/Exceptions/MissingEnvException');
+} = require('../../../dist/lib/exceptions/missing-env-exception');
 
 describe('missing env vars', () => {
   /**

@@ -4,7 +4,7 @@ const { join } = require('path');
 const { pathExists, existsSync } = require('fs-extra');
 const { v4: uuidv4 } = require('uuid');
 
-const { Prerenderer } = require('../../../dist/lib/Prerenderer');
+const { Prerenderer } = require('../../../dist/lib/prerenderer');
 
 describe('valid env vars', () => {
   /**

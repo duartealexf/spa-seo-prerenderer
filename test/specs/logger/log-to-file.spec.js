@@ -4,7 +4,7 @@ const { createReadStream } = require('fs-extra');
 const { join, basename } = require('path');
 const { v4: uuidv4 } = require('uuid');
 
-const { Prerenderer } = require('../../../dist/lib/Prerenderer');
+const { Prerenderer } = require('../../../dist/lib/prerenderer');
 
 describe('log to file', () => {
   /**

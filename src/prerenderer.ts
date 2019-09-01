@@ -1,9 +1,9 @@
 import puppeteer, { Browser, Response } from 'puppeteer';
 import { Request } from 'express';
 
-import { Config, PrerendererConfigParams } from './Config';
-import { Logger } from './Logger';
-import { PrerendererNotReadyException } from './Exceptions/PrerendererNotReadyException';
+import { Config, PrerendererConfigParams } from './config';
+import { Logger } from './logger';
+import { PrerendererNotReadyException } from './exceptions/prerenderer-not-ready-exception';
 
 interface PrerendererResponse {
   /**
