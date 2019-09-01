@@ -8,4 +8,5 @@ node_js:
 script:
   - export NODE_VERSION=$(node --version)
   - nvm use $NODE_VERSION
+  - npm run build
   - npm run test
