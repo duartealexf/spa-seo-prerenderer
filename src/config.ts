@@ -127,7 +127,7 @@ export class Config {
       this.nodeEnvironment = c.nodeEnv;
     }
 
-    if (c.prerenderablePathRegExps) {
+    if (typeof c.prerenderablePathRegExps !== 'undefined') {
       const regexps = c.prerenderablePathRegExps as RegExp[];
 
       if (!Array.isArray(regexps) || regexps.some((v) => !(v instanceof RegExp))) {
@@ -139,7 +139,7 @@ export class Config {
       this.prerenderablePathRegExps = regexps;
     }
 
-    if (c.prerenderableExtensions) {
+    if (typeof c.prerenderableExtensions !== 'undefined') {
       const extensions = c.prerenderableExtensions as string[];
 
       if (!Array.isArray(extensions) || extensions.some((v) => typeof v !== 'string')) {
@@ -151,7 +151,7 @@ export class Config {
       this.prerenderableExtensions = extensions;
     }
 
-    if (c.botUserAgents) {
+    if (typeof c.botUserAgents !== 'undefined') {
       const userAgents = c.botUserAgents as string[];
 
       if (!Array.isArray(userAgents) || userAgents.some((v) => typeof v !== 'string')) {
@@ -175,7 +175,7 @@ export class Config {
       this.timeout = timeout;
     }
 
-    if (c.whitelistedRequestURLs) {
+    if (typeof c.whitelistedRequestURLs !== 'undefined') {
       const whitelist = c.whitelistedRequestURLs as string[];
 
       if (!Array.isArray(whitelist) || whitelist.some((v) => typeof v !== 'string')) {
@@ -184,8 +184,22 @@ export class Config {
         );
       }
 
-      this.whitelistedRequestURLs = whitelist;
-      this.blacklistedRequestURLs = [];
+      if (whitelist.length) {
+        this.whitelistedRequestURLs = whitelist;
+        this.blacklistedRequestURLs = [];
+      }
+    }
+
+    if (typeof c.blacklistedRequestURLs !== 'undefined' && !this.whitelistedRequestURLs.length) {
+      const blacklist = c.blacklistedRequestURLs as string[];
+
+      if (!Array.isArray(blacklist) || blacklist.some((v) => typeof v !== 'string')) {
+        throw new InvalidConfigException(
+          'blacklistedRequestURLs given in constructor must be of type string[]!',
+        );
+      }
+
+      this.blacklistedRequestURLs = blacklist;
     }
   }
 

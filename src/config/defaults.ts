@@ -177,6 +177,6 @@ export const DEFAULT_BLACKLISTED_REQUEST_URLS = [
 
 export const DEFAULT_PRERENDERABLE_EXTENSIONS = [
   '',
-  '.html',
-  '.php',
+  'html',
+  'php',
 ];

@@ -164,7 +164,7 @@ export class Prerenderer {
     /**
      * If it is not an extension that can prerender, don't prerender.
      */
-    if (!this.config.getPrerenderableExtensions().includes(extension.toLowerCase())) {
+    if (!this.config.getPrerenderableExtensions().includes(extension.substr(1).toLowerCase())) {
       return false;
     }
 

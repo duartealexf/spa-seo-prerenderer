@@ -151,4 +151,64 @@ describe('invalid config', () => {
       assert.include(e.message, 'timeout');
     }
   });
+
+  it('should throw an error when whitelistedRequestURLs is not an array.', async () => {
+    const buggedConfig = Object.assign({}, initialConfig, {
+      whitelistedRequestURLs: 123,
+    });
+
+    try {
+      const p = new Prerenderer(buggedConfig);
+      await p.initialize();
+      assert.ok(false);
+    } catch (e) {
+      assert.instanceOf(e, InvalidConfigException);
+      assert.include(e.message, 'whitelistedRequestURLs');
+    }
+  });
+
+  it('should throw an error when whitelistedRequestURLs is not string[].', async () => {
+    const buggedConfig = Object.assign({}, initialConfig, {
+      whitelistedRequestURLs: [123],
+    });
+
+    try {
+      const p = new Prerenderer(buggedConfig);
+      await p.initialize();
+      assert.ok(false);
+    } catch (e) {
+      assert.instanceOf(e, InvalidConfigException);
+      assert.include(e.message, 'whitelistedRequestURLs');
+    }
+  });
+
+  it('should throw an error when blacklistedRequestURLs is not an array.', async () => {
+    const buggedConfig = Object.assign({}, initialConfig, {
+      blacklistedRequestURLs: 123,
+    });
+
+    try {
+      const p = new Prerenderer(buggedConfig);
+      await p.initialize();
+      assert.ok(false);
+    } catch (e) {
+      assert.instanceOf(e, InvalidConfigException);
+      assert.include(e.message, 'blacklistedRequestURLs');
+    }
+  });
+
+  it('should throw an error when blacklistedRequestURLs is not string[].', async () => {
+    const buggedConfig = Object.assign({}, initialConfig, {
+      blacklistedRequestURLs: [123],
+    });
+
+    try {
+      const p = new Prerenderer(buggedConfig);
+      await p.initialize();
+      assert.ok(false);
+    } catch (e) {
+      assert.instanceOf(e, InvalidConfigException);
+      assert.include(e.message, 'blacklistedRequestURLs');
+    }
+  });
 });

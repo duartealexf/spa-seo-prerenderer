@@ -10,7 +10,7 @@ const {
 
 describe('missing env vars', () => {
   /**
-   * @type {import('../../../dist/types/Config').PrerendererConfigParams}
+   * @type {import('../../../dist/types/config/defaults').PrerendererConfigParams}
    */
   const initialConfig = {
     nodeEnv: 'development',

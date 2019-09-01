@@ -9,7 +9,7 @@ const { DEFAULT_BLACKLISTED_REQUEST_URLS, DEFAULT_BOT_USER_AGENTS, DEFAULT_PRERE
 
 describe('valid env vars', () => {
   /**
-   * @type {import('../../../dist/types/Config').PrerendererConfigParams}
+   * @type {import('../../../dist/types/config/defaults').PrerendererConfigParams}
    */
   const initialConfig = {
     nodeEnv: 'development',

@@ -8,7 +8,7 @@ const { Prerenderer } = require('../../../dist/lib/prerenderer');
 
 describe('log errors', () => {
   /**
-   * @type {import('../../../dist/types/Config').PrerendererConfigParams}
+   * @type {import('../../../dist/types/config/defaults').PrerendererConfigParams}
    */
   const initialConfig = {
     nodeEnv: 'development',
