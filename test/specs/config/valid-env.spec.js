@@ -5,6 +5,7 @@ const { pathExists, existsSync } = require('fs-extra');
 const { v4: uuidv4 } = require('uuid');
 
 const { Prerenderer } = require('../../../dist/lib/prerenderer');
+const { DEFAULT_BLACKLISTED_REQUEST_URLS, DEFAULT_BOT_USER_AGENTS, DEFAULT_PRERENDERABLE_EXTENSIONS } = require('../../../dist/lib/config/defaults');
 
 describe('valid env vars', () => {
   /**
@@ -17,29 +18,23 @@ describe('valid env vars', () => {
     snapshotsDriver: 'fs',
   };
 
-  it('should use process.env config when no config is given.', async () => {
+  it('should use default config when no config is given.', async () => {
     const p = new Prerenderer();
     await p.initialize();
 
-    const prerendererLogFile = join(
-      process.cwd(),
-      process.env.PRERENDERER_LOG_FILE,
-    );
-    const snapshotsDirectory = join(
-      process.cwd(),
-      process.env.SNAPSHOTS_DIRECTORY,
-    );
+    const prerendererLogFile = join(process.cwd(), process.env.PRERENDERER_LOG_FILE);
+    const snapshotsDirectory = join(process.cwd(), process.env.SNAPSHOTS_DIRECTORY);
 
     assert.equal(p.getConfig().getPrerendererLogFile(), prerendererLogFile);
     assert.equal(p.getConfig().getSnapshotsDirectory(), snapshotsDirectory);
-    assert.equal(
-      p.getConfig().getSnapshotsDriver(),
-      process.env.SNAPSHOTS_DRIVER,
-    );
-    assert.equal(
-      p.getConfig().isProductionEnv(),
-      process.env.NODE_ENV === 'production',
-    );
+    assert.equal(p.getConfig().getSnapshotsDriver(), process.env.SNAPSHOTS_DRIVER);
+    assert.equal(p.getConfig().isProductionEnv(), process.env.NODE_ENV === 'production');
+    assert.deepEqual(p.getConfig().getPrerenderablePathRegExps(), [/.*/]);
+    assert.deepEqual(p.getConfig().getPrerenderableExtensions(), DEFAULT_PRERENDERABLE_EXTENSIONS);
+    assert.deepEqual(p.getConfig().getBotUserAgents(), DEFAULT_BOT_USER_AGENTS);
+    assert.equal(p.getConfig().getTimeout(), 10000);
+    assert.deepEqual(p.getConfig().getWhitelistedRequestURLs(), []);
+    assert.deepEqual(p.getConfig().getBlacklistedRequestURLs(), DEFAULT_BLACKLISTED_REQUEST_URLS);
   });
 
   it('should set an absolute path for snapshotsDirectory, from a relative directory.', async () => {
@@ -60,10 +55,7 @@ describe('valid env vars', () => {
     const p = new Prerenderer(config);
     await p.initialize();
 
-    assert.equal(
-      p.getConfig().getSnapshotsDirectory(),
-      config.snapshotsDirectory,
-    );
+    assert.equal(p.getConfig().getSnapshotsDirectory(), config.snapshotsDirectory);
   });
 
   it('should create a directory for snapshotsDirectory.', async () => {
@@ -101,21 +93,13 @@ describe('valid env vars', () => {
 
   it('should keep an absolute path for prerendererLogFile, from an absolute directory.', async () => {
     const config = Object.assign({}, initialConfig, {
-      prerendererLogFile: join(
-        process.cwd(),
-        'test',
-        'tmp',
-        `${uuidv4()}.log`,
-      ),
+      prerendererLogFile: join(process.cwd(), 'test', 'tmp', `${uuidv4()}.log`),
     });
 
     const p = new Prerenderer(config);
     await p.initialize();
 
-    assert.equal(
-      p.getConfig().getPrerendererLogFile(),
-      config.prerendererLogFile,
-    );
+    assert.equal(p.getConfig().getPrerendererLogFile(), config.prerendererLogFile);
   });
 
   it('should create a log file when prerendererLogFile is set.', async () => {

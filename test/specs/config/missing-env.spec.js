@@ -3,7 +3,7 @@ const { assert } = require('chai');
 const { join } = require('path');
 const { v4: uuidv4 } = require('uuid');
 
-const { Prerenderer } = require('../../../dist/lib/Prerenderer');
+const { Prerenderer } = require('../../../dist/lib/prerenderer');
 const {
   MissingEnvException,
 } = require('../../../dist/lib/exceptions/missing-env-exception');
