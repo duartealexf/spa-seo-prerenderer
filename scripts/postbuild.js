@@ -11,8 +11,8 @@ const CWD = join(__dirname, '..');
  */
 const setPrerenderVersion = (version) => {
   const OUT_FILES = [
-    join(CWD, 'dist', 'lib', 'Prerenderer.js'),
-    join(CWD, 'dist', 'types', 'Prerenderer.d.ts'),
+    join(CWD, 'dist', 'lib', 'prerenderer.js'),
+    join(CWD, 'dist', 'types', 'prerenderer.d.ts'),
   ];
 
   OUT_FILES.forEach((OUT_FILE) => {
