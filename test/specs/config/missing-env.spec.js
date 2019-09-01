@@ -13,15 +13,15 @@ describe('missing env vars', () => {
    * @type {import('../../../dist/types/Config').PrerendererConfigParams}
    */
   const initialConfig = {
-    NODE_ENV: 'development',
-    PRERENDERER_LOG_FILE: join('test', 'tmp', `${uuidv4()}.log`),
-    SNAPSHOTS_DIRECTORY: join('test', 'tmp', uuidv4()),
-    SNAPSHOTS_DRIVER: 'fs',
+    nodeEnv: 'development',
+    prerendererLogFile: join('test', 'tmp', `${uuidv4()}.log`),
+    snapshotsDirectory: join('test', 'tmp', uuidv4()),
+    snapshotsDriver: 'fs',
   };
 
-  it('should throw an error when NODE_ENV is not set.', async () => {
+  it('should throw an error when nodeEnv is not set.', async () => {
     const buggedConfig = Object.assign({}, initialConfig, {
-      NODE_ENV: null,
+      nodeEnv: null,
     });
 
     try {
@@ -30,13 +30,13 @@ describe('missing env vars', () => {
       assert.ok(false);
     } catch (e) {
       assert.instanceOf(e, MissingEnvException);
-      assert.include(e.message, 'NODE_ENV');
+      assert.include(e.message, 'nodeEnv');
     }
   });
 
-  it('should throw an error when SNAPSHOTS_DIRECTORY is not set.', async () => {
+  it('should throw an error when snapshotsDirectory is not set.', async () => {
     const buggedConfig = Object.assign({}, initialConfig, {
-      SNAPSHOTS_DIRECTORY: null,
+      snapshotsDirectory: null,
     });
 
     try {
@@ -45,13 +45,13 @@ describe('missing env vars', () => {
       assert.ok(false);
     } catch (e) {
       assert.instanceOf(e, MissingEnvException);
-      assert.include(e.message, 'SNAPSHOTS_DIRECTORY');
+      assert.include(e.message, 'snapshotsDirectory');
     }
   });
 
-  it('should throw an error when SNAPSHOTS_DRIVER is not set.', async () => {
+  it('should throw an error when snapshotsDriver is not set.', async () => {
     const buggedConfig = Object.assign({}, initialConfig, {
-      SNAPSHOTS_DRIVER: null,
+      snapshotsDriver: null,
     });
 
     try {
@@ -60,7 +60,7 @@ describe('missing env vars', () => {
       assert.ok(false);
     } catch (e) {
       assert.instanceOf(e, MissingEnvException);
-      assert.include(e.message, 'SNAPSHOTS_DRIVER');
+      assert.include(e.message, 'snapshotsDriver');
     }
   });
 });

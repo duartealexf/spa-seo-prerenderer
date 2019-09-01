@@ -11,10 +11,10 @@ describe('log to file', () => {
    * @type {import('../../../dist/types/Config').PrerendererConfigParams}
    */
   const initialConfig = {
-    NODE_ENV: 'production',
-    PRERENDERER_LOG_FILE: join('test', 'tmp', `${uuidv4()}.log`),
-    SNAPSHOTS_DIRECTORY: join('test', 'tmp', uuidv4()),
-    SNAPSHOTS_DRIVER: 'fs',
+    nodeEnv: 'production',
+    prerendererLogFile: join('test', 'tmp', `${uuidv4()}.log`),
+    snapshotsDirectory: join('test', 'tmp', uuidv4()),
+    snapshotsDriver: 'fs',
   };
 
   it('should log up to warning level on production env.', async () => {
@@ -55,8 +55,8 @@ describe('log to file', () => {
 
   it('should log all levels on development env.', async () => {
     const config = Object.assign({}, initialConfig, {
-      NODE_ENV: 'development',
-      PRERENDERER_LOG_FILE: join('test', 'tmp', `${uuidv4()}.log`),
+      nodeEnv: 'development',
+      prerendererLogFile: join('test', 'tmp', `${uuidv4()}.log`),
     });
 
     const p = new Prerenderer(config);

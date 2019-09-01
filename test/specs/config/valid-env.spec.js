@@ -11,10 +11,10 @@ describe('valid env vars', () => {
    * @type {import('../../../dist/types/Config').PrerendererConfigParams}
    */
   const initialConfig = {
-    NODE_ENV: 'development',
-    PRERENDERER_LOG_FILE: join('test', 'tmp', `${uuidv4()}.log`),
-    SNAPSHOTS_DIRECTORY: join('test', 'tmp', uuidv4()),
-    SNAPSHOTS_DRIVER: 'fs',
+    nodeEnv: 'development',
+    prerendererLogFile: join('test', 'tmp', `${uuidv4()}.log`),
+    snapshotsDirectory: join('test', 'tmp', uuidv4()),
+    snapshotsDriver: 'fs',
   };
 
   it('should use process.env config when no config is given.', async () => {
@@ -42,19 +42,19 @@ describe('valid env vars', () => {
     );
   });
 
-  it('should set an absolute path for SNAPSHOTS_DIRECTORY, from a relative directory.', async () => {
+  it('should set an absolute path for snapshotsDirectory, from a relative directory.', async () => {
     const p = new Prerenderer(initialConfig);
     await p.initialize();
 
     assert.equal(
       p.getConfig().getSnapshotsDirectory(),
-      join(process.cwd(), initialConfig.SNAPSHOTS_DIRECTORY),
+      join(process.cwd(), initialConfig.snapshotsDirectory),
     );
   });
 
-  it('should keep an absolute path for SNAPSHOTS_DIRECTORY, from an absolute directory.', async () => {
+  it('should keep an absolute path for snapshotsDirectory, from an absolute directory.', async () => {
     const config = Object.assign({}, initialConfig, {
-      SNAPSHOTS_DIRECTORY: join(process.cwd(), 'test', 'tmp', uuidv4()),
+      snapshotsDirectory: join(process.cwd(), 'test', 'tmp', uuidv4()),
     });
 
     const p = new Prerenderer(config);
@@ -62,13 +62,13 @@ describe('valid env vars', () => {
 
     assert.equal(
       p.getConfig().getSnapshotsDirectory(),
-      config.SNAPSHOTS_DIRECTORY,
+      config.snapshotsDirectory,
     );
   });
 
-  it('should create a directory for SNAPSHOTS_DIRECTORY.', async () => {
+  it('should create a directory for snapshotsDirectory.', async () => {
     const config = Object.assign({}, initialConfig, {
-      SNAPSHOTS_DIRECTORY: join('test', 'tmp', uuidv4()),
+      snapshotsDirectory: join('test', 'tmp', uuidv4()),
     });
 
     const p = new Prerenderer(config);
@@ -77,10 +77,10 @@ describe('valid env vars', () => {
     assert.isOk(await pathExists(p.getConfig().getSnapshotsDirectory()));
   });
 
-  it('should not create a directory for SNAPSHOTS_DIRECTORY when SNAPSHOTS_DRIVER is s3.', async () => {
+  it('should not create a directory for snapshotsDirectory when snapshotsDriver is s3.', async () => {
     const config = Object.assign({}, initialConfig, {
-      SNAPSHOTS_DIRECTORY: join('test', 'tmp', uuidv4()),
-      SNAPSHOTS_DRIVER: 's3',
+      snapshotsDirectory: join('test', 'tmp', uuidv4()),
+      snapshotsDriver: 's3',
     });
 
     const p = new Prerenderer(config);
@@ -89,19 +89,19 @@ describe('valid env vars', () => {
     assert.isNotOk(await pathExists(p.getConfig().getSnapshotsDirectory()));
   });
 
-  it('should set an absolute path for PRERENDERER_LOG_FILE, from a relative directory.', async () => {
+  it('should set an absolute path for prerendererLogFile, from a relative directory.', async () => {
     const p = new Prerenderer(initialConfig);
     await p.initialize();
 
     assert.equal(
       p.getConfig().getPrerendererLogFile(),
-      join(process.cwd(), initialConfig.PRERENDERER_LOG_FILE),
+      join(process.cwd(), initialConfig.prerendererLogFile),
     );
   });
 
-  it('should keep an absolute path for PRERENDERER_LOG_FILE, from an absolute directory.', async () => {
+  it('should keep an absolute path for prerendererLogFile, from an absolute directory.', async () => {
     const config = Object.assign({}, initialConfig, {
-      PRERENDERER_LOG_FILE: join(
+      prerendererLogFile: join(
         process.cwd(),
         'test',
         'tmp',
@@ -114,13 +114,13 @@ describe('valid env vars', () => {
 
     assert.equal(
       p.getConfig().getPrerendererLogFile(),
-      config.PRERENDERER_LOG_FILE,
+      config.prerendererLogFile,
     );
   });
 
-  it('should create a log file when PRERENDERER_LOG_FILE is set.', async () => {
+  it('should create a log file when prerendererLogFile is set.', async () => {
     const config = Object.assign({}, initialConfig, {
-      PRERENDERER_LOG_FILE: join('test', 'tmp', `${uuidv4()}.log`),
+      prerendererLogFile: join('test', 'tmp', `${uuidv4()}.log`),
     });
 
     const p = new Prerenderer(config);
@@ -129,9 +129,9 @@ describe('valid env vars', () => {
     assert.isOk(existsSync(p.getConfig().getPrerendererLogFile()));
   });
 
-  it('should not create a log file when PRERENDERER_LOG_FILE is not set.', async () => {
+  it('should not create a log file when prerendererLogFile is not set.', async () => {
     const config = Object.assign({}, initialConfig, {
-      PRERENDERER_LOG_FILE: undefined,
+      prerendererLogFile: undefined,
     });
 
     const p = new Prerenderer(config);

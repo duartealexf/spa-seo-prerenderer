@@ -7,39 +7,50 @@ import { MismatchingEnvException } from './Exceptions/MismatchingEnvException';
 import { Filesystem } from './Filesystem/Filesystem';
 
 /**
- * Possible values for SNAPSHOTS_DRIVER environment config.
+ * Correct values for snapshots driver environment config.
  */
 export type SnapshotsDriver = 'fs' | 's3';
 
 /**
- * Possible values for SNAPSHOTS_DIRECTORY environment config.
+ * NodeJS environment config.
  */
-export type NodeEnvironment = 'development' | 'production';
+export type NodeEnvironment = 'development' | 'production' | string | undefined;
 
 /**
  * Interface for needed values as in process.env.
  */
 export interface PrerendererConfigParams {
-  [key: string]: string | undefined;
-  /**
-   * Prerenderer log file location.
-   */
-  PRERENDERER_LOG_FILE?: string;
+  [key: string]: string | string[] | undefined;
 
   /**
-   * Node environment.
+   * NodeJS environment.
    */
-  NODE_ENV: NodeEnvironment;
+  nodeEnv?: NodeEnvironment;
 
   /**
    * Chosen snapshots driver.
    */
-  SNAPSHOTS_DRIVER: SnapshotsDriver;
+  snapshotsDriver: SnapshotsDriver;
 
   /**
    * Directory to store snapshots in.
    */
-  SNAPSHOTS_DIRECTORY: string;
+  snapshotsDirectory: string;
+
+  /**
+   * Prerenderer log file location.
+   */
+  prerendererLogFile?: string;
+
+  /**
+   * Blacklisted paths (do not prerender matching patterns).
+   */
+  prerendererBlacklistedPaths?: string[];
+
+  /**
+   * Blacklist paths (do prerender matching patterns).
+   */
+  prerendererWhitelistedPaths?: string[];
 }
 
 export class Config {
@@ -49,7 +60,7 @@ export class Config {
   private prerendererLogFile = '';
 
   /**
-   * Node environment.
+   * NodeJS environment.
    */
   private nodeEnvironment: NodeEnvironment = 'production';
 
@@ -62,6 +73,16 @@ export class Config {
    * Directory to store snapshots in.
    */
   private snapshotsDirectory = '../snapshots';
+
+  /**
+   * Blacklisted paths (do not prerender matching patterns).
+   */
+  private blacklistedPaths: string[] = [];
+
+  /**
+   * Whitelisted paths (do prerender matching patterns).
+   */
+  private whitelistedPaths: string[] = [];
 
   /**
    * Values as in process.env.
@@ -77,10 +98,10 @@ export class Config {
     dotenv.config();
 
     this.processEnv = {
-      PRERENDERER_LOG_FILE: process.env.PRERENDERER_LOG_FILE || '',
-      NODE_ENV: process.env.NODE_ENV || 'production',
-      SNAPSHOTS_DRIVER: process.env.SNAPSHOTS_DRIVER || 'fs',
-      SNAPSHOTS_DIRECTORY: process.env.SNAPSHOTS_DIRECTORY || '../snapshots',
+      nodeEnv: process.env.NODE_ENV || 'production',
+      snapshotsDriver: process.env.SNAPSHOTS_DRIVER || 'fs',
+      snapshotsDirectory: process.env.SNAPSHOTS_DIRECTORY || '../snapshots',
+      prerendererLogFile: process.env.PRERENDERER_LOG_FILE || '',
       ...config,
     };
   }
@@ -101,10 +122,10 @@ export class Config {
    * Check that all required configuration is set.
    */
   private checkRequiredConfig(): void {
-    ['NODE_ENV', 'SNAPSHOTS_DRIVER', 'SNAPSHOTS_DIRECTORY'].forEach((env) => {
+    ['nodeEnv', 'snapshotsDriver', 'snapshotsDirectory'].forEach((env) => {
       if (
-        !this.processEnv[env]
-        || (typeof this.processEnv[env] === 'string' && !(this.processEnv[env] as string).length)
+        !this.processEnv[env] ||
+        (typeof this.processEnv[env] === 'string' && !(this.processEnv[env] as string).length)
       ) {
         throw new MissingEnvException(env);
       }
@@ -115,15 +136,15 @@ export class Config {
    * Initialize snapshots configuration.
    */
   private async initSnapshotConfig(): Promise<void> {
-    const snapshotsDriver: SnapshotsDriver = this.processEnv.SNAPSHOTS_DRIVER as SnapshotsDriver;
-    let snapshotsDirectory: string = this.processEnv.SNAPSHOTS_DIRECTORY;
+    const snapshotsDriver: SnapshotsDriver = this.processEnv.snapshotsDriver as SnapshotsDriver;
+    let snapshotsDirectory: string = this.processEnv.snapshotsDirectory;
 
     const correctDrivers = ['fs', 's3'];
 
     if (!correctDrivers.includes(snapshotsDriver)) {
       throw new MismatchingEnvException(
-        'SNAPSHOTS_DRIVER',
-        this.processEnv.NODE_ENV,
+        'snapshotsDriver',
+        this.processEnv.nodeEnv as string,
         correctDrivers,
       );
     }
@@ -131,7 +152,7 @@ export class Config {
     if (snapshotsDriver === 's3') {
       if (/^\.|^\//.test(snapshotsDirectory)) {
         throw new InvalidEnvException(
-          "SNAPSHOTS_DIRECTORY cannot start with '.' or '/' when SNAPSHOTS_DRIVER is 's3'. Adjust it to choose to a valid relative directory in s3.",
+          "snapshotsDirectory cannot start with '.' or '/' when snapshotsDriver is 's3'. Adjust it to choose to a valid relative directory in s3.",
         );
       }
     } else {
@@ -158,16 +179,16 @@ export class Config {
    * Initialize logging configuration.
    */
   private async initLoggingConfig(): Promise<void> {
-    if (!this.processEnv.PRERENDERER_LOG_FILE) {
+    if (!this.processEnv.prerendererLogFile) {
       return;
     }
 
     /**
      * Make the directory absolute.
      */
-    const logFile = this.processEnv.PRERENDERER_LOG_FILE.startsWith('/')
-      ? this.processEnv.PRERENDERER_LOG_FILE
-      : join(process.cwd(), this.processEnv.PRERENDERER_LOG_FILE);
+    const logFile = this.processEnv.prerendererLogFile.startsWith('/')
+      ? this.processEnv.prerendererLogFile
+      : join(process.cwd(), this.processEnv.prerendererLogFile);
 
     /**
      * Ensure file is exists and is writeable.
@@ -181,15 +202,7 @@ export class Config {
    * Initialize other environment configurations.
    */
   private initEnvironmentConfig(): void {
-    const nodeEnv: NodeEnvironment = this.processEnv.NODE_ENV as NodeEnvironment;
-
-    const correctEnvironments = ['production', 'development'];
-
-    if (!correctEnvironments.includes(nodeEnv)) {
-      throw new MismatchingEnvException('NODE_ENV', this.processEnv.NODE_ENV, correctEnvironments);
-    }
-
-    this.nodeEnvironment = nodeEnv;
+    this.nodeEnvironment = this.processEnv.nodeEnv;
   }
 
   /**
@@ -225,6 +238,20 @@ export class Config {
    */
   public getPrerendererLogFile(): string {
     return this.prerendererLogFile;
+  }
+
+  /**
+   * Get blacklisted paths.
+   */
+  public getBlacklistedPaths(): string[] {
+    return this.blacklistedPaths;
+  }
+
+  /**
+   * Get whitelisted paths.
+   */
+  public getWhitelistedPaths(): string[] {
+    return this.whitelistedPaths;
   }
 
   /**

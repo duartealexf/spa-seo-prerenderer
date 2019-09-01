@@ -11,10 +11,10 @@ describe('log errors', () => {
    * @type {import('../../../dist/types/Config').PrerendererConfigParams}
    */
   const initialConfig = {
-    NODE_ENV: 'development',
-    PRERENDERER_LOG_FILE: join('test', 'tmp', `${uuidv4()}.log`),
-    SNAPSHOTS_DIRECTORY: join('test', 'tmp', uuidv4()),
-    SNAPSHOTS_DRIVER: 'fs',
+    nodeEnv: 'development',
+    prerendererLogFile: join('test', 'tmp', `${uuidv4()}.log`),
+    snapshotsDirectory: join('test', 'tmp', uuidv4()),
+    snapshotsDriver: 'fs',
   };
 
   it('should close log write stream if it cannot write to log file.', async () => {

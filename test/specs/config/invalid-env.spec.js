@@ -16,15 +16,15 @@ describe('invalid env vars', () => {
    * @type {import('../../../dist/types/Config').PrerendererConfigParams}
    */
   const initialConfig = {
-    NODE_ENV: 'development',
-    PRERENDERER_LOG_FILE: join('test', 'tmp', `${uuidv4()}.log`),
-    SNAPSHOTS_DIRECTORY: join('test', 'tmp', uuidv4()),
-    SNAPSHOTS_DRIVER: 'fs',
+    nodeEnv: 'development',
+    prerendererLogFile: join('test', 'tmp', `${uuidv4()}.log`),
+    snapshotsDirectory: join('test', 'tmp', uuidv4()),
+    snapshotsDriver: 'fs',
   };
 
-  it('should throw an error when SNAPSHOTS_DRIVER is incorrect.', async () => {
+  it('should throw an error when snapshotsDriver is incorrect.', async () => {
     const buggedConfig = Object.assign({}, initialConfig, {
-      SNAPSHOTS_DRIVER: '123456',
+      snapshotsDriver: '123456',
     });
 
     try {
@@ -33,15 +33,15 @@ describe('invalid env vars', () => {
       assert.ok(false);
     } catch (e) {
       assert.instanceOf(e, MismatchingEnvException);
-      assert.include(e.message, 'SNAPSHOTS_DRIVER');
+      assert.include(e.message, 'snapshotsDriver');
     }
   });
 
-  it('should throw an error when SNAPSHOTS_DRIVER is not ok for s3.', async () => {
+  it('should throw an error when snapshotsDriver is not ok for s3.', async () => {
     try {
       const buggedConfig = Object.assign({}, initialConfig, {
-        SNAPSHOTS_DIRECTORY: '/test/path',
-        SNAPSHOTS_DRIVER: 's3',
+        snapshotsDirectory: '/test/path',
+        snapshotsDriver: 's3',
       });
 
       const p = new Prerenderer(buggedConfig);
@@ -49,14 +49,14 @@ describe('invalid env vars', () => {
       assert.ok(false);
     } catch (e) {
       assert.instanceOf(e, InvalidEnvException);
-      assert.include(e.message, 'SNAPSHOTS_DIRECTORY');
-      assert.include(e.message, "when SNAPSHOTS_DRIVER is 's3'");
+      assert.include(e.message, 'snapshotsDirectory');
+      assert.include(e.message, "when snapshotsDriver is 's3'");
     }
 
     try {
       const buggedConfig = Object.assign({}, initialConfig, {
-        SNAPSHOTS_DIRECTORY: './test/path',
-        SNAPSHOTS_DRIVER: 's3',
+        snapshotsDirectory: './test/path',
+        snapshotsDriver: 's3',
       });
 
       const p = new Prerenderer(buggedConfig);
@@ -64,8 +64,8 @@ describe('invalid env vars', () => {
       assert.ok(false);
     } catch (e) {
       assert.instanceOf(e, InvalidEnvException);
-      assert.include(e.message, 'SNAPSHOTS_DIRECTORY');
-      assert.include(e.message, "when SNAPSHOTS_DRIVER is 's3'");
+      assert.include(e.message, 'snapshotsDirectory');
+      assert.include(e.message, "when snapshotsDriver is 's3'");
     }
   });
 });

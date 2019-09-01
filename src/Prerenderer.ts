@@ -289,7 +289,7 @@ export class Prerenderer {
    * Get whether given request should be prerendered.
    * @param request NodeJS request.
    */
-  public static async shouldPrerender(request: Request): Promise<boolean> {
+  public async shouldPrerender(request: Request): Promise<boolean> {
     const userAgent = request.headers['user-agent'];
 
     if (!userAgent) {
