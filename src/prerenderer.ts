@@ -1,9 +1,11 @@
 import puppeteer, { Browser, Response } from 'puppeteer';
 import { Request } from 'express';
 
-import { Config, PrerendererConfigParams } from './config';
+import { extname } from 'path';
+import { Config } from './config';
 import { Logger } from './logger';
 import { PrerendererNotReadyException } from './exceptions/prerenderer-not-ready-exception';
+import { PrerendererConfigParams } from './config/defaults';
 
 interface PrerendererResponse {
   /**
@@ -112,6 +114,70 @@ export class Prerenderer {
     }
   }
 
+  /**
+   * Get response from last call to prerender().
+   */
+  public getLastResponse(): PrerendererResponse | undefined {
+    return this.lastResponse;
+  }
+
+  /**
+   * Get whether given request should be prerendered, considering request
+   * method, blacklisted and whitelisted user agents, extensions and paths.
+   * @param request NodeJS request.
+   */
+  public async shouldPrerender(request: Request): Promise<boolean> {
+    /**
+     * If it is not valid url, don't prerender.
+     */
+    if (!/^https?:\/\//.test(request.url)) {
+      return false;
+    }
+
+    /**
+     * Only prerender GET requests.
+     */
+    if (request.method !== 'GET') {
+      return false;
+    }
+
+    const userAgent = request.headers['user-agent'];
+
+    /**
+     * No user agent, don't prerender.
+     */
+    if (!userAgent) {
+      return false;
+    }
+
+    /**
+     * If it is not a known bot user agent, don't prerender.
+     */
+    if (!this.config.getBotUserAgents().includes(userAgent.toLowerCase())) {
+      return false;
+    }
+
+    // TODO: is this the actual path and extension?
+    const path = request.originalUrl;
+    const extension = extname(path);
+
+    /**
+     * If it is not an extension that can prerender, don't prerender.
+     */
+    if (!this.config.getPrerenderableExtensions().includes(extension.toLowerCase())) {
+      return false;
+    }
+
+    /**
+     * If it is not a prerenderable path, don't prerender.
+     */
+    if (!this.config.getPrerenderablePathRegExps().some((r) => r.test(path))) {
+      return false;
+    }
+
+    return true;
+  }
+
   public async prerender(request: Request): Promise<void> {
     if (!this.browser) {
       throw new PrerendererNotReadyException(
@@ -180,7 +246,7 @@ export class Prerenderer {
       try {
         // Navigate to page. Wait until there are no oustanding network requests.
         response = await page.goto(url, {
-          timeout: Config.getTimeout(),
+          timeout: this.config.getTimeout(),
           waitUntil: 'networkidle0',
         });
       } catch (e) {
@@ -264,58 +330,5 @@ export class Prerenderer {
       // console.error(err);
       throw new Error('page.goto/waitForSelector timed out.');
     }
-  }
-
-  /**
-   * Get response from last call to prerender().
-   */
-  public getLastResponse(): PrerendererResponse | undefined {
-    return this.lastResponse;
-  }
-
-  /**
-   * Get whether given URL is a valid URL to prerender.
-   * @param url URL to validate.
-   */
-  public static isValidURL(url: string): boolean {
-    if (!url.match(/^http/)) {
-      return true;
-    }
-
-    return false;
-  }
-
-  /**
-   * Get whether given request should be prerendered, considering request
-   * method, blacklisted and whitelisted user agents, extensions and paths.
-   * @param request NodeJS request.
-   */
-  public async shouldPrerender(request: Request): Promise<boolean> {
-    if (request.method !== 'GET') {
-      return false;
-    }
-
-    const userAgent = request.headers['user-agent'];
-
-    if (!userAgent) {
-      return false;
-    }
-
-    const path = request.originalUrl;
-
-    // TODO: parse url and get only extension
-    if (Config.getIgnoredExtensions().includes(request.url)) {
-      return false;
-    }
-
-    // TODO: add whitelist check
-    // TODO: add blacklist check
-
-    if (Config.getBotUserAgents().includes(userAgent.toLowerCase())
-    ) {
-      return true;
-    }
-
-    return false;
   }
 }
