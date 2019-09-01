@@ -7,7 +7,7 @@ import { PrerendererNotReadyException } from './Exceptions/PrerendererNotReadyEx
 
 export class Logger {
   private static readonly LOG_LEVELS = [
-    'emer',
+    'emerg',
     'alert',
     'crit',
     'error',
@@ -70,7 +70,6 @@ export class Logger {
         if (this.logFile) {
           this.logFile.close();
         }
-        delete this.logFile;
         this.error(`Error writing to log file: ${error.message}`, 'logger');
       });
     }
@@ -145,8 +144,8 @@ export class Logger {
 
     const formattedMessage = Logger.formatMessage(logLevel, message, context);
 
-    if (this.logFile) {
-      this.logFile.write(formattedMessage);
+    if (this.logFile && this.logFile.writable) {
+      this.logFile.write(`${formattedMessage}\n`);
     }
 
     if (logLevel <= Logger.LOG_LEVEL_ERROR) {
