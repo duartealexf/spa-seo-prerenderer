@@ -1,4 +1,3 @@
-import dotenv from 'dotenv';
 import { join } from 'path';
 
 import { MissingEnvException } from './Exceptions/MissingEnvException';
@@ -20,44 +19,180 @@ export type NodeEnvironment = 'development' | 'production' | string | undefined;
  * Interface for needed values as in process.env.
  */
 export interface PrerendererConfigParams {
-  [key: string]: string | string[] | undefined;
+  [key: string]: number | string | string[] | RegExp[] | undefined;
 
   /**
    * NodeJS environment.
+   * @default 'production'
    */
   nodeEnv?: NodeEnvironment;
 
   /**
    * Chosen snapshots driver.
+   * @default 'fs'
    */
   snapshotsDriver: SnapshotsDriver;
 
   /**
    * Directory to store snapshots in.
+   * @default '../snapshots'
    */
   snapshotsDirectory: string;
 
   /**
-   * Prerenderer log file location.
+   * Prerenderer log file location. Not specifying any will make it not log to a file.
+   * @default ''
    */
   prerendererLogFile?: string;
 
   /**
-   * Blacklisted paths (do not prerender matching patterns).
+   * Array of path RegExps that, when matched
+   * to request path, will activate Prerenderer.
+   * @default [new RegExp('.*')]
    */
-  prerendererBlacklistedPaths?: string[];
+  prerenderablePathRegExps: RegExp[];
 
   /**
-   * Blacklist paths (do prerender matching patterns).
+   * Case insensitive list of extensions that, when matched
+   * to request path, will activate Prerenderer.
+   * @default DEFAULT_PRERENDERABLE_EXTENSIONS
    */
-  prerendererWhitelistedPaths?: string[];
+  prerenderableExtensions?: string[];
+
+  /**
+   * Case insensitive list of user agents that, when matched
+   * to request user agent, will activate Prerenderer.
+   * @default DEFAULT_BOT_USER_AGENTS
+   */
+  botUserAgents?: string[];
+
+  /**
+   * Puppeteer's timeout (in ms).
+   * @default 10000
+   */
+  timeout?: number;
+
+  /**
+   * Case insensitive list with URL parts that Puppeteer will exclusively allow the rendering
+   * page to make requests to. Defaults to an empty array. If any URL part is added to this
+   * list, Puppeteer will only consider this whitelist and ignore blacklistedRequestURLs.
+   * @default []
+   */
+  whitelistedRequestURLs?: string[];
+
+  /**
+   * Case insensitive list with URL parts that Puppeteer will disallow the rendering page to
+   * make requests to. Useful for disallowing the prerendered page to make network requests
+   * to, e.g. services like Google Analytics, GTM, chat services, Facebook, Hubspot, etc.
+   * @default DEFAULT_BLACKLISTED_REQUEST_URLS
+   */
+  blacklistedRequestURLs?: string[];
 }
+
+export const DEFAULT_BOT_USER_AGENTS = [
+  'googlebot',
+  'yahoo! slurp',
+  'bingbot',
+  'yandex',
+  'baiduspider',
+  'facebookexternalhit',
+  'twitterbot',
+  'rogerbot',
+  'linkedinbot',
+  'embedly',
+  'quora link preview',
+  'showyoubot',
+  'outbrain',
+  'pinterest/0.',
+  'developers.google.com/+/web/snippet',
+  'slackbot',
+  'vkshare',
+  'w3c_validator',
+  'redditbot',
+  'applebot',
+  'whatsapp',
+  'flipboard',
+  'tumblr',
+  'bitlybot',
+  'skypeuripreview',
+  'nuzzel',
+  'discordbot',
+  'google page speed',
+  'qwantify',
+  'pinterestbot',
+  'bitrix link preview',
+  'xing-contenttabreceiver',
+  'chrome-lighthouse',
+  'x-bufferbot',
+];
+
+/**
+ * Some of this from https://www.thirdpartyweb.today
+ */
+export const DEFAULT_BLACKLISTED_REQUEST_URLS = [
+  'doubleclick.net', // Google
+  'adservice.google', // Google
+  '.googleadservices.', // Google
+  'google-analytics', // Google
+  'google.com/pagead', // Google
+  'ga.js', // Google
+  'gtm.js', // Google
+  '.googleapis.', // Google
+  'connect.facebook.net', // Facebook
+  '.facebook.com/tr', // Facebook
+  '.addthis.com', // Twitter
+  'static.ads-twitter.', // Twitter
+  '/scevent.', // Snapchat
+  '.zdassets.', // ZenDesk
+  'assets.zendesk.com', // ZenDesk
+  '.collect.igodigital.', // Salesforce
+
+  '/collect.js', // common tracking pattern
+  '/analytics.js', // common tracking pattern
+  '/tracking.js', // common tracking pattern
+  '/collect.min.js', // common tracking pattern
+  '/analytics.min.js', // common tracking pattern
+  '/tracking.min.js', // common tracking pattern
+
+  '.tawk.to', // Tawk
+  '.zopim.', // Zopim
+  '.yandex.', // Yandex
+  '.luckyorange.', // Lucky Orange
+  '.criteo.', // Criteo
+  '.hotjar.', // Hotjar
+  '.onesignal.', // OneSignal
+  '.tiqcdn.', // Tealium
+  '.intercom.com', // Intercom
+  '.lunametrics.', // Bounteous
+  '.calltrackingmetrics.', // Call Tracking Metrics
+
+  // Less common and low impact ones.
+  // '.bounteous.', // Bounteous
+  // 'callsumo.com', // Sumo
+  // 'sumo.com', // Sumo
+  // 'media.net', // Media.net
+  // '.pubmine.', // Pubmine
+  // '.moatads.', // Moat Ads
+  // '.histats.', // Histats
+  // '.exoclick.', // Exoclick
+  // '.pubmatic.', // Pubmatic
+  // '.linksynergy.', // Linksynergy
+  // '.scorecardresearch.', // Score Card Research
+  // '.gemius.', // Gemius
+  // '.outbrain.', // Outbrain
+];
+
+export const DEFAULT_PRERENDERABLE_EXTENSIONS = [
+  '',
+  '.html',
+  '.php',
+];
 
 export class Config {
   /**
-   * Prerenderer log file location.
+   * Values as in process.env.
    */
-  private prerendererLogFile = '';
+  private config: PrerendererConfigParams;
 
   /**
    * NodeJS environment.
@@ -75,19 +210,46 @@ export class Config {
   private snapshotsDirectory = '../snapshots';
 
   /**
-   * Blacklisted paths (do not prerender matching patterns).
+   * Prerenderer log file location.
    */
-  private blacklistedPaths: string[] = [];
+  private prerendererLogFile = '';
 
   /**
-   * Whitelisted paths (do prerender matching patterns).
+   * Array of path RegExps that, when matched
+   * to request path, will activate Prerenderer.
    */
-  private whitelistedPaths: string[] = [];
+  private prerenderablePathRegExps: RegExp[] = [/.*/];
 
   /**
-   * Values as in process.env.
+   * Case insensitive list of extensions that, when matched
+   * to request path, will activate Prerenderer.
    */
-  private processEnv: PrerendererConfigParams;
+  private prerenderableExtensions: string[] = DEFAULT_PRERENDERABLE_EXTENSIONS;
+
+  /**
+   * Case insensitive list of user agents that, when matched
+   * to request user agent, will activate Prerenderer.
+   */
+  private botUserAgents: string[] = DEFAULT_BOT_USER_AGENTS;
+
+  /**
+   * Puppeteer's timeout (in ms).
+   */
+  private timeout = 60000;
+
+  /**
+   * Case insensitive list with URL parts that Puppeteer will exclusively allow the rendering
+   * page to make requests to. Defaults to an empty array. If any URL part is added to this
+   * list, Puppeteer will only consider this whitelist and ignore blacklistedRequestURLs.
+   */
+  private whitelistedRequestURLs: string[] = [];
+
+  /**
+   * Case insensitive list with URL parts that Puppeteer will disallow the rendering page to
+   * make requests to. Useful for disallowing the prerendered page to make network requests
+   * to, e.g. services like Google Analytics, GTM, chat services, Facebook, Hubspot, etc.
+   */
+  private blacklistedRequestURLs: string[] = DEFAULT_BLACKLISTED_REQUEST_URLS;
 
   /**
    * Whether config has been initialized.
@@ -95,9 +257,7 @@ export class Config {
   private initialized = false;
 
   constructor(config: PrerendererConfigParams) {
-    dotenv.config();
-
-    this.processEnv = {
+    this.config = {
       nodeEnv: process.env.NODE_ENV || 'production',
       snapshotsDriver: process.env.SNAPSHOTS_DRIVER || 'fs',
       snapshotsDirectory: process.env.SNAPSHOTS_DIRECTORY || '../snapshots',
@@ -124,8 +284,8 @@ export class Config {
   private checkRequiredConfig(): void {
     ['nodeEnv', 'snapshotsDriver', 'snapshotsDirectory'].forEach((env) => {
       if (
-        !this.processEnv[env] ||
-        (typeof this.processEnv[env] === 'string' && !(this.processEnv[env] as string).length)
+        !this.config[env] ||
+        (typeof this.config[env] === 'string' && !(this.config[env] as string).length)
       ) {
         throw new MissingEnvException(env);
       }
@@ -136,15 +296,15 @@ export class Config {
    * Initialize snapshots configuration.
    */
   private async initSnapshotConfig(): Promise<void> {
-    const snapshotsDriver: SnapshotsDriver = this.processEnv.snapshotsDriver as SnapshotsDriver;
-    let snapshotsDirectory: string = this.processEnv.snapshotsDirectory;
+    const snapshotsDriver: SnapshotsDriver = this.config.snapshotsDriver as SnapshotsDriver;
+    let snapshotsDirectory: string = this.config.snapshotsDirectory;
 
     const correctDrivers = ['fs', 's3'];
 
     if (!correctDrivers.includes(snapshotsDriver)) {
       throw new MismatchingEnvException(
         'snapshotsDriver',
-        this.processEnv.nodeEnv as string,
+        this.config.nodeEnv as string,
         correctDrivers,
       );
     }
@@ -179,16 +339,16 @@ export class Config {
    * Initialize logging configuration.
    */
   private async initLoggingConfig(): Promise<void> {
-    if (!this.processEnv.prerendererLogFile) {
+    if (!this.config.prerendererLogFile) {
       return;
     }
 
     /**
      * Make the directory absolute.
      */
-    const logFile = this.processEnv.prerendererLogFile.startsWith('/')
-      ? this.processEnv.prerendererLogFile
-      : join(process.cwd(), this.processEnv.prerendererLogFile);
+    const logFile = this.config.prerendererLogFile.startsWith('/')
+      ? this.config.prerendererLogFile
+      : join(process.cwd(), this.config.prerendererLogFile);
 
     /**
      * Ensure file is exists and is writeable.
@@ -202,7 +362,7 @@ export class Config {
    * Initialize other environment configurations.
    */
   private initEnvironmentConfig(): void {
-    this.nodeEnvironment = this.processEnv.nodeEnv;
+    this.nodeEnvironment = this.config.nodeEnv;
   }
 
   /**
@@ -241,121 +401,44 @@ export class Config {
   }
 
   /**
-   * Get blacklisted paths.
+   * Get path RegExps that Prerenderer should handle.
    */
-  public getBlacklistedPaths(): string[] {
-    return this.blacklistedPaths;
+  public getPrerenderablePathRegExps(): RegExp[] {
+    return this.prerenderablePathRegExps;
   }
 
   /**
-   * Get whitelisted paths.
+   * Get extensions list that Prerenderer should handle.
    */
-  public getWhitelistedPaths(): string[] {
-    return this.whitelistedPaths;
+  public getPrerenderableExtensions(): string[] {
+    return this.prerenderableExtensions;
   }
 
   /**
-   * TODO: document me.
+   * Get configured Bot user agents.
    */
-  public static getTimeout(): number {
-    return 10000;
+  public getBotUserAgents(): string[] {
+    return this.botUserAgents;
   }
 
   /**
-   * TODO: document me.
+   * Get configured Puppeteer timeout.
    */
-  public static getBlacklistedRequestURLRegExps(): RegExp[] {
-    return [/www\.google-analytics\.com/, /\/gtag\/js/, /ga\.js/, /analytics\.js/];
-  }
-
-  // TODO: compare this list and extensions list with the one in
-  // https://gist.github.com/thoop/8072354
-  public static getBotUserAgents(): string[] {
-    return [
-      'googlebot',
-      'yahoo! slurp',
-      'bingbot',
-      'yandex',
-      'baiduspider',
-      'facebookexternalhit',
-      'twitterbot',
-      'rogerbot',
-      'linkedinbot',
-      'embedly',
-      'quora link preview',
-      'showyoubot',
-      'outbrain',
-      'pinterest/0.',
-      'developers.google.com/+/web/snippet',
-      'slackbot',
-      'vkshare',
-      'w3c_validator',
-      'redditbot',
-      'applebot',
-      'whatsapp',
-      'flipboard',
-      'tumblr',
-      'bitlybot',
-      'skypeuripreview',
-      'nuzzel',
-      'discordbot',
-      'google page speed',
-      'qwantify',
-      'pinterestbot',
-      'bitrix link preview',
-      'xing-contenttabreceiver',
-      'chrome-lighthouse',
-      'x-bufferbot',
-    ];
+  public getTimeout(): number {
+    return this.timeout;
   }
 
   /**
-   * TODO: document me.
+   * Get whitelisted URL parts for Puppeteer network requests.
    */
-  public static getIgnoredExtensions(): string[] {
-    return [
-      '.js',
-      '.css',
-      '.xml',
-      '.less',
-      '.png',
-      '.jpg',
-      '.jpeg',
-      '.gif',
-      '.pdf',
-      '.doc',
-      '.txt',
-      '.ico',
-      '.rss',
-      '.zip',
-      '.mp3',
-      '.rar',
-      '.exe',
-      '.wmv',
-      '.doc',
-      '.avi',
-      '.ppt',
-      '.mpg',
-      '.mpeg',
-      '.tif',
-      '.wav',
-      '.mov',
-      '.psd',
-      '.ai',
-      '.xls',
-      '.mp4',
-      '.m4a',
-      '.swf',
-      '.dat',
-      '.dmg',
-      '.iso',
-      '.flv',
-      '.m4v',
-      '.torrent',
-      '.woff',
-      '.ttf',
-      '.svg',
-      '.webmanifest',
-    ];
+  public getWhitelistedRequestURLs(): string[] {
+    return this.whitelistedRequestURLs;
+  }
+
+  /**
+   * Get blacklisted URL parts for Puppeteer network requests.
+   */
+  public getBlacklistedRequestURLs(): string[] {
+    return this.blacklistedRequestURLs;
   }
 }

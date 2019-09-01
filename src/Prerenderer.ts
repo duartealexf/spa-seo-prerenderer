@@ -286,15 +286,22 @@ export class Prerenderer {
   }
 
   /**
-   * Get whether given request should be prerendered.
+   * Get whether given request should be prerendered, considering request
+   * method, blacklisted and whitelisted user agents, extensions and paths.
    * @param request NodeJS request.
    */
   public async shouldPrerender(request: Request): Promise<boolean> {
+    if (request.method !== 'GET') {
+      return false;
+    }
+
     const userAgent = request.headers['user-agent'];
 
     if (!userAgent) {
       return false;
     }
+
+    const path = request.originalUrl;
 
     // TODO: parse url and get only extension
     if (Config.getIgnoredExtensions().includes(request.url)) {
@@ -304,9 +311,7 @@ export class Prerenderer {
     // TODO: add whitelist check
     // TODO: add blacklist check
 
-    if (
-      request.method === 'GET'
-      && Config.getBotUserAgents().includes(userAgent.toLowerCase())
+    if (Config.getBotUserAgents().includes(userAgent.toLowerCase())
     ) {
       return true;
     }
