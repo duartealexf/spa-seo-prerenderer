@@ -17,7 +17,7 @@ export class Config {
   /**
    * Values as in process.env.
    */
-  private config: PrerendererConfigParams;
+  private constructSettings: PrerendererConfigParams;
 
   /**
    * NodeJS environment.
@@ -82,7 +82,7 @@ export class Config {
   private initialized = false;
 
   constructor(config: PrerendererConfigParams) {
-    this.config = {
+    this.constructSettings = {
       nodeEnv: process.env.NODE_ENV || 'production',
       snapshotsDriver: process.env.SNAPSHOTS_DRIVER || 'fs',
       snapshotsDirectory: process.env.SNAPSHOTS_DIRECTORY || '../snapshots',
@@ -91,18 +91,7 @@ export class Config {
     };
 
     this.checkRequiredConfig();
-    // this.validateConfigValues();
-
-    this.nodeEnvironment = this.config.nodeEnv;
-    // this.prerenderablePathRegExps = this.config.prerenderablePathRegExps;
-    // this.prerenderableExtensions
-    // this.botUserAgents
-    // this.timeout
-    // this.whitelistedRequestURLs
-    // const blacklistedRequestURLs =
-    // if (Array.isArray(config.whitelistedRequestURLs) && config.whitelistedRequestURLs.length) {
-
-    // };
+    this.validateAndAssignConfigValues();
   }
 
   /**
@@ -119,34 +108,101 @@ export class Config {
    * Check that all required configuration is set.
    */
   private checkRequiredConfig(): void {
+    const c = this.constructSettings;
+
     ['nodeEnv', 'snapshotsDriver', 'snapshotsDirectory'].forEach((env) => {
-      if (
-        !this.config[env] ||
-        (typeof this.config[env] === 'string' && !(this.config[env] as string).length)
-      ) {
+      if (!c[env] || (typeof c[env] === 'string' && !(c[env] as string).length)) {
         throw new MissingEnvException(env);
       }
     });
   }
 
   /**
-   * Validate that values in config are valid.
+   * Assign values from construct settings to this config instance.
    */
-  // private validateConfigValues(): void {}
+  private validateAndAssignConfigValues(): void {
+    const c = this.constructSettings;
+
+    if (c.nodeEnv && c.nodeEnv.length) {
+      this.nodeEnvironment = c.nodeEnv;
+    }
+
+    if (c.prerenderablePathRegExps) {
+      const regexps = c.prerenderablePathRegExps as RegExp[];
+
+      if (!Array.isArray(regexps) || regexps.some((v) => !(v instanceof RegExp))) {
+        throw new InvalidConfigException(
+          'prerenderablePathRegExps given in constructor must be of type RegExp[]!',
+        );
+      }
+
+      this.prerenderablePathRegExps = regexps;
+    }
+
+    if (c.prerenderableExtensions) {
+      const extensions = c.prerenderableExtensions as string[];
+
+      if (!Array.isArray(extensions) || extensions.some((v) => typeof v !== 'string')) {
+        throw new InvalidConfigException(
+          'prerenderableExtensions given in constructor must be of type string[]!',
+        );
+      }
+
+      this.prerenderableExtensions = extensions;
+    }
+
+    if (c.botUserAgents) {
+      const userAgents = c.botUserAgents as string[];
+
+      if (!Array.isArray(userAgents) || userAgents.some((v) => typeof v !== 'string')) {
+        throw new InvalidConfigException(
+          'botUserAgents given in constructor must be of type string[]!',
+        );
+      }
+
+      this.botUserAgents = userAgents.map((u) => u.toLowerCase());
+    }
+
+    if (typeof c.timeout !== 'undefined') {
+      const timeout = c.timeout as number;
+
+      if (typeof timeout !== 'number' || timeout <= 0) {
+        throw new InvalidConfigException(
+          'timeout given in constructor must be a number greater than zero!',
+        );
+      }
+
+      this.timeout = timeout;
+    }
+
+    if (c.whitelistedRequestURLs) {
+      const whitelist = c.whitelistedRequestURLs as string[];
+
+      if (!Array.isArray(whitelist) || whitelist.some((v) => typeof v !== 'string')) {
+        throw new InvalidConfigException(
+          'whitelistedRequestURLs given in constructor must be of type string[]!',
+        );
+      }
+
+      this.whitelistedRequestURLs = whitelist;
+      this.blacklistedRequestURLs = [];
+    }
+  }
 
   /**
    * Initialize snapshots configuration.
    */
   private async initSnapshotConfig(): Promise<void> {
-    const snapshotsDriver: SnapshotsDriver = this.config.snapshotsDriver as SnapshotsDriver;
-    let snapshotsDirectory: string = this.config.snapshotsDirectory;
+    const snapshotsDriver: SnapshotsDriver = this.constructSettings
+      .snapshotsDriver as SnapshotsDriver;
+    let snapshotsDirectory: string = this.constructSettings.snapshotsDirectory;
 
     const correctDrivers = ['fs', 's3'];
 
     if (!correctDrivers.includes(snapshotsDriver)) {
       throw new MismatchingConfigException(
         'snapshotsDriver',
-        this.config.nodeEnv as string,
+        this.constructSettings.nodeEnv as string,
         correctDrivers,
       );
     }
@@ -181,16 +237,16 @@ export class Config {
    * Initialize logging configuration.
    */
   private async initLoggingConfig(): Promise<void> {
-    if (!this.config.prerendererLogFile) {
+    if (!this.constructSettings.prerendererLogFile) {
       return;
     }
 
     /**
      * Make the directory absolute.
      */
-    const logFile = this.config.prerendererLogFile.startsWith('/')
-      ? this.config.prerendererLogFile
-      : join(process.cwd(), this.config.prerendererLogFile);
+    const logFile = this.constructSettings.prerendererLogFile.startsWith('/')
+      ? this.constructSettings.prerendererLogFile
+      : join(process.cwd(), this.constructSettings.prerendererLogFile);
 
     /**
      * Ensure file is exists and is writeable.
