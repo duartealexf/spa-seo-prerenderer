@@ -1,7 +1,7 @@
 /**
- * Exception thrown when an environment variable has an invalid value.
+ * Exception thrown when a config variable has an invalid value.
  */
-export class InvalidEnvException extends Error {
+export class InvalidConfigException extends Error {
   public message: string;
 
   constructor(message: string) {

@@ -1,8 +1,8 @@
 import { join } from 'path';
 
 import { MissingEnvException } from './exceptions/missing-env-exception';
-import { InvalidEnvException } from './exceptions/invalid-env-exception';
-import { MismatchingEnvException } from './exceptions/mismatching-env-exception';
+import { InvalidConfigException } from './exceptions/invalid-config-exception';
+import { MismatchingConfigException } from './exceptions/mismatching-config-exception';
 import { Filesystem } from './filesystem/filesystem';
 import {
   PrerendererConfigParams,
@@ -89,16 +89,28 @@ export class Config {
       prerendererLogFile: process.env.PRERENDERER_LOG_FILE || '',
       ...config,
     };
+
+    this.checkRequiredConfig();
+    // this.validateConfigValues();
+
+    this.nodeEnvironment = this.config.nodeEnv;
+    // this.prerenderablePathRegExps = this.config.prerenderablePathRegExps;
+    // this.prerenderableExtensions
+    // this.botUserAgents
+    // this.timeout
+    // this.whitelistedRequestURLs
+    // const blacklistedRequestURLs =
+    // if (Array.isArray(config.whitelistedRequestURLs) && config.whitelistedRequestURLs.length) {
+
+    // };
   }
 
   /**
    * Initialize configuration, which is required before starting app.
    */
   public async initialize(): Promise<void> {
-    this.checkRequiredConfig();
     await this.initSnapshotConfig();
     await this.initLoggingConfig();
-    this.initEnvironmentConfig();
 
     this.initialized = true;
   }
@@ -118,6 +130,11 @@ export class Config {
   }
 
   /**
+   * Validate that values in config are valid.
+   */
+  // private validateConfigValues(): void {}
+
+  /**
    * Initialize snapshots configuration.
    */
   private async initSnapshotConfig(): Promise<void> {
@@ -127,7 +144,7 @@ export class Config {
     const correctDrivers = ['fs', 's3'];
 
     if (!correctDrivers.includes(snapshotsDriver)) {
-      throw new MismatchingEnvException(
+      throw new MismatchingConfigException(
         'snapshotsDriver',
         this.config.nodeEnv as string,
         correctDrivers,
@@ -136,7 +153,7 @@ export class Config {
 
     if (snapshotsDriver === 's3') {
       if (/^\.|^\//.test(snapshotsDirectory)) {
-        throw new InvalidEnvException(
+        throw new InvalidConfigException(
           "snapshotsDirectory cannot start with '.' or '/' when snapshotsDriver is 's3'. Adjust it to choose to a valid relative directory in s3.",
         );
       }
@@ -181,13 +198,6 @@ export class Config {
     await Filesystem.ensureFile(logFile);
 
     this.prerendererLogFile = logFile;
-  }
-
-  /**
-   * Initialize other environment configurations.
-   */
-  private initEnvironmentConfig(): void {
-    this.nodeEnvironment = this.config.nodeEnv;
   }
 
   /**

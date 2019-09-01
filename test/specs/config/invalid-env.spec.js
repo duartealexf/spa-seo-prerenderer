@@ -5,15 +5,15 @@ const { v4: uuidv4 } = require('uuid');
 
 const { Prerenderer } = require('../../../dist/lib/prerenderer');
 const {
-  InvalidEnvException,
-} = require('../../../dist/lib/exceptions/invalid-env-exception');
+  InvalidConfigException,
+} = require('../../../dist/lib/exceptions/invalid-config-exception');
 const {
-  MismatchingEnvException,
-} = require('../../../dist/lib/exceptions/mismatching-env-exception');
+  MismatchingConfigException,
+} = require('../../../dist/lib/exceptions/mismatching-config-exception');
 
 describe('invalid env vars', () => {
   /**
-   * @type {import('../../../dist/types/Config').PrerendererConfigParams}
+   * @type {import('../../../dist/types/config/defaults').PrerendererConfigParams}
    */
   const initialConfig = {
     nodeEnv: 'development',
@@ -32,7 +32,7 @@ describe('invalid env vars', () => {
       await p.initialize();
       assert.ok(false);
     } catch (e) {
-      assert.instanceOf(e, MismatchingEnvException);
+      assert.instanceOf(e, MismatchingConfigException);
       assert.include(e.message, 'snapshotsDriver');
     }
   });
@@ -48,7 +48,7 @@ describe('invalid env vars', () => {
       await p.initialize();
       assert.ok(false);
     } catch (e) {
-      assert.instanceOf(e, InvalidEnvException);
+      assert.instanceOf(e, InvalidConfigException);
       assert.include(e.message, 'snapshotsDirectory');
       assert.include(e.message, "when snapshotsDriver is 's3'");
     }
@@ -63,7 +63,7 @@ describe('invalid env vars', () => {
       await p.initialize();
       assert.ok(false);
     } catch (e) {
-      assert.instanceOf(e, InvalidEnvException);
+      assert.instanceOf(e, InvalidConfigException);
       assert.include(e.message, 'snapshotsDirectory');
       assert.include(e.message, "when snapshotsDriver is 's3'");
     }

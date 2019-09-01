@@ -43,7 +43,7 @@ export interface PrerendererConfigParams {
    * to request path, will activate Prerenderer.
    * @default [new RegExp('.*')]
    */
-  prerenderablePathRegExps: RegExp[];
+  prerenderablePathRegExps?: RegExp[];
 
   /**
    * Case insensitive list of extensions that, when matched
