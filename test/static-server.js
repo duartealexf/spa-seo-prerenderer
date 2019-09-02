@@ -56,7 +56,7 @@ module.exports = {
    */
   start: async () =>
     new Promise((resolve) => {
-      server = app.listen(parseInt(process.env.TEST_STATIC_SERVER_PORT, 10) || 7800, '0.0.0.0', () => {
+      server = app.listen(parseInt(process.env.TEST_STATIC_SERVER_PORT, 10) || 7800, () => {
         resolve();
       });
     }),
