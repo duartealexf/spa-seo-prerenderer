@@ -1,5 +1,5 @@
 import puppeteer, { Browser, Response } from 'puppeteer';
-import { Request } from 'express';
+import { IncomingMessage } from 'http';
 
 import { extname } from 'path';
 import { Config } from './config';
@@ -22,6 +22,8 @@ interface PrerendererResponse {
     [header: string]: string | number;
   };
 }
+
+export type ReasonsToRejectPrerender = undefined | 'no-request' | 'rejected-request' | 'no-url' | 'rejected-method' | 'no-user-agent' | 'rejected-user-agent' | 'rejected-extension' | 'rejected-path';
 
 /**
  * Based on https://github.com/GoogleChrome/rendertron
@@ -48,9 +50,14 @@ export class Prerenderer {
   private initialized = false;
 
   /**
-   * Get last prerender response object.
+   * Last prerender response object.
    */
   private lastResponse?: PrerendererResponse;
+
+  /**
+   * Reason why it has decided to not prerender last time.
+   */
+  private lastRejectedPrerenderReason?: ReasonsToRejectPrerender;
 
   /**
    * Prerenderer user agent including version.
@@ -122,15 +129,46 @@ export class Prerenderer {
   }
 
   /**
+   * Get the reason why it has decided to not prerender last time.
+   */
+  public getLastRejectedPrerenderReason(): ReasonsToRejectPrerender {
+    return this.lastRejectedPrerenderReason;
+  }
+
+  private static getRequestUserAgent(request: IncomingMessage): string {
+    const keys = Object.getOwnPropertyNames(request.headers);
+    const length = keys.length;
+
+    for (let i = 0; i < length; i += 1) {
+      const key = keys[i];
+      const header = request.headers[key] as string;
+
+      if (key.toLowerCase() === 'user-agent') {
+        return header;
+      }
+    }
+
+    return '';
+  }
+
+  /**
    * Get whether given request should be prerendered, considering request
    * method, blacklisted and whitelisted user agents, extensions and paths.
    * @param request NodeJS request.
    */
-  public async shouldPrerender(request: Request): Promise<boolean> {
-    /**
-     * If it is not valid url, don't prerender.
-     */
-    if (!/^https?:\/\//.test(request.url)) {
+  public shouldPrerender(request: IncomingMessage): boolean {
+    if (!request) {
+      this.lastRejectedPrerenderReason = 'no-request';
+      return false;
+    }
+
+    if (!(request instanceof IncomingMessage)) {
+      this.lastRejectedPrerenderReason = 'rejected-request';
+      return false;
+    }
+
+    if (!request.url) {
+      this.lastRejectedPrerenderReason = 'no-url';
       return false;
     }
 
@@ -138,33 +176,38 @@ export class Prerenderer {
      * Only prerender GET requests.
      */
     if (request.method !== 'GET') {
+      this.lastRejectedPrerenderReason = 'rejected-method';
       return false;
     }
 
-    const userAgent = request.headers['user-agent'];
+    let userAgent = Prerenderer.getRequestUserAgent(request);
 
     /**
      * No user agent, don't prerender.
      */
     if (!userAgent) {
+      this.lastRejectedPrerenderReason = 'no-user-agent';
       return false;
     }
+
+    userAgent = userAgent.toLowerCase();
 
     /**
      * If it is not a known bot user agent, don't prerender.
      */
-    if (!this.config.getBotUserAgents().includes(userAgent.toLowerCase())) {
+    if (!this.config.getBotUserAgents().includes(userAgent)) {
+      this.lastRejectedPrerenderReason = 'rejected-user-agent';
       return false;
     }
 
-    // TODO: is this the actual path and extension?
-    const path = request.originalUrl;
-    const extension = extname(path);
+    const path = request.url.substr(1);
+    const extension = extname(path).substr(1).toLowerCase();
 
     /**
      * If it is not an extension that can prerender, don't prerender.
      */
-    if (!this.config.getPrerenderableExtensions().includes(extension.substr(1).toLowerCase())) {
+    if (!this.config.getPrerenderableExtensions().includes(extension)) {
+      this.lastRejectedPrerenderReason = 'rejected-extension';
       return false;
     }
 
@@ -172,9 +215,11 @@ export class Prerenderer {
      * If it is not a prerenderable path, don't prerender.
      */
     if (!this.config.getPrerenderablePathRegExps().some((r) => r.test(path))) {
+      this.lastRejectedPrerenderReason = 'rejected-path';
       return false;
     }
 
+    this.lastRejectedPrerenderReason = undefined;
     return true;
   }
 
@@ -190,6 +235,7 @@ export class Prerenderer {
     try {
       // https://github.com/brijeshpant83/bp-pre-puppeteer-node/blob/master/index.js#L200
       // might need to change the url to x-forwarded-host
+      // http://expressjs.com/en/api.html#req.protocol
 
       const renderStart = Date.now();
       const page = await this.browser.newPage();

@@ -21,9 +21,6 @@
       "request": "launch",
       "name": "Debug Tests",
       "program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
-      "env": {
-        "DEBUG": "prerenderer"
-      },
       "args": [
         "-u",
         "tdd",
