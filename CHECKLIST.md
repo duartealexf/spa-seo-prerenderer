@@ -3,35 +3,38 @@
 ## Basic setup
 
 - [x] Setup repository
-- [x] Create tests, work with TDD
-- [ ] Simple prerenderer, save local file
+- [ ] Create tests
 - [x] Debug
-- [ ] Keep headless browser open, create new pages per request
-- [ ] Filter user agents
-- [ ] Filter extensions
-- [ ] Blacklisting tracking scripts
+- [x] Keep headless browser open, create new pages per request
+- [x] Filter user agents
+- [x] Filter extensions
+- [x] Blacklisting tracking scripts
+- [ ] Simple prerenderer, save local file
+- [ ] Add to docker, set tests in docker with nginx
+- [ ] Create a nginx proxy test
+- [ ] Create a subdomain test
+- [ ] Create a complex path test
+- [ ] Create a multi-route test
+- [ ] Preserve status codes (deliver 404, 500, etc)
 - [ ] **Setup in Docker**
 
 ## Creating an use-case
 
-- [ ] Create a multi-route use-case
+- [ ] Attach it to a real website
 - [ ] Make it public
 - [ ] Add GA / GTM / plug to Google Search Console
-- [ ] Take screenshots of messed up Google Result
+- [ ] Take screenshots of messed up Google search results
 - [ ] See how Google Pagespeed Insights behave
 - [ ] Plug prerenderer
+- [ ] Take screenshots of corrected Google search results
 
 ## Need-to-have
 
-- [ ] Preserve status codes (deliver 404, 500, etc)
-- [ ] Upload to S3 / make needed changes / .env setup
+- [ ] Upload to S3
 - [ ] See how to automatically clear prerendered pages (by commit, or something)
 - [ ] Create a recipe for using it with nginx
-- [ ] Create whitelist
-- [ ] Create blacklist
-- [ ] Extend bots list
 - [ ] **Add to public NPM registry - release as 1.0.0**
-- [ ] **Publish as a docker image**
+- [ ] **Publish a docker image**
 
 ## Nice-to-have
 
