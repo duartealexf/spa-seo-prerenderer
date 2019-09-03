@@ -1,7 +1,8 @@
-import puppeteer, { Browser, Response } from 'puppeteer';
+import puppeteer, { Browser, Response as PuppeteerResponse } from 'puppeteer';
+import { extname } from 'path';
+import { Request as ExpressRequest, Response as ExpressResponse } from 'express';
 import { IncomingMessage } from 'http';
 
-import { extname } from 'path';
 import { Config } from './config';
 import { Logger } from './logger';
 import { PrerendererNotReadyException } from './exceptions/prerenderer-not-ready-exception';
@@ -23,7 +24,49 @@ interface PrerendererResponse {
   };
 }
 
-export type ReasonsToRejectPrerender = undefined | 'no-request' | 'rejected-request' | 'no-url' | 'rejected-method' | 'no-user-agent' | 'rejected-user-agent' | 'rejected-extension' | 'rejected-path';
+/**
+ * Reasons why the Prerender rejects prerendering a request, on shouldPrerender() method.
+ */
+export type ReasonsToRejectPrerender =
+  /**
+   * Initial value.
+   */
+  | undefined
+
+  /**
+   * Request is falsy.
+   */
+  | 'no-request'
+
+  /**
+   * Received request is not an instance of http.IncomingMessage
+   */
+  | 'rejected-request'
+
+  /**
+   * Request method is not GET.
+   */
+  | 'rejected-method'
+
+  /**
+   * No user agent in request.
+   */
+  | 'no-user-agent'
+
+  /**
+   * User agent was not a known bot.
+   */
+  | 'rejected-user-agent'
+
+  /**
+   * Request file extension was not meant to be prerendered, as per config.
+   */
+  | 'rejected-extension'
+
+  /**
+   * Request path extension was not meant to be prerendered, as per config.
+   */
+  | 'rejected-path';
 
 /**
  * Based on https://github.com/GoogleChrome/rendertron
@@ -135,7 +178,11 @@ export class Prerenderer {
     return this.lastRejectedPrerenderReason;
   }
 
-  private static getRequestUserAgent(request: IncomingMessage): string {
+  /**
+   * Get user agent header string from request.
+   * @param request NodeJS request.
+   */
+  private static getRequestUserAgent(request: ExpressRequest): string {
     const keys = Object.getOwnPropertyNames(request.headers);
     const length = keys.length;
 
@@ -156,7 +203,7 @@ export class Prerenderer {
    * method, blacklisted and whitelisted user agents, extensions and paths.
    * @param request NodeJS request.
    */
-  public shouldPrerender(request: IncomingMessage): boolean {
+  public shouldPrerender(request: ExpressRequest): boolean {
     if (!request) {
       this.lastRejectedPrerenderReason = 'no-request';
       return false;
@@ -164,11 +211,6 @@ export class Prerenderer {
 
     if (!(request instanceof IncomingMessage)) {
       this.lastRejectedPrerenderReason = 'rejected-request';
-      return false;
-    }
-
-    if (!request.url) {
-      this.lastRejectedPrerenderReason = 'no-url';
       return false;
     }
 
@@ -201,7 +243,9 @@ export class Prerenderer {
     }
 
     const path = request.url.substr(1);
-    const extension = extname(path).substr(1).toLowerCase();
+    const extension = extname(path)
+      .substr(1)
+      .toLowerCase();
 
     /**
      * If it is not an extension that can prerender, don't prerender.
@@ -223,75 +267,69 @@ export class Prerenderer {
     return true;
   }
 
-  public async prerender(request: Request): Promise<void> {
+  public async prerender(request: ExpressRequest, response: ExpressResponse): Promise<void> {
     if (!this.browser) {
       throw new PrerendererNotReadyException(
         'Prerenderer needs to be started before prerendering an url. Did you call prerenderer.start()?',
       );
     }
 
-    const url = request.url;
-
     try {
-      // https://github.com/brijeshpant83/bp-pre-puppeteer-node/blob/master/index.js#L200
-      // might need to change the url to x-forwarded-host
-      // http://expressjs.com/en/api.html#req.protocol
+      const protocol = request.protocol;
+      const host = request.hostname;
+      const port = request.connection.localPort === 80 ? '' : `:${request.connection.localPort}`;
+      const path = request.originalUrl;
+
+      // TODO: keep query paramss.
+      const requestedUrl = `${protocol}://${host}${port}${path}`;
 
       const renderStart = Date.now();
       const page = await this.browser.newPage();
 
       page.setUserAgent(Prerenderer.USER_AGENT);
+      page.setRequestInterception(true);
 
       // TODO: handle certificate error and continue
       // TODO: follow redirects
+      const blacklist = this.config.getBlacklistedRequestURLs();
+      const whitelist = this.config.getWhitelistedRequestURLs();
 
-      // TODO: create list of url patterns to block request to (i.e. analytics)
-      page.on('request', (req) => {
-        // Don't load Google Analytics lib requests so pageviews aren't 2x.
-        const blacklist = ['www.google-analytics.com', '/gtag/js', 'ga.js', 'analytics.js'];
+      let requestFilter: (req: puppeteer.Request) => void;
 
-        /* This is from https://github.com/prerender/prerender/blob/master/lib/server.js
-         * Do we need it?
-        //if the original server had a chunked encoding, we should
-        //remove it since we aren't sending a chunked response
-        res.removeHeader('Transfer-Encoding');
-        //if the original server wanted to keep the connection alive, let's close it
-        res.removeHeader('Connection');
-        //getting 502s for sites that return these headers
-        res.removeHeader('X-Content-Security-Policy');
-        res.removeHeader('Content-Security-Policy');
-        res.removeHeader('Content-Encoding');
+      if (whitelist.length) {
+        requestFilter = (req: puppeteer.Request) => {
+          if (whitelist.some((p) => req.url().includes(p))) {
+            req.continue();
+          } else {
+            req.abort();
+          }
+        };
+      } else {
+        requestFilter = (req: puppeteer.Request) => {
+          if (blacklist.some((p) => req.url().includes(p))) {
+            req.abort();
+          } else {
+            req.continue();
+          }
+        };
+      }
 
-        res.status(req.prerender.statusCode);
-         */
+      page.on('request', requestFilter);
 
-        if (blacklist.find((pattern: string) => req.url().match(pattern))) {
-          req.abort();
-          return;
-        }
-        req.continue();
-      });
+      /**
+       * Add shadow dom shim.
+       */
+      page.evaluateOnNewDocument('if (window.customElements) customElements.forcePolyfill = true;');
+      page.evaluateOnNewDocument('ShadyDOM = { force: true }');
+      page.evaluateOnNewDocument('ShadyCSS = { shimcssproperties: true }');
 
-      // Page.addScriptToEvaluateOnNewDocument({source: 'if (window.customElements) {
-      // customElements.forcePolyfill = true'}); }
-      // Page.addScriptToEvaluateOnNewDocument({source: 'ShadyDOM = {force: true}'})
-      // Page.addScriptToEvaluateOnNewDocument({source: 'ShadyCSS = {shimcssproperties: true}'})
-
-      let response: Response | null = null;
-
-      // Capture main frame response. This is used in the case that rendering
-      // times out, which results in puppeteer throwing an error. This allows us
-      // to return a partial response for what was able to be rendered in that
-      // time frame.
-      page.addListener('response', (r: Response) => {
-        if (!response) {
-          response = r;
-        }
-      });
+      let puppeteerResponse: PuppeteerResponse | null = null;
 
       try {
-        // Navigate to page. Wait until there are no oustanding network requests.
-        response = await page.goto(url, {
+        /**
+         * Navigate to page and wait for network to be idle.
+         */
+        puppeteerResponse = await page.goto(requestedUrl, {
           timeout: this.config.getTimeout(),
           waitUntil: 'networkidle0',
         });
@@ -300,10 +338,11 @@ export class Prerenderer {
         // console.error(e);
       }
 
-      if (!response) {
-        // console.error('response does not exist');
-        // This should only occur when the page is about:blank. See
-        // https://github.com/GoogleChrome/puppeteer/blob/v1.5.0/docs/api.md#pagegotourl-options.
+      if (!puppeteerResponse) {
+        /**
+         * This should only occur when page is about:blank.
+         * @see https://github.com/GoogleChrome/puppeteer/blob/v1.5.0/docs/api.md#pagegotourl-options.
+         */
         await page.close();
 
         this.lastResponse = {
@@ -319,7 +358,7 @@ export class Prerenderer {
 
       // Disable access to compute metadata. See
       // https://cloud.google.com/compute/docs/storing-retrieving-metadata.
-      if (response.headers()['metadata-flavor'] === 'Google') {
+      if (puppeteerResponse.headers()['metadata-flavor'] === 'Google') {
         await page.close();
         this.lastResponse = {
           headers: {
@@ -335,7 +374,7 @@ export class Prerenderer {
       // Set status to the initial server's response code. Check for a <meta
       // name="render:status_code" content="4xx" /> tag which overrides the status
       // code.
-      let status = response.status();
+      let status = puppeteerResponse.status();
 
       const newStatusCode = await page
         .$eval('meta[name="render:status_code"]', (element) =>
@@ -366,7 +405,7 @@ export class Prerenderer {
         body,
         headers: {
           status,
-          'X-Original-Location': url,
+          'X-Original-Location': path,
           'X-Prerendered-Ms': Date.now() - renderStart,
         },
       };

@@ -25,7 +25,7 @@ const defaultOptions = {
  * @param {string} path
  * @param {any} customHeaders
  * @param {boolean} botUserAgent
- * @returns {Promise<import('http').IncomingMessage>}
+ * @returns {Promise<import('express').Request>}
  */
 const createRequest = (method, path = '/', customHeaders = {}, botUserAgent = false) => {
   /**
@@ -69,7 +69,7 @@ const createRequest = (method, path = '/', customHeaders = {}, botUserAgent = fa
  * @param {string} path
  * @param {any} customHeaders
  * @param {boolean} botUserAgent
- * @returns {Promise<import('http').IncomingMessage>}
+ * @returns {Promise<import('express').Request>}
  */
 const createGetRequest = (path = '/', customHeaders = {}, botUserAgent = false) =>
   createRequest('GET', path, customHeaders, botUserAgent);
@@ -78,7 +78,7 @@ const createGetRequest = (path = '/', customHeaders = {}, botUserAgent = false) 
  * @param {string} path
  * @param {any} customHeaders
  * @param {boolean} botUserAgent
- * @returns {Promise<import('http').IncomingMessage>}
+ * @returns {Promise<import('express').Request>}
  */
 const createPostRequest = (path = '/', customHeaders = {}, botUserAgent = false) =>
   createRequest('POST', path, customHeaders, botUserAgent);
