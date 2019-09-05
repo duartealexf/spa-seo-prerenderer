@@ -4,6 +4,9 @@ FROM node:11-alpine AS app
 ENV HOME=/var/www
 WORKDIR $HOME
 
+RUN node -v \
+  && npm -v
+
 # NPM dependencies
 COPY package* $HOME/
 RUN npm i
@@ -11,7 +14,6 @@ RUN npm i
 # Copy project files
 COPY . $HOME/
 
-RUN node -v \
-  && npm -v
+RUN npm run build
 
 CMD ["npm", "run", "test"];

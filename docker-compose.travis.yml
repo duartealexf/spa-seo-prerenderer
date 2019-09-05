@@ -1,5 +1,50 @@
 version: '3'
 
 services:
+  nginx:
+    build:
+      context: .
+      dockerfile: docker/nginx.dockerfile
+      args:
+        TEST_NGINX_SERVER_HOST: ${TEST_NGINX_SERVER_HOST}
+        TEST_NODEJS_PROXY_PATH: ${TEST_NODEJS_PROXY_PATH}
+    environment:
+      - TEST_NGINX_SERVER_HOST
+      - TEST_NODEJS_SERVER_HOST
+      - TEST_NODEJS_PROXY_PATH
+    networks:
+      prerender:
+        ipv4_address: 172.25.0.101
+    extra_hosts:
+      - ${TEST_NGINX_SERVER_HOST}:170.0.0.1
+      - ${TEST_NODEJS_SERVER_HOST}:172.25.0.102
+
   tests:
-    command: 'npm run test'
+    depends_on:
+      - nginx
+    build:
+      context: .
+      dockerfile: docker/tests.dockerfile
+    extra_hosts:
+      - ${TEST_NGINX_SERVER_HOST}:172.25.0.101
+      - ${TEST_NODEJS_SERVER_HOST}:127.0.0.1
+    ports:
+      - 9229:9229
+    networks:
+      prerender:
+        ipv4_address: 172.25.0.102
+    environment:
+      - PRERENDERER_LOG_FILE
+      - NODE_ENV
+      - SNAPSHOTS_DRIVER
+      - SNAPSHOTS_DIRECTORY
+      - TEST_NGINX_SERVER_HOST
+      - TEST_NODEJS_SERVER_HOST
+      - TEST_NODEJS_PROXY_PATH
+
+networks:
+  prerender:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.25.0.0/24

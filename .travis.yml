@@ -1,6 +1,7 @@
-language: node_js
 services:
   - docker
+before_script:
+  - docker-compose -f docker-compose.travis.yml config
+  - docker-compose -f docker-compose.travis.yml build
 script:
-  - docker-compose -f docker-compose.yml -f docker-compose.travis.yml build
-  - docker-compose -f docker-compose.yml -f docker-compose.travis.yml up
+  - docker-compose -f docker-compose.travis.yml run tests
