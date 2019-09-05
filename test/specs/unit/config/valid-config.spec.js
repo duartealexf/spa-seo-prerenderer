@@ -4,12 +4,12 @@ const { join } = require('path');
 const { pathExists, existsSync } = require('fs-extra');
 const { v4: uuidv4 } = require('uuid');
 
-const { Prerenderer } = require('../../../dist/lib/prerenderer');
-const { DEFAULT_BLACKLISTED_REQUEST_URLS, DEFAULT_BOT_USER_AGENTS, DEFAULT_PRERENDERABLE_EXTENSIONS } = require('../../../dist/lib/config/defaults');
+const { Prerenderer } = require('../../../../dist/lib/prerenderer');
+const { DEFAULT_BLACKLISTED_REQUEST_URLS, DEFAULT_BOT_USER_AGENTS, DEFAULT_PRERENDERABLE_EXTENSIONS } = require('../../../../dist/lib/config/defaults');
 
 describe('valid env vars', () => {
   /**
-   * @type {import('../../../dist/types/config/defaults').PrerendererConfigParams}
+   * @type {import('../../../../dist/types/config/defaults').PrerendererConfigParams}
    */
   const initialConfig = {
     nodeEnv: 'development',
@@ -126,7 +126,7 @@ describe('valid env vars', () => {
 
   it('should set all configuration as passed to constructor, except for whitelist/blacklist.', async () => {
     /**
-     * @type {import('../../../dist/types/config/defaults').PrerendererConfigParams}
+     * @type {import('../../../../dist/types/config/defaults').PrerendererConfigParams}
      */
     const config = {
       ...initialConfig,
@@ -147,7 +147,7 @@ describe('valid env vars', () => {
 
   it('should set an empty request URL blacklist when both a blacklist and whitelist config is given.', async () => {
     /**
-     * @type {import('../../../dist/types/config/defaults').PrerendererConfigParams}
+     * @type {import('../../../../dist/types/config/defaults').PrerendererConfigParams}
      */
     const config = {
       ...initialConfig,
@@ -171,7 +171,7 @@ describe('valid env vars', () => {
 
   it('should set an empty request URL blacklist when both a whitelist config is given.', async () => {
     /**
-     * @type {import('../../../dist/types/config/defaults').PrerendererConfigParams}
+     * @type {import('../../../../dist/types/config/defaults').PrerendererConfigParams}
      */
     const config = {
       ...initialConfig,
@@ -194,7 +194,7 @@ describe('valid env vars', () => {
 
   it('should set a blacklist request URL when an empty whitelist and a valid blacklist config is given.', async () => {
     /**
-     * @type {import('../../../dist/types/config/defaults').PrerendererConfigParams}
+     * @type {import('../../../../dist/types/config/defaults').PrerendererConfigParams}
      */
     const config = {
       ...initialConfig,
@@ -218,7 +218,7 @@ describe('valid env vars', () => {
 
   it('should set a blacklist request URL when only a valid blacklist config is given.', async () => {
     /**
-     * @type {import('../../../dist/types/config/defaults').PrerendererConfigParams}
+     * @type {import('../../../../dist/types/config/defaults').PrerendererConfigParams}
      */
     const config = {
       ...initialConfig,

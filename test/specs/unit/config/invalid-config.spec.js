@@ -3,12 +3,12 @@ const { assert } = require('chai');
 const { join } = require('path');
 const { v4: uuidv4 } = require('uuid');
 
-const { Prerenderer } = require('../../../dist/lib/prerenderer');
-const { InvalidConfigException } = require('../../../dist/lib/exceptions/invalid-config-exception');
+const { Prerenderer } = require('../../../../dist/lib/prerenderer');
+const { InvalidConfigException } = require('../../../../dist/lib/exceptions/invalid-config-exception');
 
 describe('invalid config', () => {
   /**
-   * @type {import('../../../dist/types/config/defaults').PrerendererConfigParams}
+   * @type {import('../../../../dist/types/config/defaults').PrerendererConfigParams}
    */
   const initialConfig = {
     nodeEnv: 'development',

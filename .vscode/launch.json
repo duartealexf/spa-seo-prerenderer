@@ -7,30 +7,12 @@
     {
       "type": "node",
       "request": "attach",
-      "name": "Attach to Node",
-      "port": 9229
-    },
-    {
-      "type": "node",
-      "request": "launch",
-      "name": "Launch Opened File",
-      "program": "${file}"
-    },
-    {
-      "type": "node",
-      "request": "launch",
-      "name": "Debug Tests",
-      "program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
-      "args": [
-        "-u",
-        "tdd",
-        "--watch",
-        "--timeout",
-        "8640000",
-        "--colors",
-        "${workspaceFolder}/test/specs/**/*.spec.js"
-      ],
-      "internalConsoleOptions": "openOnSessionStart"
+      "name": "Docker: Attach to Node",
+      "remoteRoot": "/var/www",
+      "localRoot": "${workspaceFolder}",
+      "port": 9229,
+      "protocol": "inspector",
+      "address": "localhost"
     }
   ]
 }

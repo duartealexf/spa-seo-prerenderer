@@ -1,12 +1,6 @@
 language: node_js
-node_js:
-  - '8.3.0'
-  - '9'
-  - '10'
-  - '11'
-  - '12'
+services:
+  - docker
 script:
-  - export NODE_VERSION=$(node --version)
-  - nvm use $NODE_VERSION
-  - npm run build
-  - npm run test
+  - docker-compose -f docker-compose.yml -f docker-compose.travis.yml build
+  - docker-compose -f docker-compose.yml -f docker-compose.travis.yml up

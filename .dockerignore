@@ -1,0 +1,14 @@
+npm-debug.log
+
+docker-compose*
+
+.DS_Store
+.idea/
+.npm/
+.config/
+.nyc_output/
+.vscode/
+.vs/
+
+/node_modules
+/dist

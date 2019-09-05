@@ -4,12 +4,12 @@ const { join } = require('path');
 const { pathExists, existsSync } = require('fs-extra');
 const { v4: uuidv4 } = require('uuid');
 
-const { Prerenderer } = require('../../../dist/lib/prerenderer');
-const { DEFAULT_BLACKLISTED_REQUEST_URLS, DEFAULT_BOT_USER_AGENTS, DEFAULT_PRERENDERABLE_EXTENSIONS } = require('../../../dist/lib/config/defaults');
+const { Prerenderer } = require('../../../../dist/lib/prerenderer');
+const { DEFAULT_BLACKLISTED_REQUEST_URLS, DEFAULT_BOT_USER_AGENTS, DEFAULT_PRERENDERABLE_EXTENSIONS } = require('../../../../dist/lib/config/defaults');
 
 describe('valid env vars', () => {
   /**
-   * @type {import('../../../dist/types/config/defaults').PrerendererConfigParams}
+   * @type {import('../../../../dist/types/config/defaults').PrerendererConfigParams}
    */
   const initialConfig = {
     nodeEnv: 'development',

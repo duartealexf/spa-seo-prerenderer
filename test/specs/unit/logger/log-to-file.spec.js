@@ -4,11 +4,11 @@ const { createReadStream } = require('fs-extra');
 const { join, basename } = require('path');
 const { v4: uuidv4 } = require('uuid');
 
-const { Prerenderer } = require('../../../dist/lib/prerenderer');
+const { Prerenderer } = require('../../../../dist/lib/prerenderer');
 
 describe('log to file', () => {
   /**
-   * @type {import('../../../dist/types/config/defaults').PrerendererConfigParams}
+   * @type {import('../../../../dist/types/config/defaults').PrerendererConfigParams}
    */
   const initialConfig = {
     nodeEnv: 'production',

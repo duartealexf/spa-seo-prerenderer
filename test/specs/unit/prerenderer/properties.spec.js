@@ -1,9 +1,9 @@
 const { describe, it, before } = require('mocha');
 const { assert } = require('chai');
 
-const { Prerenderer } = require('../../../dist/lib/prerenderer');
-const { Logger } = require('../../../dist/lib/logger');
-const { Config } = require('../../../dist/lib/config');
+const { Prerenderer } = require('../../../../dist/lib/prerenderer');
+const { Logger } = require('../../../../dist/lib/logger');
+const { Config } = require('../../../../dist/lib/config');
 
 describe('prerenderer property checks after initialization', async () => {
   /**

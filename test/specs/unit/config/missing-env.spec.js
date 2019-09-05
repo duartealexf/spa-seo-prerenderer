@@ -3,14 +3,14 @@ const { assert } = require('chai');
 const { join } = require('path');
 const { v4: uuidv4 } = require('uuid');
 
-const { Prerenderer } = require('../../../dist/lib/prerenderer');
+const { Prerenderer } = require('../../../../dist/lib/prerenderer');
 const {
   MissingEnvException,
-} = require('../../../dist/lib/exceptions/missing-env-exception');
+} = require('../../../../dist/lib/exceptions/missing-env-exception');
 
 describe('missing env vars', () => {
   /**
-   * @type {import('../../../dist/types/config/defaults').PrerendererConfigParams}
+   * @type {import('../../../../dist/types/config/defaults').PrerendererConfigParams}
    */
   const initialConfig = {
     nodeEnv: 'development',

@@ -56,7 +56,7 @@ module.exports = {
    */
   start: async () =>
     new Promise((resolve) => {
-      server = app.listen(parseInt(process.env.TEST_STATIC_SERVER_PORT, 10) || 7800, '127.0.0.1', () => {
+      server = app.listen(80, '0.0.0.0', () => {
         resolve();
       });
     }),
@@ -76,18 +76,18 @@ module.exports = {
    * Attach prerenderer middleware with given config.
    * @type {(p: import('../dist/types/config/defaults').PrerendererConfigParams) => Promise<void>}
    */
-  // attachPrerendererWithConfig: async (config) => {
-  //   const p = new Prerenderer(config);
-  //   await p.initialize();
+  attachPrerendererWithConfig: async (config) => {
+    const p = new Prerenderer(config);
+    await p.initialize();
 
-  //   /**
-  //    * Typical Express usage.
-  //    */
-  //   app.use((req, res, next) => {
-  //     if (p.shouldPrerender(req)) {
-  //       return p.prerender(req, res);
-  //     }
-  //     return next();
-  //   });
-  // },
+    /**
+     * Typical Express usage.
+     */
+    app.use((req, res, next) => {
+      if (p.shouldPrerender(req)) {
+        return p.prerender(req, res);
+      }
+      return next();
+    });
+  },
 };

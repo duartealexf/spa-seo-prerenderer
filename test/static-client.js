@@ -2,39 +2,60 @@ const { request } = require('http');
 const { v4: uuidv4 } = require('uuid');
 
 const { requests } = require('./static-server');
-
 const { DEFAULT_BOT_USER_AGENTS } = require('../dist/lib/config/defaults');
 
-const defaultOptions = {
-  protocol: 'http:',
-  port: process.env.TEST_STATIC_SERVER_PORT,
-  host: 'localhost',
-  headers: {
-    Connection: 'keep-alive',
-    Pragma: 'no-cache',
-    Accept: 'text/html,application/xhtml+xml,application/xml;q=1,*/*',
-    'Cache-Control': 'no-cache',
-    'Accept-Encoding': 'gzip, deflate, br',
-    'Accept-Language': 'en-US',
-    'User-Agent': 'Mozilla/5.0',
-  },
+/**
+ * @type {import('http').OutgoingHttpHeaders}
+ */
+const defaultRequestHeaders = {
+  Connection: 'keep-alive',
+  Pragma: 'no-cache',
+  Accept: 'text/html,application/xhtml+xml,application/xml;q=1,*/*',
+  'Cache-Control': 'no-cache',
+  'Accept-Encoding': 'gzip, deflate, br',
+  'Accept-Language': 'en-US',
+  'User-Agent': 'Mozilla/5.0',
 };
 
 /**
+ * Trim slashes from string.
+ * @param {string} str
+ */
+const trimSlashes = (str) => str.replace(/^\/+|\/+$/g, '');
+
+/**
+ * Create a request.
+ * @param {boolean} isSecure
  * @param {string} method
+ * @param {boolean} isProxy
  * @param {string} path
  * @param {any} customHeaders
  * @param {boolean} botUserAgent
  * @returns {Promise<import('express').Request>}
  */
-const createRequest = (method, path = '/', customHeaders = {}, botUserAgent = false) => {
+const createRequest = (isSecure, method, isProxy, path, customHeaders, botUserAgent) => {
   /**
    * Create random request id.
    */
   const id = uuidv4();
 
+  let requestPath;
+  let host;
+
+  if (isProxy) {
+    requestPath = `/${process.env.TEST_NODEJS_PROXY_PATH}/${trimSlashes(path)}`;
+    host = process.env.TEST_NGINX_SERVER_HOST;
+
+  } else {
+    requestPath = `/${trimSlashes(path)}`;
+    host = process.env.TEST_NODEJS_SERVER_HOST;
+  }
+
+  /**
+   * @type {import('http').OutgoingHttpHeaders}
+   */
   const headers = {
-    ...defaultOptions.headers,
+    ...defaultRequestHeaders,
     ...customHeaders,
     'x-request-id': id,
   };
@@ -49,9 +70,10 @@ const createRequest = (method, path = '/', customHeaders = {}, botUserAgent = fa
      */
     request(
       {
-        ...defaultOptions,
+        protocol: isSecure ? 'https:' : 'http:',
+        path: requestPath,
+        host,
         headers,
-        path,
         method,
       },
       () => {
@@ -65,22 +87,32 @@ const createRequest = (method, path = '/', customHeaders = {}, botUserAgent = fa
   });
 };
 
-/**
- * @param {string} path
- * @param {any} customHeaders
- * @param {boolean} botUserAgent
- * @returns {Promise<import('express').Request>}
- */
-const createGetRequest = (path = '/', customHeaders = {}, botUserAgent = false) =>
-  createRequest('GET', path, customHeaders, botUserAgent);
+module.exports = {
+  /**
+   * Create a HTTP GET request directly to NodeJS server.
+   * @param {string} path
+   * @param {any} customHeaders
+   * @param {boolean} botUserAgent
+   * @returns {Promise<import('express').Request>}
+   */
+  createDirectHttpGetRequest: (path = '', customHeaders = {}, botUserAgent = true) =>
+    createRequest(false, 'GET', false, path, customHeaders, botUserAgent),
 
-/**
- * @param {string} path
- * @param {any} customHeaders
- * @param {boolean} botUserAgent
- * @returns {Promise<import('express').Request>}
- */
-const createPostRequest = (path = '/', customHeaders = {}, botUserAgent = false) =>
-  createRequest('POST', path, customHeaders, botUserAgent);
+  /**
+   * Create a HTTP GET request to NodeJS server behind a Nginx proxy.
+   * @param {string} path
+   * @param {any} customHeaders
+   * @param {boolean} botUserAgent
+   * @returns {Promise<import('express').Request>}
+   */
+  createProxyHttpGetRequest: (path = '', customHeaders = {}, botUserAgent = true) =>
+    createRequest(false, 'GET', true, path, customHeaders, botUserAgent),
 
-module.exports = { createGetRequest, createPostRequest };
+  /**
+   * Create a HTTP POST request directly to NodeJS server. Note that there are not
+   * many options to make a post request. This is because we don't need to focus
+   * on them as much, as the Prerenderer only create snapshots for GET requests.
+   * @returns {Promise<import('express').Request>}
+   */
+  createDirectHttpPostRequest: () => createRequest(false, 'POST', false, '', {}, true),
+};
