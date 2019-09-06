@@ -1,6 +1,6 @@
 language: minimal
 git:
-  depth: 1
+  depth: 3
 services:
   - docker
 env:
