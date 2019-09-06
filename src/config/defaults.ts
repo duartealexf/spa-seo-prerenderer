@@ -42,7 +42,7 @@ export interface PrerendererConfigParams {
    * Chromium executable.
    * @default '''
    */
-  chromiumExecutable: string;
+  chromiumExecutable?: string;
 
   /**
    * Array of path RegExps that, when matched
