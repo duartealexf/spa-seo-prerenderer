@@ -12,6 +12,7 @@ import {
   DEFAULT_BOT_USER_AGENTS,
   DEFAULT_BLACKLISTED_REQUEST_URLS,
 } from './config/defaults';
+import { ChromiumNotFoundException } from './exceptions/chromium-not-found-exception';
 
 export class Config {
   /**
@@ -38,6 +39,11 @@ export class Config {
    * Prerenderer log file location.
    */
   private prerendererLogFile = '';
+
+  /**
+   * Path to Chromium binary. Not specifying any will use Chromium from node_modules folder.
+   */
+  private chromiumPath?: string;
 
   /**
    * Array of path RegExps that, when matched
@@ -87,6 +93,7 @@ export class Config {
       snapshotsDriver: process.env.SNAPSHOTS_DRIVER || 'fs',
       snapshotsDirectory: process.env.SNAPSHOTS_DIRECTORY || '../snapshots',
       prerendererLogFile: process.env.PRERENDERER_LOG_FILE || '',
+      chromiumPath: process.env.CHROMIUM_PATH || '',
       ...config,
     };
 
@@ -100,6 +107,7 @@ export class Config {
   public async initialize(): Promise<void> {
     await this.initSnapshotConfig();
     await this.initLoggingConfig();
+    await this.initChromiumConfig();
 
     this.initialized = true;
   }
@@ -263,11 +271,38 @@ export class Config {
       : join(process.cwd(), this.constructSettings.prerendererLogFile);
 
     /**
-     * Ensure file is exists and is writeable.
+     * Ensure file exists and is writeable.
      */
     await Filesystem.ensureFile(logFile);
 
     this.prerendererLogFile = logFile;
+  }
+
+  /**
+   * Initialize Chromium configuration.
+   */
+  private async initChromiumConfig(): Promise<void> {
+    if (!this.constructSettings.chromiumPath) {
+      return;
+    }
+
+    /**
+     * Make the directory absolute.
+     */
+    const chromiumPath = this.constructSettings.chromiumPath.startsWith('/')
+      ? this.constructSettings.chromiumPath
+      : join(process.cwd(), this.constructSettings.chromiumPath);
+
+    /**
+     * Ensure file exists and is writeable.
+     */
+    const exists = await Filesystem.exists(chromiumPath);
+
+    if (!exists) {
+      throw new ChromiumNotFoundException(chromiumPath);
+    }
+
+    this.chromiumPath = chromiumPath;
   }
 
   /**
@@ -303,6 +338,13 @@ export class Config {
    */
   public getPrerendererLogFile(): string {
     return this.prerendererLogFile;
+  }
+
+  /**
+   * Get path to Chromium binary.
+   */
+  public getChromiumPath(): string | undefined {
+    return this.chromiumPath;
   }
 
   /**

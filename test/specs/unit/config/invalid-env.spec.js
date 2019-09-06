@@ -10,6 +10,9 @@ const {
 const {
   MismatchingConfigException,
 } = require('../../../../dist/lib/exceptions/mismatching-config-exception');
+const {
+  ChromiumNotFoundException,
+} = require('../../../../dist/lib/exceptions/chromium-not-found-exception');
 
 describe('invalid env vars', () => {
   /**
@@ -66,6 +69,20 @@ describe('invalid env vars', () => {
       assert.instanceOf(e, InvalidConfigException);
       assert.include(e.message, 'snapshotsDirectory');
       assert.include(e.message, "when snapshotsDriver is 's3'");
+    }
+  });
+
+  it('should throw an error when chromiumPath does not exist.', async () => {
+    const buggedConfig = Object.assign({}, initialConfig, {
+      chromiumPath: '/enoent',
+    });
+
+    try {
+      const p = new Prerenderer(buggedConfig);
+      await p.initialize();
+      assert.ok(false);
+    } catch (e) {
+      assert.instanceOf(e, ChromiumNotFoundException);
     }
   });
 });

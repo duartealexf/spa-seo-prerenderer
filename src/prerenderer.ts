@@ -1,4 +1,4 @@
-import puppeteer, { Browser, Response as PuppeteerResponse } from 'puppeteer';
+import puppeteer, { Browser, Response as PuppeteerResponse, LaunchOptions } from 'puppeteer';
 import { extname } from 'path';
 import { Request as ExpressRequest, Response as ExpressResponse } from 'express';
 import { IncomingMessage } from 'http';
@@ -149,7 +149,13 @@ export class Prerenderer {
     }
 
     this.getLogger().info('Launching Puppeteer...', 'prerenderer');
-    this.browser = await puppeteer.launch({ args: ['--no-sandbox'] });
+    const options: LaunchOptions = { args: ['--no-sandbox'] };
+
+    if (this.config.getChromiumPath()) {
+      options.executablePath = this.config.getChromiumPath();
+    }
+
+    this.browser = await puppeteer.launch(options);
     this.getLogger().info('Launched Puppeteer!', 'prerenderer');
   }
 

@@ -25,6 +25,7 @@ services:
       - ${TEST_NGINX_SERVER_HOST}:172.25.0.101
       - ${TEST_NODEJS_SERVER_HOST}:127.0.0.1
     volumes:
+      - ./dist:/var/www/dist
       - ./src:/var/www/src
       - ./test:/var/www/test
     ports:
