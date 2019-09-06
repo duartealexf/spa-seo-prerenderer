@@ -14,17 +14,18 @@ describe('should prerender requests directly to NodeJS', () => {
     nodeEnv: 'development',
     prerendererLogFile: join('test', 'tmp', `${uuidv4()}.log`),
     snapshotsDirectory: join('test', 'tmp', uuidv4()),
-    snapshotsDriver: 'fs',
+    snapshotsDriver: 'fs'
   };
 
-  // it('should prerender index.html.', async () => {
-  //   const p = new Prerenderer(initialConfig);
-  //   await p.initialize();
-  //   await p.start();
+  it('should prerender index.html.', async () => {
+    const p = new Prerenderer(initialConfig);
+    await p.initialize();
+    await p.start();
 
-  //   const r = await createDirectHttpGetRequest('/index.html', {}, true);
-  //   await p.prerender(r);
+    const r = await createDirectHttpGetRequest('/index.html', {}, true);
+    await p.prerender(r);
+    await p.stop();
 
-  //   assert.isNotEmpty(p.getLastResponse());
-  // });
+    assert.isNotEmpty(p.getLastResponse());
+  });
 });

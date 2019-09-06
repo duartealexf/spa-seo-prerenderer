@@ -12,7 +12,9 @@
       "localRoot": "${workspaceFolder}",
       "port": 9229,
       "protocol": "inspector",
-      "address": "localhost"
+      "address": "localhost",
+      "smartStep": true,
+      "skipFiles": ["<node_internals>/**", "node_modules/**"]
     }
   ]
 }

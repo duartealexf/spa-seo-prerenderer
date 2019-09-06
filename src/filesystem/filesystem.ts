@@ -101,7 +101,7 @@ export class Filesystem {
   }
 
   /**
-   * Where file or directory exists.
+   * Get whether file or directory exists.
    * @param pathParts
    */
   public static async exists(...pathParts: string[]): Promise<boolean> {

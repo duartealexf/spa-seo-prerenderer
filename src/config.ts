@@ -40,6 +40,11 @@ export class Config {
   private prerendererLogFile = '';
 
   /**
+   * Chromium executable
+   */
+  private chromiumExecutable?: string;
+
+  /**
    * Array of path RegExps that, when matched
    * to request path, will activate Prerenderer.
    */
@@ -87,6 +92,7 @@ export class Config {
       snapshotsDriver: process.env.SNAPSHOTS_DRIVER || 'fs',
       snapshotsDirectory: process.env.SNAPSHOTS_DIRECTORY || '../snapshots',
       prerendererLogFile: process.env.PRERENDERER_LOG_FILE || '',
+      chromiumExecutable: process.env.CHROMIUM_EXECUTABLE,
       ...config,
     };
 
@@ -100,6 +106,8 @@ export class Config {
   public async initialize(): Promise<void> {
     await this.initSnapshotConfig();
     await this.initLoggingConfig();
+
+    this.chromiumExecutable = this.constructSettings.chromiumExecutable;
 
     this.initialized = true;
   }
@@ -263,7 +271,7 @@ export class Config {
       : join(process.cwd(), this.constructSettings.prerendererLogFile);
 
     /**
-     * Ensure file is exists and is writeable.
+     * Ensure file exists and is writeable.
      */
     await Filesystem.ensureFile(logFile);
 
@@ -303,6 +311,13 @@ export class Config {
    */
   public getPrerendererLogFile(): string {
     return this.prerendererLogFile;
+  }
+
+  /**
+   * Get path to Chromium binary.
+   */
+  public getChromiumExecutable(): string | undefined {
+    return this.chromiumExecutable;
   }
 
   /**

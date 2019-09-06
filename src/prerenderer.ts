@@ -1,12 +1,12 @@
-import puppeteer, { Browser, Response as PuppeteerResponse } from 'puppeteer';
+import puppeteer, { Browser, Response as PuppeteerResponse, LaunchOptions } from 'puppeteer';
 import { extname } from 'path';
 import { Request as ExpressRequest, Response as ExpressResponse } from 'express';
 import { IncomingMessage } from 'http';
 
 import { Config } from './config';
 import { Logger } from './logger';
-import { PrerendererNotReadyException } from './exceptions/prerenderer-not-ready-exception';
 import { PrerendererConfigParams } from './config/defaults';
+import { PrerendererNotReadyException } from './exceptions/prerenderer-not-ready-exception';
 
 interface PrerendererResponse {
   /**
@@ -149,7 +149,13 @@ export class Prerenderer {
     }
 
     this.getLogger().info('Launching Puppeteer...', 'prerenderer');
-    this.browser = await puppeteer.launch({ args: ['--no-sandbox'] });
+    const options: LaunchOptions = { args: ['--no-sandbox'] };
+
+    if (this.config.getChromiumExecutable()) {
+      options.executablePath = this.config.getChromiumExecutable();
+    }
+
+    this.browser = await puppeteer.launch(options);
     this.getLogger().info('Launched Puppeteer!', 'prerenderer');
   }
 
@@ -360,6 +366,7 @@ export class Prerenderer {
       // https://cloud.google.com/compute/docs/storing-retrieving-metadata.
       if (puppeteerResponse.headers()['metadata-flavor'] === 'Google') {
         await page.close();
+
         this.lastResponse = {
           headers: {
             status: 403,

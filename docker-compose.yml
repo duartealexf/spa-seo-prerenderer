@@ -4,11 +4,10 @@ services:
   nginx:
     build:
       context: .
-      dockerfile: docker/nginx.dockerfile
+      dockerfile: docker/nginx/nginx.dockerfile
       args:
         TEST_NGINX_SERVER_HOST: ${TEST_NGINX_SERVER_HOST}
-    volumes:
-      - .:/var/www
+        TEST_NODEJS_PROXY_PATH: ${TEST_NODEJS_PROXY_PATH}
     networks:
       prerender:
         ipv4_address: 172.25.0.101
@@ -21,18 +20,19 @@ services:
       - nginx
     build:
       context: .
-      dockerfile: docker/tests.dockerfile
+      dockerfile: docker/tests/tests-node-12.dockerfile
     extra_hosts:
       - ${TEST_NGINX_SERVER_HOST}:172.25.0.101
       - ${TEST_NODEJS_SERVER_HOST}:127.0.0.1
     volumes:
-      - .:/var/www
+      - ./dist:/var/www/dist
+      - ./src:/var/www/src
+      - ./test:/var/www/test
     ports:
       - 9229:9229
     networks:
       prerender:
         ipv4_address: 172.25.0.102
-    command: npm run test:debug
 
 networks:
   prerender:

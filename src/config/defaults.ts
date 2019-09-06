@@ -39,6 +39,12 @@ export interface PrerendererConfigParams {
   prerendererLogFile?: string;
 
   /**
+   * Chromium executable.
+   * @default '''
+   */
+  chromiumExecutable: string;
+
+  /**
    * Array of path RegExps that, when matched
    * to request path, will activate Prerenderer.
    * @default [new RegExp('.*')]

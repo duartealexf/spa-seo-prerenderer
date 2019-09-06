@@ -23,9 +23,11 @@ describe('valid env vars', () => {
     await p.initialize();
 
     const prerendererLogFile = join(process.cwd(), process.env.PRERENDERER_LOG_FILE);
+    const chromiumExecutable = process.env.CHROMIUM_EXECUTABLE;
     const snapshotsDirectory = join(process.cwd(), process.env.SNAPSHOTS_DIRECTORY);
 
     assert.equal(p.getConfig().getPrerendererLogFile(), prerendererLogFile);
+    assert.equal(p.getConfig().getChromiumExecutable(), chromiumExecutable);
     assert.equal(p.getConfig().getSnapshotsDirectory(), snapshotsDirectory);
     assert.equal(p.getConfig().getSnapshotsDriver(), process.env.SNAPSHOTS_DRIVER);
     assert.equal(p.getConfig().isProductionEnv(), process.env.NODE_ENV === 'production');
@@ -122,5 +124,16 @@ describe('valid env vars', () => {
     await p.initialize();
 
     assert.isNotOk(await pathExists(p.getConfig().getPrerendererLogFile()));
+  });
+
+  it('should have chromiumExecutable set as per given config.', async () => {
+    const config = Object.assign({}, initialConfig, {
+      chromiumExecutable: 'chromium'
+    });
+
+    const p = new Prerenderer(config);
+    await p.initialize();
+
+    assert.equal(p.getConfig().getChromiumExecutable(), config.chromiumExecutable);
   });
 });

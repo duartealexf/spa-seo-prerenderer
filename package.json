@@ -1,6 +1,6 @@
 {
   "name": "spa-seo-prerenderer",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "description": "Pluggable puppeteer prerenderer - make your SPA SEO-friendly.",
   "author": "Alexandre Duarte <duartealexf@gmail.com> (https://github.com/duartealexf)",
   "main": "dist/index.js",
