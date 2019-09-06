@@ -45,7 +45,6 @@ const createRequest = (isSecure, method, isProxy, path, customHeaders, botUserAg
   if (isProxy) {
     requestPath = `/${process.env.TEST_NODEJS_PROXY_PATH}/${trimSlashes(path)}`;
     host = process.env.TEST_NGINX_SERVER_HOST;
-
   } else {
     requestPath = `/${trimSlashes(path)}`;
     host = process.env.TEST_NODEJS_SERVER_HOST;

@@ -5,8 +5,8 @@ import { IncomingMessage } from 'http';
 
 import { Config } from './config';
 import { Logger } from './logger';
-import { PrerendererNotReadyException } from './exceptions/prerenderer-not-ready-exception';
 import { PrerendererConfigParams } from './config/defaults';
+import { PrerendererNotReadyException } from './exceptions/prerenderer-not-ready-exception';
 
 interface PrerendererResponse {
   /**
