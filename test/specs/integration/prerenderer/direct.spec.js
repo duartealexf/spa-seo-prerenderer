@@ -24,6 +24,7 @@ describe('should prerender requests directly to NodeJS', () => {
 
     const r = await createDirectHttpGetRequest('/index.html', {}, true);
     await p.prerender(r);
+    await p.stop();
 
     assert.isNotEmpty(p.getLastResponse());
   });

@@ -366,6 +366,7 @@ export class Prerenderer {
       // https://cloud.google.com/compute/docs/storing-retrieving-metadata.
       if (puppeteerResponse.headers()['metadata-flavor'] === 'Google') {
         await page.close();
+
         this.lastResponse = {
           headers: {
             status: 403,
