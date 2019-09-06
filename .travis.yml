@@ -1,5 +1,14 @@
+language: minimal
+git:
+  depth: 1
 services:
   - docker
+env:
+  - NODE_VERSION=8.3
+  - NODE_VERSION=9
+  - NODE_VERSION=10
+  - NODE_VERSION=11
+  - NODE_VERSION=12
 before_script:
   - docker-compose -f docker-compose.travis.yml config
   - docker-compose -f docker-compose.travis.yml build

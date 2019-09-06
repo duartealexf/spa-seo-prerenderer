@@ -1,4 +1,4 @@
-FROM node:11-alpine AS app
+FROM node:9-alpine
 
 # Home settings
 ENV HOME=/var/www
