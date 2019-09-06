@@ -1,7 +1,9 @@
 FROM node:8.3-slim
 
+ENV APT_KEY_DONT_WARN_ON_DANGEROUS_USAGE=1
+
 # Install Chromium 76, compatible with Puppeteer 1.19
-RUN wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add
+RUN wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add -
 RUN echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list
 RUN apt update
 RUN apt install -y google-chrome-stable=76.* --no-install-recommends
