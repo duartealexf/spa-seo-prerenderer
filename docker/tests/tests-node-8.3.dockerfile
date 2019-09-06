@@ -8,7 +8,6 @@ RUN echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >
 RUN apt update
 RUN apt install -y google-chrome-stable=76.* --no-install-recommends
 
-ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD true
 ENV HOME=/var/www
 RUN mkdir -p $HOME
 
