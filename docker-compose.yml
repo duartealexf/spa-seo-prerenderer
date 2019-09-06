@@ -7,7 +7,10 @@ services:
       dockerfile: docker/nginx/nginx.dockerfile
       args:
         TEST_NGINX_SERVER_HOST: ${TEST_NGINX_SERVER_HOST}
+        TEST_NODEJS_SERVER_HOST: ${TEST_NODEJS_SERVER_HOST}
         TEST_NODEJS_PROXY_PATH: ${TEST_NODEJS_PROXY_PATH}
+    volumes:
+      - ./logs:/var/log/nginx
     networks:
       prerender:
         ipv4_address: 172.25.0.101
@@ -25,6 +28,7 @@ services:
       - ${TEST_NGINX_SERVER_HOST}:172.25.0.101
       - ${TEST_NODEJS_SERVER_HOST}:127.0.0.1
     volumes:
+      - ./logs:/var/www/logs
       - ./dist:/var/www/dist
       - ./src:/var/www/src
       - ./test:/var/www/test
