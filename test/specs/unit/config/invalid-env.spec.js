@@ -10,9 +10,6 @@ const {
 const {
   MismatchingConfigException,
 } = require('../../../../dist/lib/exceptions/mismatching-config-exception');
-const {
-  ChromiumNotFoundException,
-} = require('../../../../dist/lib/exceptions/chromium-not-found-exception');
 
 describe('invalid env vars', () => {
   /**
