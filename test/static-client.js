@@ -31,7 +31,7 @@ const trimSlashes = (str) => str.replace(/^\/+|\/+$/g, '');
  * @param {string} path
  * @param {any} customHeaders
  * @param {boolean} botUserAgent
- * @returns {Promise<import('express').Request>}
+ * @returns {Promise<{request: import('express').Request, response: import('express').Response}>}
  */
 const createRequest = (isSecure, method, isProxy, path, customHeaders, botUserAgent) => {
   /**
@@ -75,12 +75,12 @@ const createRequest = (isSecure, method, isProxy, path, customHeaders, botUserAg
         headers,
         method,
       },
-      () => {
+      (response) => {
         /**
          * When receiving response, resolve promise from request that the server received.
          */
         const request = requests.get(id);
-        resolve(request);
+        resolve({ request, response });
       },
     ).end();
   });
@@ -92,7 +92,7 @@ module.exports = {
    * @param {string} path
    * @param {any} customHeaders
    * @param {boolean} botUserAgent
-   * @returns {Promise<import('express').Request>}
+   * @returns {Promise<{request: import('express').Request, response: import('express').Response}>}
    */
   createDirectHttpGetRequest: (path = '', customHeaders = {}, botUserAgent = true) =>
     createRequest(false, 'GET', false, path, customHeaders, botUserAgent),
@@ -102,7 +102,7 @@ module.exports = {
    * @param {string} path
    * @param {any} customHeaders
    * @param {boolean} botUserAgent
-   * @returns {Promise<import('express').Request>}
+   * @returns {Promise<{request: import('express').Request, response: import('express').Response}>}
    */
   createProxyHttpGetRequest: (path = '', customHeaders = {}, botUserAgent = true) =>
     createRequest(false, 'GET', true, path, customHeaders, botUserAgent),
@@ -111,7 +111,7 @@ module.exports = {
    * Create a HTTP POST request directly to NodeJS server. Note that there are not
    * many options to make a post request. This is because we don't need to focus
    * on them as much, as the Prerenderer only create snapshots for GET requests.
-   * @returns {Promise<import('express').Request>}
+   * @returns {Promise<{request: import('express').Request, response: import('express').Response}>}
    */
   createDirectHttpPostRequest: () => createRequest(false, 'POST', false, '', {}, true),
 };

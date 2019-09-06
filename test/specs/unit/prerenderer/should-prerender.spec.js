@@ -46,8 +46,8 @@ describe('whether it should prerender', () => {
     const p = new Prerenderer();
     await p.initialize();
 
-    const r = await createDirectHttpPostRequest();
-    assert.isNotOk(p.shouldPrerender(r));
+    const { request } = await createDirectHttpPostRequest();
+    assert.isNotOk(p.shouldPrerender(request));
 
     reasonToRejectLastPrerender = 'rejected-method';
     assert.equal(p.getLastRejectedPrerenderReason(), reasonToRejectLastPrerender);
@@ -57,8 +57,8 @@ describe('whether it should prerender', () => {
     const p = new Prerenderer();
     await p.initialize();
 
-    const r = await createDirectHttpGetRequest('', { 'user-agent': ''}, false);
-    assert.isNotOk(p.shouldPrerender(r));
+    const { request } = await createDirectHttpGetRequest('', { 'user-agent': ''}, false);
+    assert.isNotOk(p.shouldPrerender(request));
 
     reasonToRejectLastPrerender = 'no-user-agent';
     assert.equal(p.getLastRejectedPrerenderReason(), reasonToRejectLastPrerender);
@@ -68,8 +68,8 @@ describe('whether it should prerender', () => {
     const p = new Prerenderer();
     await p.initialize();
 
-    const r = await createDirectHttpGetRequest('', {}, false);
-    assert.isNotOk(p.shouldPrerender(r));
+    const { request } = await createDirectHttpGetRequest('', {}, false);
+    assert.isNotOk(p.shouldPrerender(request));
 
     reasonToRejectLastPrerender = 'rejected-user-agent';
     assert.equal(p.getLastRejectedPrerenderReason(), reasonToRejectLastPrerender);
@@ -87,8 +87,8 @@ describe('whether it should prerender', () => {
     const p = new Prerenderer(config);
     await p.initialize();
 
-    const r = await createDirectHttpGetRequest('/pixel.png', {}, true);
-    assert.isNotOk(p.shouldPrerender(r));
+    const { request } = await createDirectHttpGetRequest('/pixel.png', {}, true);
+    assert.isNotOk(p.shouldPrerender(request));
 
     reasonToRejectLastPrerender = 'rejected-extension';
     assert.equal(p.getLastRejectedPrerenderReason(), reasonToRejectLastPrerender);
@@ -106,8 +106,8 @@ describe('whether it should prerender', () => {
     const p = new Prerenderer(config);
     await p.initialize();
 
-    const r = await createDirectHttpGetRequest('/', {}, true);
-    assert.isNotOk(p.shouldPrerender(r));
+    const { request } = await createDirectHttpGetRequest('/', {}, true);
+    assert.isNotOk(p.shouldPrerender(request));
 
     reasonToRejectLastPrerender = 'rejected-path';
     assert.equal(p.getLastRejectedPrerenderReason(), reasonToRejectLastPrerender);
@@ -125,8 +125,8 @@ describe('whether it should prerender', () => {
     const p = new Prerenderer(config);
     await p.initialize();
 
-    const r = await createDirectHttpGetRequest('/index.html', {}, true);
-    assert.isOk(p.shouldPrerender(r));
+    const { request } = await createDirectHttpGetRequest('/index.html', {}, true);
+    assert.isOk(p.shouldPrerender(request));
 
     reasonToRejectLastPrerender = undefined;
     assert.equal(p.getLastRejectedPrerenderReason(), reasonToRejectLastPrerender);

@@ -3,7 +3,7 @@ const { assert } = require('chai');
 const { join } = require('path');
 const { v4: uuidv4 } = require('uuid');
 
-const { createDirectHttpGetRequest, createDirectHttpPostRequest } = require('../../../static-client');
+const { createDirectHttpGetRequest } = require('../../../static-client');
 const { Prerenderer } = require('../../../../dist/lib/prerenderer');
 
 describe('should prerender requests directly to NodeJS', () => {
@@ -22,8 +22,8 @@ describe('should prerender requests directly to NodeJS', () => {
     await p.initialize();
     await p.start();
 
-    const r = await createDirectHttpGetRequest('/index.html', {}, true);
-    await p.prerender(r);
+    const { request, response } = await createDirectHttpGetRequest('/index.html', {}, true);
+    await p.prerender(request, response);
     await p.stop();
 
     assert.isNotEmpty(p.getLastResponse());

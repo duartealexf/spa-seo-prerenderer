@@ -3,10 +3,10 @@ const { assert } = require('chai');
 const { join } = require('path');
 const { v4: uuidv4 } = require('uuid');
 
-const { createDirectHttpGetRequest, createDirectHttpPostRequest } = require('../../../static-client');
+const { createProxyHttpGetRequest } = require('../../../static-client');
 const { Prerenderer } = require('../../../../dist/lib/prerenderer');
 
-describe('should prerender requests to NodeJS behind Nginx reverse proxy', () => {
+describe('should prerender requests to NodeJS behind Nginx proxy', () => {
   /**
    * @type {import('../../../../dist/types/config/defaults').PrerendererConfigParams}
    */
@@ -17,14 +17,15 @@ describe('should prerender requests to NodeJS behind Nginx reverse proxy', () =>
     snapshotsDriver: 'fs',
   };
 
-  // it('should prerender index.html.', async () => {
-  //   const p = new Prerenderer(initialConfig);
-  //   await p.initialize();
-  //   await p.start();
+  it('should prerender index.html.', async () => {
+    const p = new Prerenderer(initialConfig);
+    await p.initialize();
+    await p.start();
 
-  //   const r = await createDirectHttpGetRequest('/index.html', {}, true);
-  //   await p.prerender(r);
+    const { request, response } = await createProxyHttpGetRequest('/index.html', {}, true);
+    await p.prerender(request, response);
+    await p.stop();
 
-  //   assert.isNotEmpty(p.getLastResponse());
-  // });
+    assert.isNotEmpty(p.getLastResponse());
+  });
 });
