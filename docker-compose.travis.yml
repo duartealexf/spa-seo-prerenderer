@@ -4,7 +4,7 @@ services:
   nginx:
     build:
       context: .
-      dockerfile: docker/nginx.dockerfile
+      dockerfile: docker/nginx/nginx.dockerfile
       args:
         TEST_NGINX_SERVER_HOST: ${TEST_NGINX_SERVER_HOST}
         TEST_NODEJS_PROXY_PATH: ${TEST_NODEJS_PROXY_PATH}
@@ -24,7 +24,7 @@ services:
       - nginx
     build:
       context: .
-      dockerfile: docker/tests.dockerfile
+      dockerfile: docker/tests/tests-node-${NODE_VERSION}.dockerfile
     extra_hosts:
       - ${TEST_NGINX_SERVER_HOST}:172.25.0.101
       - ${TEST_NODEJS_SERVER_HOST}:127.0.0.1
