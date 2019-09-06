@@ -39,10 +39,10 @@ export interface PrerendererConfigParams {
   prerendererLogFile?: string;
 
   /**
-   * Path to Chromium binary. Not specifying any will use Chromium from node_modules folder.
-   * @default undefined
+   * Chromium executable.
+   * @default '''
    */
-  chromiumPath?: string;
+  chromiumExecutable: string;
 
   /**
    * Array of path RegExps that, when matched

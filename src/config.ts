@@ -12,7 +12,6 @@ import {
   DEFAULT_BOT_USER_AGENTS,
   DEFAULT_BLACKLISTED_REQUEST_URLS,
 } from './config/defaults';
-import { ChromiumNotFoundException } from './exceptions/chromium-not-found-exception';
 
 export class Config {
   /**
@@ -41,9 +40,9 @@ export class Config {
   private prerendererLogFile = '';
 
   /**
-   * Path to Chromium binary. Not specifying any will use Chromium from node_modules folder.
+   * Chromium executable
    */
-  private chromiumPath?: string;
+  private chromiumExecutable?: string;
 
   /**
    * Array of path RegExps that, when matched
@@ -93,7 +92,7 @@ export class Config {
       snapshotsDriver: process.env.SNAPSHOTS_DRIVER || 'fs',
       snapshotsDirectory: process.env.SNAPSHOTS_DIRECTORY || '../snapshots',
       prerendererLogFile: process.env.PRERENDERER_LOG_FILE || '',
-      chromiumPath: process.env.CHROMIUM_PATH || '',
+      chromiumExecutable: process.env.CHROMIUM_EXECUTABLE,
       ...config,
     };
 
@@ -107,7 +106,8 @@ export class Config {
   public async initialize(): Promise<void> {
     await this.initSnapshotConfig();
     await this.initLoggingConfig();
-    await this.initChromiumConfig();
+
+    this.chromiumExecutable = this.constructSettings.chromiumExecutable;
 
     this.initialized = true;
   }
@@ -279,33 +279,6 @@ export class Config {
   }
 
   /**
-   * Initialize Chromium configuration.
-   */
-  private async initChromiumConfig(): Promise<void> {
-    if (!this.constructSettings.chromiumPath) {
-      return;
-    }
-
-    /**
-     * Make the directory absolute.
-     */
-    const chromiumPath = this.constructSettings.chromiumPath.startsWith('/')
-      ? this.constructSettings.chromiumPath
-      : join(process.cwd(), this.constructSettings.chromiumPath);
-
-    /**
-     * Ensure file exists and is writeable.
-     */
-    const exists = await Filesystem.exists(chromiumPath);
-
-    if (!exists) {
-      throw new ChromiumNotFoundException(chromiumPath);
-    }
-
-    this.chromiumPath = chromiumPath;
-  }
-
-  /**
    * Whether configuration has been initialized.
    */
   public isInitialized(): boolean {
@@ -343,8 +316,8 @@ export class Config {
   /**
    * Get path to Chromium binary.
    */
-  public getChromiumPath(): string | undefined {
-    return this.chromiumPath;
+  public getChromiumExecutable(): string | undefined {
+    return this.chromiumExecutable;
   }
 
   /**

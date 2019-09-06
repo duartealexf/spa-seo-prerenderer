@@ -151,8 +151,8 @@ export class Prerenderer {
     this.getLogger().info('Launching Puppeteer...', 'prerenderer');
     const options: LaunchOptions = { args: ['--no-sandbox'] };
 
-    if (this.config.getChromiumPath()) {
-      options.executablePath = this.config.getChromiumPath();
+    if (this.config.getChromiumExecutable()) {
+      options.executablePath = this.config.getChromiumExecutable();
     }
 
     this.browser = await puppeteer.launch(options);

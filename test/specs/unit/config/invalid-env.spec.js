@@ -71,18 +71,4 @@ describe('invalid env vars', () => {
       assert.include(e.message, "when snapshotsDriver is 's3'");
     }
   });
-
-  it('should throw an error when chromiumPath does not exist.', async () => {
-    const buggedConfig = Object.assign({}, initialConfig, {
-      chromiumPath: '/enoent',
-    });
-
-    try {
-      const p = new Prerenderer(buggedConfig);
-      await p.initialize();
-      assert.ok(false);
-    } catch (e) {
-      assert.instanceOf(e, ChromiumNotFoundException);
-    }
-  });
 });
