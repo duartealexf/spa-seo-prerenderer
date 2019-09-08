@@ -2,16 +2,37 @@ const mocha = require('mocha');
 const fsExtra = require('fs-extra');
 const { join } = require('path');
 
-const server = require('../static-server');
+const testAppServer = require('../servers/test-app-server');
+const prerendererServer = require('../servers/prerenderer-server');
 
 mocha.before(async () => {
-  await server.start();
+  /**
+   * Start test app server.
+   */
+  await testAppServer.start();
+  await testAppServer.attachPrerenderMiddleware({
+    snapshotsDirectory: join(process.cwd(), 'test', 'tmp'),
+    snapshotsDriver: 'fs',
+  });
 
+  /**
+   * Start prerenderer server.
+   */
+  await prerendererServer.start();
+  await prerendererServer.attachPrerenderWithConfig({
+    snapshotsDirectory: join(process.cwd(), 'test', 'tmp'),
+    snapshotsDriver: 'fs',
+  });
+
+  /**
+   * Empty tmp dir.
+   */
   const tmpDir = join(process.cwd(), 'test', 'tmp');
   await fsExtra.mkdirp(tmpDir);
   await fsExtra.emptyDir(tmpDir);
 });
 
 mocha.after(async () => {
-  await server.close();
+  await testAppServer.close();
+  await prerendererServer.close();
 });

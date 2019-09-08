@@ -105,7 +105,7 @@ export class Prerenderer {
   /**
    * Prerenderer user agent including version.
    */
-  public static readonly USER_AGENT = 'prerenderer/{{version}}';
+  public static readonly USER_AGENT = 'Mozilla/5.0 (compatible; prerenderer/{{version}})';
 
   constructor(config: PrerendererConfigParams) {
     this.config = new Config(config);
@@ -248,6 +248,7 @@ export class Prerenderer {
       return false;
     }
 
+    // TODO: improve this when testing with query strings and fragments.
     const path = request.url.substr(1);
     const extension = extname(path)
       .substr(1)
@@ -283,8 +284,27 @@ export class Prerenderer {
     try {
       const protocol = request.protocol;
       const host = request.hostname;
-      const port = request.connection.localPort === 80 ? '' : `:${request.connection.localPort}`;
       const path = request.originalUrl;
+
+      let portSource: 'connection' | 'header' | undefined;
+      let parsedPort: number | undefined;
+      let port = '';
+
+      if (request.connection.localPort) {
+        portSource = 'connection';
+      } else if (request.headers['x-forwarded-port']) {
+        portSource = 'header';
+      }
+
+      if (portSource === 'connection') {
+        parsedPort = request.connection.localPort;
+      } else if (portSource === 'header') {
+        parsedPort = parseInt(request.headers['x-forwarded-port'] as string, 10);
+      }
+
+      if (parsedPort !== 80 && parsedPort !== 433) {
+        port = `:${parsedPort}`;
+      }
 
       // TODO: keep query paramss.
       const requestedUrl = `${protocol}://${host}${port}${path}`;

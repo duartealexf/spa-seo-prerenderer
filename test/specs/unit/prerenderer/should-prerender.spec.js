@@ -3,7 +3,7 @@ const { assert } = require('chai');
 const { join } = require('path');
 const { v4: uuidv4 } = require('uuid');
 
-const { createDirectHttpGetRequest, createDirectHttpPostRequest } = require('../../../static-client');
+const { createDirectHttpGetRequest, createDirectHttpPostRequest } = require('../../../client');
 const { Prerenderer } = require('../../../../dist/lib/prerenderer');
 
 describe('whether it should prerender', () => {
