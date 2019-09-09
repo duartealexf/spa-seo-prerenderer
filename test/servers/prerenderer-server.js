@@ -33,11 +33,11 @@ module.exports = {
 
     await killPort(port);
 
-    server = await new Promise((resolve) =>
-      app.listen(port, '0.0.0.0', () => {
-        resolve();
-      }),
-    );
+    server = await new Promise((resolve) => {
+      const s = app.listen(port, '0.0.0.0', () => {
+        resolve(s);
+      });
+    });
   },
 
   /**

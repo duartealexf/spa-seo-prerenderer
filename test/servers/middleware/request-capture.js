@@ -9,7 +9,7 @@ const requests = new Map();
  * which then can be retrieved later to help testing purposes.
  * @param {import('express').Request} req
  * @param {import('express').Response} res
- * @param {() => void} next
+ * @param {(err?: any) => void} next
  */
 const captureRequests = (req, res, next) => {
   const id = req.headers['x-request-id'];

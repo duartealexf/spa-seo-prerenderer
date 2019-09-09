@@ -361,7 +361,7 @@ export class Prerenderer {
         });
       } catch (e) {
         // TODO: do something other than console error.
-        // console.error(e);
+        this.getLogger().error(e, 'puppeteer.page.goto');
       }
 
       if (!puppeteerResponse) {

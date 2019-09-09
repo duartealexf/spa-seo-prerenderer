@@ -1,25 +1,12 @@
 require('dotenv').config();
 const express = require('express');
-const static = require('serve-static');
 const killPort = require('kill-port');
-const { join } = require('path');
 
 const { captureRequests, requests } = require('./middleware/request-capture');
 const { configPrerendererMiddleware } = require('./middleware/prerenderer');
+const { serveStatic } = require('./middleware/serve-static');
 
 const app = express();
-
-app.use(captureRequests);
-
-/**
- * Attach to serve static test files.
- * @see https://expressjs.com/en/resources/middleware/serve-static.html
- */
-app.use(
-  static(join(__dirname, 'static'), {
-    redirect: false,
-  }),
-);
 
 /** @type {import('http').Server} */
 let server;
@@ -53,10 +40,10 @@ module.exports = {
 
     await killPort(port);
 
-    server = await new Promise((resolve) =>
-      app.listen(port, '0.0.0.0', () => {
-        resolve();
-      }),
+    server = await new Promise((resolve) =>{
+      const s = app.listen(port, '0.0.0.0', () => {
+        resolve(s);
+      })},
     );
   },
 
@@ -75,10 +62,12 @@ module.exports = {
   /**
    * @param {import('../../dist/types/config/defaults').PrerendererConfigParams} config
    */
-  attachPrerenderMiddleware: async (config) => {
+  attachMiddlewares: async (config) => {
     const { prerenderer: p, middleware } = await configPrerendererMiddleware(config);
     prerenderer = p;
 
+    app.use(captureRequests);
     app.use(middleware);
+    app.use(serveStatic);
   },
 };

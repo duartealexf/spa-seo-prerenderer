@@ -15,6 +15,7 @@ describe('whether it should prerender', () => {
     prerendererLogFile: join('test', 'tmp', `${uuidv4()}.log`),
     snapshotsDirectory: join('test', 'tmp', uuidv4()),
     snapshotsDriver: 'fs',
+    timeout: 8640000
   };
 
   /**

@@ -10,9 +10,10 @@ mocha.before(async () => {
    * Start test app server.
    */
   await testAppServer.start();
-  await testAppServer.attachPrerenderMiddleware({
+  await testAppServer.attachMiddlewares({
     snapshotsDirectory: join(process.cwd(), 'test', 'tmp'),
     snapshotsDriver: 'fs',
+    timeout: 8640000
   });
 
   /**
@@ -22,6 +23,7 @@ mocha.before(async () => {
   await prerendererServer.attachPrerenderWithConfig({
     snapshotsDirectory: join(process.cwd(), 'test', 'tmp'),
     snapshotsDriver: 'fs',
+    timeout: 8640000
   });
 
   /**

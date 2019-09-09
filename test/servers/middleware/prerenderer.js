@@ -13,11 +13,27 @@ module.exports = {
 
     return {
       prerenderer,
+
+      /**
+       * Prerenderer middleware that evaluates whether it
+       * should prerender, to send prerendered response.
+       * @param {import('express').Request} req
+       * @param {import('express').Response} res
+       * @param {(err?: any) => void} next
+       */
       middleware: (req, res, next) => {
         if (prerenderer.shouldPrerender(req)) {
-          return prerenderer.prerender(req, res).catch((err) => {
-            next(err);
-          });
+          return prerenderer
+            .prerender(req, res)
+            .then(() => {
+              const response = prerenderer.getLastResponse();
+
+              // TODO: prerenderer should write response, add correct headers and send it.
+              res.send(response.body);
+            })
+            .catch((err) => {
+              next(err);
+            });
         }
         return next();
       },

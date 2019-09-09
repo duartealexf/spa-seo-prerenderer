@@ -22,13 +22,11 @@ export interface PrerendererConfigParams {
 
   /**
    * Chosen snapshots driver.
-   * @default 'fs'
    */
   snapshotsDriver: SnapshotsDriver;
 
   /**
    * Directory to store snapshots in.
-   * @default '../snapshots'
    */
   snapshotsDirectory: string;
 
