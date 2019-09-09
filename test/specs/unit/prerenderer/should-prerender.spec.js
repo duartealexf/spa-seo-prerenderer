@@ -113,23 +113,4 @@ describe('whether it should prerender', () => {
     reasonToRejectLastPrerender = 'rejected-path';
     assert.equal(p.getLastRejectedPrerenderReason(), reasonToRejectLastPrerender);
   });
-
-  it('should prerender if it is a prerenderable path.', async () => {
-    /**
-     * @type {import('../../../../dist/types/config/defaults').PrerendererConfigParams}
-     */
-    const config = {
-      ...initialConfig,
-      prerenderablePathRegExps: [/index\.html/],
-    };
-
-    const p = new Prerenderer(config);
-    await p.initialize();
-
-    const { request } = await createDirectHttpGetRequest('/index.html', {}, true);
-    assert.isOk(p.shouldPrerender(request));
-
-    reasonToRejectLastPrerender = undefined;
-    assert.equal(p.getLastRejectedPrerenderReason(), reasonToRejectLastPrerender);
-  });
 });
