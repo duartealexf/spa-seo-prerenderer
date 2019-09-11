@@ -14,7 +14,7 @@ Pluggable puppeteer prerenderer - make your SPA SEO-friendly.
 
 ## How to use
 
-TODO
+TODO!
 
 ## Contributing
 
