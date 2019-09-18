@@ -172,4 +172,14 @@ module.exports = {
    */
   requestSmartProxyDecidedToPrerender: (request) =>
     request.header('x-proxy-should-prerender') === '1',
+
+  /**
+   * Get body from given response
+   * @param {import('http').IncomingMessage} request
+   */
+  getResponseBody: async (response) => new Promise((resolve) => {
+    response.on('data', (data) => {
+      resolve(data.toString());
+    });
+  }),
 };

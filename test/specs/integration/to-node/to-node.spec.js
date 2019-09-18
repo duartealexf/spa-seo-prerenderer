@@ -2,8 +2,9 @@ const { describe, it } = require('mocha');
 const { assert } = require('chai');
 const { join } = require('path');
 const { v4: uuidv4 } = require('uuid');
+const cheerio = require('cheerio');
 
-const { createDirectHttpGetRequest } = require('../../../client');
+const { createDirectHttpGetRequest, getResponseBody } = require('../../../client');
 const { Prerenderer } = require('../../../../dist/lib/prerenderer');
 
 describe('should prerender requests sent directly to NodeJS', () => {
@@ -17,15 +18,17 @@ describe('should prerender requests sent directly to NodeJS', () => {
     snapshotsDriver: 'fs'
   };
 
-  // it('should prerender index.html.', async () => {
-  //   const p = new Prerenderer(initialConfig);
-  //   await p.initialize();
-  //   await p.start();
+  it('should receive prerendered index.html.', async () => {
+    const p = new Prerenderer(initialConfig);
+    await p.initialize();
+    await p.start();
 
-  //   const { request, response } = await createDirectHttpGetRequest('/index.html', {}, true);
-  //   await p.prerender(request, response);
-  //   await p.stop();
+    const { response } = await createDirectHttpGetRequest('index.html', {}, true);
+    const body = await getResponseBody(response);
+    const $ = cheerio.load(body);
 
-  //   assert.isNotEmpty(p.getLastResponse());
-  // });
+    assert.equal($('#app').length, 1);
+  });
+
+  // TODO: test inners of prerenderer, such as request catcher.
 });
