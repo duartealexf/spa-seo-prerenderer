@@ -1,3 +1,9 @@
+/**
+ * This server will simulate an actual NodeJS app server which is proxied from an Nginx or
+ * Apache server (that do not decide whether request should prerender - so they just proxy
+ * requests to NodeJS). This NodeJS server plugs the Prerenderer as a middleware, which
+ * decides whether it should prerender – so it does and sends the response.
+ */
 require('dotenv').config();
 const express = require('express');
 const killPort = require('kill-port');
@@ -26,7 +32,7 @@ module.exports = {
   server,
 
   /**
-   * Requests that server has received.
+   * Requests that have been captured.
    */
   requests,
 
@@ -40,11 +46,11 @@ module.exports = {
 
     await killPort(port);
 
-    server = await new Promise((resolve) =>{
+    server = await new Promise((resolve) => {
       const s = app.listen(port, '0.0.0.0', () => {
         resolve(s);
-      })},
-    );
+      });
+    });
   },
 
   /**
@@ -63,11 +69,13 @@ module.exports = {
    * @param {import('../../dist/types/config/defaults').PrerendererConfigParams} config
    */
   attachMiddlewares: async (config) => {
-    const { prerenderer: p, middleware } = await configPrerendererMiddleware(config);
+    const { prerenderer: p, middleware: prerendererMiddleware } = await configPrerendererMiddleware(
+      config,
+    );
     prerenderer = p;
 
-    app.use(captureRequests);
-    app.use(middleware);
+    app.use(captureRequests('app'));
+    app.use(prerendererMiddleware);
     app.use(serveStatic);
   },
 };

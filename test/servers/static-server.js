@@ -1,14 +1,14 @@
 /**
- * This server will simulate a Prerenderer-only NodeJS server which is proxied from an
- * Nginx or Apache server (that decided whether request should be prerendered). After
- * having that decision made, this server only prerenders and sends the response.
+ * This server will just deliver static content, without prerendering it. It should be proxied
+ * from a Nginx or Apache server that decided whether request should be prerendered. If
+ * request reaches this server, then that means that it should not be prerendered.
  */
 require('dotenv').config();
 const express = require('express');
 const killPort = require('kill-port');
 
 const { captureRequests, requests } = require('./middleware/request-capture');
-const { initializePrerenderer } = require('./middleware/prerenderer');
+const { serveStatic } = require('./middleware/serve-static');
 
 const app = express();
 
@@ -35,12 +35,12 @@ module.exports = {
   requests,
 
   /**
-   * Start Prerenderer server.
+   * Start test static server.
    */
   start: async () => {
-    const port = process.env.TEST_PRERENDERER_NODEJS_SERVER_PORT
-      ? parseInt(process.env.TEST_PRERENDERER_NODEJS_SERVER_PORT, 10)
-      : 7900;
+    const port = process.env.TEST_STATIC_NODEJS_SERVER_PORT
+      ? parseInt(process.env.TEST_STATIC_NODEJS_SERVER_PORT, 10)
+      : 7800;
 
     await killPort(port);
 
@@ -52,7 +52,7 @@ module.exports = {
   },
 
   /**
-   * Close Prerenderer server.
+   * Close test static server.
    */
   close: async () => {
     if (server) {
@@ -63,16 +63,8 @@ module.exports = {
     }
   },
 
-  /**
-   * @param {import('../../dist/types/config/defaults').PrerendererConfigParams} config
-   */
-  attachPrerenderWithConfig: async (config) => {
-    const { prerenderer: p, middleware: prerendererMiddleware } = await initializePrerenderer(
-      config,
-    );
-
-    prerenderer = p;
-    app.use(captureRequests('prerender'));
-    app.use(prerendererMiddleware);
+  attachMiddlewares: () => {
+    app.use(captureRequests('static'));
+    app.use(serveStatic);
   },
 };

@@ -1,7 +1,7 @@
 const { request } = require('http');
 const { v4: uuidv4 } = require('uuid');
 
-const { requests } = require('./servers/test-app-server');
+const { requests } = require('./servers/app-server');
 const { DEFAULT_BOT_USER_AGENTS } = require('../dist/lib/config/defaults');
 
 /**
@@ -32,7 +32,7 @@ const trimSlashes = (str) => str.replace(/^\/+|\/+$/g, '');
  * @param {string} path
  * @param {any} customHeaders
  * @param {boolean} botUserAgent
- * @returns {Promise<{request: import('express').Request, response: import('http').IncomingMessage}>}
+ * @returns {Promise<{request: import('express').Request, response: import('http').IncomingMessage, context: 'prerender'|'static'|'app'}>}
  */
 const createRequest = (method, isSecure, host, port, path, customHeaders, botUserAgent) => {
   /**
@@ -70,8 +70,8 @@ const createRequest = (method, isSecure, host, port, path, customHeaders, botUse
         /**
          * When receiving response, resolve promise from request that the server received.
          */
-        const request = requests.get(id);
-        resolve({ request, response });
+        const requestInfo = requests.get(id);
+        resolve({ ...requestInfo, response });
       },
     ).end();
   });
@@ -88,7 +88,7 @@ module.exports = {
     createRequest(
       'POST',
       false,
-      process.env.TEST_NODEJS_SERVERS_HOST,
+      process.env.TEST_NODEJS_CONTAINER_HOST,
       process.env.TEST_APP_NODEJS_SERVER_PORT,
       '',
       {},
@@ -106,7 +106,7 @@ module.exports = {
     createRequest(
       'GET',
       false,
-      process.env.TEST_NODEJS_SERVERS_HOST,
+      process.env.TEST_NODEJS_CONTAINER_HOST,
       process.env.TEST_APP_NODEJS_SERVER_PORT,
       path,
       customHeaders,
@@ -125,7 +125,7 @@ module.exports = {
     createRequest(
       'GET',
       false,
-      process.env.TEST_DUMB_NGINX_SERVER_HOST,
+      process.env.TEST_DUMB_NGINX_CONTAINER_HOST,
       80,
       path,
       customHeaders,
@@ -144,7 +144,7 @@ module.exports = {
     createRequest(
       'GET',
       false,
-      process.env.TEST_SMART_NGINX_SERVER_HOST,
+      process.env.TEST_SMART_NGINX_CONTAINER_HOST,
       80,
       path,
       customHeaders,
@@ -170,5 +170,6 @@ module.exports = {
    * proxy and it decided to proxy to Prerenderer.
    * @param {import('express').Request} request
    */
-  requestSmartProxyDecidedToPrerender: (request) => request.header('x-proxy-should-prerender') === '1',
+  requestSmartProxyDecidedToPrerender: (request) =>
+    request.header('x-proxy-should-prerender') === '1',
 };
