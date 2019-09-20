@@ -7,7 +7,7 @@ const cheerio = require('cheerio');
 const { createDirectHttpGetRequest, getResponseBody } = require('../../../client');
 const { Prerenderer } = require('../../../../dist/lib/prerenderer');
 
-describe('should prerender requests sent directly to NodeJS', () => {
+describe('prerender requests sent directly to NodeJS', () => {
   /**
    * @type {import('../../../../dist/types/config/defaults').PrerendererConfigParams}
    */
@@ -15,7 +15,7 @@ describe('should prerender requests sent directly to NodeJS', () => {
     nodeEnv: 'development',
     prerendererLogFile: join('test', 'tmp', `${uuidv4()}.log`),
     snapshotsDirectory: join('test', 'tmp', uuidv4()),
-    snapshotsDriver: 'fs'
+    snapshotsDriver: 'fs',
   };
 
   it('should receive prerendered index.html.', async () => {

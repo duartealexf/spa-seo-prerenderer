@@ -149,7 +149,9 @@ export class Prerenderer {
     }
 
     this.getLogger().info('Launching Puppeteer...', 'prerenderer');
-    const options: LaunchOptions = { args: ['--no-sandbox'] };
+    const options: LaunchOptions = {
+      args: ['--no-sandbox'],
+    };
 
     if (this.config.getChromiumExecutable()) {
       options.executablePath = this.config.getChromiumExecutable();
@@ -275,6 +277,8 @@ export class Prerenderer {
   }
 
   public async prerender(request: ExpressRequest, response: ExpressResponse): Promise<void> {
+    // TODO: use IncomingMessage instead of express request and response.
+
     if (!this.browser) {
       throw new PrerendererNotReadyException(
         'Prerenderer needs to be started before prerendering an url. Did you call prerenderer.start()?',
@@ -282,29 +286,13 @@ export class Prerenderer {
     }
 
     try {
-      const protocol = request.protocol;
-      const host = request.hostname;
+      const protocol =
+        Prerenderer.getRequestHeader(request, 'x-forwarded-proto') || request.protocol;
+      const host = Prerenderer.getRequestHeader(request, 'x-forwarded-host') || request.hostname;
+      const port = Prerenderer.getRequestPort(request);
+
+      // TODO: check if originalUrl is what we want
       const path = request.originalUrl;
-
-      let portSource: 'connection' | 'header' | undefined;
-      let parsedPort: number | undefined;
-      let port = '';
-
-      if (request.connection.localPort) {
-        portSource = 'connection';
-      } else if (request.headers['x-forwarded-port']) {
-        portSource = 'header';
-      }
-
-      if (portSource === 'connection') {
-        parsedPort = request.connection.localPort;
-      } else if (portSource === 'header') {
-        parsedPort = parseInt(request.headers['x-forwarded-port'] as string, 10);
-      }
-
-      if (parsedPort !== 80 && parsedPort !== 433) {
-        port = `:${parsedPort}`;
-      }
 
       // TODO: keep query paramss.
       const requestedUrl = `${protocol}://${host}${port}${path}`;
@@ -442,5 +430,26 @@ export class Prerenderer {
       // console.error(err);
       throw new Error('page.goto/waitForSelector timed out.');
     }
+  }
+
+  private static getRequestHeader(request: ExpressRequest, header: string): string {
+    const headerEntry = Object.entries(request.headers).find(([k]) => k.toLowerCase() === header);
+
+    if (!headerEntry) {
+      return '';
+    }
+
+    return headerEntry[1] as string;
+  }
+
+  private static getRequestPort(request: ExpressRequest): string {
+    const port =
+      Prerenderer.getRequestHeader(request, 'x-forwarded-port') || request.connection.localPort;
+
+    if (port === 80 || port === 433) {
+      return '';
+    }
+
+    return `:${port}`;
   }
 }

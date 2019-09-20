@@ -24,7 +24,7 @@ module.exports = {
         const stat = statSync(filepath);
 
         if (stat.isFile()) {
-          const contents = readFileSync(filepath).toString();
+          const contents = readFileSync(filepath).toString('utf8');
           res.send(contents);
         } else {
           res.send('');

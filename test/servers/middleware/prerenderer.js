@@ -52,9 +52,17 @@ module.exports = {
     return {
       prerenderer,
       middleware: (req, res, next) => {
-        return prerenderer.prerender(req, res).catch((err) => {
-          next(err);
-        });
+        return prerenderer
+          .prerender(req, res)
+          .then(() => {
+            const response = prerenderer.getLastResponse();
+
+            // TODO: prerenderer should write response, add correct headers and send it.
+            res.send(response.body);
+          })
+          .catch((err) => {
+            next(err);
+          });
       },
     };
   },

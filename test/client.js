@@ -3,6 +3,7 @@ const { v4: uuidv4 } = require('uuid');
 
 const { requests } = require('./servers/app-server');
 const { DEFAULT_BOT_USER_AGENTS } = require('../dist/lib/config/defaults');
+const { createGunzip } = require('zlib');
 
 /**
  * @type {import('http').OutgoingHttpHeaders}
@@ -32,7 +33,7 @@ const trimSlashes = (str) => str.replace(/^\/+|\/+$/g, '');
  * @param {string} path
  * @param {any} customHeaders
  * @param {boolean} botUserAgent
- * @returns {Promise<{request: import('express').Request, response: import('http').IncomingMessage, context: 'prerender'|'static'|'app'}>}
+ * @returns {Promise<{request: import('http').IncomingMessage, response: import('http').IncomingMessage, context: 'prerender'|'static'|'app'}>}
  */
 const createRequest = (method, isSecure, host, port, path, customHeaders, botUserAgent) => {
   /**
@@ -50,7 +51,7 @@ const createRequest = (method, isSecure, host, port, path, customHeaders, botUse
   };
 
   if (botUserAgent) {
-    headers['user-agent'] = DEFAULT_BOT_USER_AGENTS[0];
+    headers['User-Agent'] = DEFAULT_BOT_USER_AGENTS[0];
   }
 
   return new Promise((resolve) => {
@@ -77,12 +78,31 @@ const createRequest = (method, isSecure, host, port, path, customHeaders, botUse
   });
 };
 
+/**
+ * Get header from given request/response.
+ * @param {import('http').IncomingMessage} requestOrResponse
+ * @param {string} header
+ * @returns {string}
+ */
+const getHeader = (requestOrResponse, header) => {
+  const headerEntry = Object.entries(requestOrResponse.headers).find(
+    ([k]) => k.toLowerCase() === header,
+  );
+
+  if (!headerEntry) {
+    return '';
+  }
+
+  // @ts-ignore
+  return headerEntry[1];
+};
+
 module.exports = {
   /**
    * Create a HTTP POST request directly to NodeJS server. Note that there are not
    * many options to make a post request. This is because we don't need to focus
    * on them as much, as the Prerenderer only create snapshots for GET requests.
-   * @returns {Promise<{request: import('express').Request, response: import('http').IncomingMessage}>}
+   * @returns {ReturnType<typeof createRequest>}
    */
   createDirectHttpPostRequest: () =>
     createRequest(
@@ -100,7 +120,7 @@ module.exports = {
    * @param {string} path
    * @param {any} customHeaders
    * @param {boolean} botUserAgent
-   * @returns {Promise<{request: import('express').Request, response: import('http').IncomingMessage}>}
+   * @returns {ReturnType<typeof createRequest>}
    */
   createDirectHttpGetRequest: (path = '', customHeaders = {}, botUserAgent = true) =>
     createRequest(
@@ -119,7 +139,7 @@ module.exports = {
    * @param {string} path
    * @param {any} customHeaders
    * @param {boolean} botUserAgent
-   * @returns {Promise<{request: import('express').Request, response: import('http').IncomingMessage}>}
+   * @returns {ReturnType<typeof createRequest>}
    */
   createDumbProxyHttpGetRequest: (path = '', customHeaders = {}, botUserAgent = true) =>
     createRequest(
@@ -138,7 +158,7 @@ module.exports = {
    * @param {string} path
    * @param {any} customHeaders
    * @param {boolean} botUserAgent
-   * @returns {Promise<{request: import('express').Request, response: import('http').IncomingMessage}>}
+   * @returns {ReturnType<typeof createRequest>}
    */
   createSmartProxyHttpGetRequest: (path = '', customHeaders = {}, botUserAgent = true) =>
     createRequest(
@@ -154,32 +174,45 @@ module.exports = {
   /**
    * Returns whether request passed through dumb Nginx's proxy.
    * If it returns false, it passed through smart Nginx's proxy.
-   * @param {import('express').Request} request
+   * @param {import('http').IncomingMessage} request
+   * @returns {boolean}
    */
-  requestPassedThroughDumbProxy: (request) => request.header('x-proxy-mode') === 'dumb',
+  requestPassedThroughDumbProxy: (request) => getHeader(request, 'x-proxy-mode') === 'dumb',
 
   /**
    * Returns whether request passed through smart Nginx's proxy.
    * If it returns false, it passed through dumb Nginx's proxy.
-   * @param {import('express').Request} request
+   * @param {import('http').IncomingMessage} request
+   * @returns {boolean}
    */
-  requestPassedThroughSmartProxy: (request) => request.header('x-proxy-mode') === 'smart',
+  requestPassedThroughSmartProxy: (request) => getHeader(request, 'x-proxy-mode') === 'smart',
 
   /**
    * Returns whether request passed through smart Nginx's
    * proxy and it decided to proxy to Prerenderer.
-   * @param {import('express').Request} request
+   * @param {import('http').IncomingMessage} request
+   * @returns {boolean}
    */
   requestSmartProxyDecidedToPrerender: (request) =>
-    request.header('x-proxy-should-prerender') === '1',
+    getHeader(request, 'x-proxy-should-prerender') === '1',
 
   /**
-   * Get body from given response
-   * @param {import('http').IncomingMessage} request
+   * Get body from given response.
+   * @param {import('http').IncomingMessage} response
+   * @returns {Promise<string>}
    */
-  getResponseBody: async (response) => new Promise((resolve) => {
-    response.on('data', (data) => {
-      resolve(data.toString());
-    });
-  }),
+  getResponseBody: (response) =>
+    new Promise((resolve) => {
+      const isGzipped = getHeader(response, 'content-encoding') === 'gzip';
+      const stream = isGzipped ? response.pipe(createGunzip()) : response;
+      const buffer = [];
+
+      stream
+        .on('data', (/** @type {Buffer} */ chunk) => {
+          buffer.push(chunk.toString('utf-8'));
+        })
+        .on('end', () => {
+          resolve(buffer.join(''));
+        });
+    }),
 };
