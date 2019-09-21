@@ -192,13 +192,10 @@ export class Config {
         );
       }
 
-      if (whitelist.length) {
-        this.whitelistedRequestURLs = whitelist;
-        this.blacklistedRequestURLs = [];
-      }
+      this.whitelistedRequestURLs = whitelist;
     }
 
-    if (typeof c.blacklistedRequestURLs !== 'undefined' && !this.whitelistedRequestURLs.length) {
+    if (typeof c.blacklistedRequestURLs !== 'undefined') {
       const blacklist = c.blacklistedRequestURLs as string[];
 
       if (!Array.isArray(blacklist) || blacklist.some((v) => typeof v !== 'string')) {
