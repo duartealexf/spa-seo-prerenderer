@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.10](https://github.com/duartealexf/spa-seo-prerenderer/compare/v0.0.9...v0.0.10) (2019-09-21)
+
+
+### Bug Fixes
+
+* fix errors in prerenderer for node 8.3 and 9 ([76cb8cb](https://github.com/duartealexf/spa-seo-prerenderer/commit/76cb8cb))
+
+
+### Features
+
+* add prerenderer url parser and remove express dep ([e59d340](https://github.com/duartealexf/spa-seo-prerenderer/commit/e59d340))
+
 ### [0.0.9](https://github.com/duartealexf/spa-seo-prerenderer/compare/v0.0.8...v0.0.9) (2019-09-11)
 
 ### [0.0.8](https://github.com/duartealexf/spa-seo-prerenderer/compare/v0.0.7...v0.0.8) (2019-09-06)
