@@ -1,4 +1,4 @@
-import puppeteer, { Browser, Response as PuppeteerResponse, LaunchOptions } from 'puppeteer';
+import puppeteer, { Browser, Response as PuppeteerResponse, LaunchOptions, Page } from 'puppeteer';
 import { extname } from 'path';
 import { IncomingMessage } from 'http';
 import { URL } from 'url';
@@ -7,6 +7,7 @@ import { Config } from './config';
 import { Logger } from './logger';
 import { PrerendererConfigParams } from './config/defaults';
 import { PrerendererNotReadyException } from './exceptions/prerenderer-not-ready-exception';
+import { PrerendererResponseError } from './error';
 
 export interface PrerendererResponse {
   /**
@@ -264,146 +265,134 @@ export class Prerenderer {
       );
     }
 
-    const parsedUrl = Prerenderer.parseUrl(request);
+    const page = await this.browser.newPage();
 
     const renderStart = Date.now();
 
-    try {
-      const page = await this.browser.newPage();
-
-      page.setUserAgent(Prerenderer.USER_AGENT);
-      page.setRequestInterception(true);
-
-      // TODO: handle certificate error and continue - also test this
-      const blacklist = this.config.getBlacklistedRequestURLs();
-      const whitelist = this.config.getWhitelistedRequestURLs();
-
-      const requestFilter = (req: puppeteer.Request): void => {
-        if (whitelist.some((p) => req.url().includes(p))) {
-          req.continue();
-          return;
-        }
-        if (blacklist.some((p) => req.url().includes(p))) {
-          req.abort();
-          return;
-        }
-        req.continue();
-      };
-
-      page.on('request', requestFilter);
-
-      /**
-       * Add shadow dom shim.
-       */
-      page.evaluateOnNewDocument('if (window.customElements) customElements.forcePolyfill = true;');
-      page.evaluateOnNewDocument('ShadyDOM = { force: true }');
-      page.evaluateOnNewDocument('ShadyCSS = { shimcssproperties: true }');
-
-      let puppeteerResponse: PuppeteerResponse | null = null;
-
-      try {
-        /**
-         * Navigate to page and wait for network to be idle.
-         */
-        puppeteerResponse = await page.goto(parsedUrl.toString(), {
-          timeout: this.config.getTimeout(),
-          waitUntil: 'networkidle0',
-        });
-      } catch (e) {
+    await this.navigatePageWithRequest(page, request)
+      .then((puppeteerResponse) => {
+        this.lastResponse = puppeteerResponse;
+      })
+      .catch(async (error) => {
         let message: string;
+        let status = 400;
 
-        if (e instanceof Error) {
-          message = e.message;
-        } else if (typeof e === 'object') {
-          message = JSON.stringify(e);
+        if (error instanceof PrerendererResponseError) {
+          status = error.statusCode;
+          message = error.message;
+        } else if (error instanceof Error) {
+          message = error.message;
+        } else if (typeof error === 'object') {
+          message = JSON.stringify(error);
         } else {
-          message = e;
+          message = error;
         }
 
-        this.getLogger().error(message, 'puppeteer:page-goto');
+        this.getLogger().error(message, 'puppeteer');
 
         await page.close();
+        const url = Prerenderer.parseUrl(request);
 
         this.lastResponse = {
           headers: {
-            status: 400,
-            'X-Original-Location': parsedUrl.toString(),
+            status,
+            'X-Original-Location': url.toString(),
             'X-Prerendered-Ms': Date.now() - renderStart,
           },
           body: '',
         };
-
-        return;
-      }
-
-      if (!puppeteerResponse) {
-        await page.close();
-
-        this.lastResponse = {
-          headers: {
-            status: 400,
-            'X-Original-Location': parsedUrl.toString(),
-            'X-Prerendered-Ms': Date.now() - renderStart,
-          },
-          body: '',
-        };
-
-        return;
-      }
-
-      /**
-       * Disable access to compute metadata.
-       * @see https://cloud.google.com/compute/docs/storing-retrieving-metadata
-       */
-      if (puppeteerResponse.headers()['metadata-flavor'] === 'Google') {
-        await page.close();
-
-        this.lastResponse = {
-          headers: {
-            status: 403,
-            'X-Original-Location': parsedUrl.toString(),
-            'X-Prerendered-Ms': Date.now() - renderStart,
-          },
-          body: '',
-        };
-
-        return;
-      }
-
-      let status = puppeteerResponse.status();
-
-      /**
-       * If browser uses cache and sees 304, consider 200.
-       */
-      if (status === 304) {
-        status = 200;
-      }
-
-      const body = await page.content();
-      await page.close();
-
-      this.lastResponse = {
-        body,
-        headers: {
-          status,
-          'X-Original-Location': parsedUrl.toString(),
-          'X-Prerendered-Ms': Date.now() - renderStart,
-        },
-      };
-    } catch (err) {
-      this.getLogger().error(JSON.stringify(err), 'prerender');
-
-      this.lastResponse = {
-        body: '',
-        headers: {
-          status: 503,
-          'X-Original-Location': parsedUrl.toString(),
-          'X-Prerendered-Ms': Date.now() - renderStart,
-        },
-      };
-    }
+      });
   }
 
+  /**
+   * Navigate given Puppeteer page according to request.
+   * @param page
+   * @param request
+   */
+  private async navigatePageWithRequest(
+    page: Page,
+    request: IncomingMessage,
+  ): Promise<PrerendererResponse> {
+    const url = Prerenderer.parseUrl(request);
+    const renderStart = Date.now();
+
+    page.setUserAgent(Prerenderer.USER_AGENT);
+    page.setRequestInterception(true);
+
+    // TODO: handle certificate error and continue - also test this
+    const blacklist = this.config.getBlacklistedRequestURLs();
+    const whitelist = this.config.getWhitelistedRequestURLs();
+
+    const requestFilter = (req: puppeteer.Request): void => {
+      if (whitelist.some((p) => req.url().includes(p))) {
+        req.continue();
+        return;
+      }
+      if (blacklist.some((p) => req.url().includes(p))) {
+        req.abort();
+        return;
+      }
+      req.continue();
+    };
+
+    page.on('request', requestFilter);
+
+    /**
+     * Add shadow dom shim.
+     */
+    page.evaluateOnNewDocument('if (window.customElements) customElements.forcePolyfill = true;');
+    page.evaluateOnNewDocument('ShadyDOM = { force: true }');
+    page.evaluateOnNewDocument('ShadyCSS = { shimcssproperties: true }');
+
+    let puppeteerResponse: PuppeteerResponse | null = null;
+
+    /**
+     * Navigate to page and wait for network to be idle.
+     */
+    puppeteerResponse = await page.goto(url.toString(), {
+      timeout: this.config.getTimeout(),
+      waitUntil: 'networkidle0',
+    });
+
+    if (!puppeteerResponse) {
+      throw new PrerendererResponseError(400, 'Puppeteer received no response.');
+    }
+
+    /**
+     * Disable access to compute metadata.
+     * @see https://cloud.google.com/compute/docs/storing-retrieving-metadata
+     */
+    if (puppeteerResponse.headers()['metadata-flavor'] === 'Google') {
+      throw new PrerendererResponseError(403, 'Access to compute metadata is forbidden.');
+    }
+
+    let status = puppeteerResponse.status();
+
+    /**
+     * If browser uses cache and sees 304, consider 200.
+     */
+    if (status === 304) {
+      status = 200;
+    }
+
+    const body = await page.content();
+    await page.close();
+
+    return {
+      body,
+      headers: {
+        status,
+        'X-Original-Location': url.toString(),
+        'X-Prerendered-Ms': Date.now() - renderStart,
+      },
+    };
+  }
+
+  /**
+   * Get given header from given request.
+   * @param request
+   * @param header
+   */
   private static getRequestHeader(request: IncomingMessage, header: string): string {
     const headerEntry = Object.entries(request.headers).find(([k]) => k.toLowerCase() === header);
 
@@ -414,6 +403,10 @@ export class Prerenderer {
     return headerEntry[1] as string;
   }
 
+  /**
+   * Parse URL from given request.
+   * @param request
+   */
   public static parseUrl(request: IncomingMessage): URL {
     let protocol = Prerenderer.getRequestHeader(request, 'x-forwarded-proto');
     let host = Prerenderer.getRequestHeader(request, 'x-forwarded-host');
@@ -422,6 +415,7 @@ export class Prerenderer {
     const path = request.url || '/'; // TODO: does it work with query strings?
 
     if (!protocol) {
+      // TODO: get https.
       // protocol = request.connection // .encrypted
       //   ? 'https'
       //   : 'http';
