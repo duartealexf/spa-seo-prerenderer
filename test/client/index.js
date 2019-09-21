@@ -1,9 +1,9 @@
 const { request } = require('http');
 const { v4: uuidv4 } = require('uuid');
 
-const { requests } = require('./servers/app-server');
-const { DEFAULT_BOT_USER_AGENTS } = require('../dist/lib/config/defaults');
-const { createGunzip } = require('zlib');
+const { requests } = require('../servers/app-server');
+const { DEFAULT_BOT_USER_AGENTS } = require('../../dist/lib/config/defaults');
+const { ClientResponse, getHeader } = require('./response');
 
 /**
  * @type {import('http').OutgoingHttpHeaders}
@@ -33,7 +33,7 @@ const trimSlashes = (str) => str.replace(/^\/+|\/+$/g, '');
  * @param {string} path
  * @param {any} customHeaders
  * @param {boolean} botUserAgent
- * @returns {Promise<{request: import('http').IncomingMessage, response: import('http').IncomingMessage, context: 'prerender'|'static'|'app'}>}
+ * @returns {Promise<{ request: import('http').IncomingMessage, response: ClientResponse, context: 'prerender'|'static'|'app'}>}
  */
 const createRequest = (method, isSecure, host, port, path, customHeaders, botUserAgent) => {
   /**
@@ -67,34 +67,17 @@ const createRequest = (method, isSecure, host, port, path, customHeaders, botUse
         path: `/${trimSlashes(path)}`,
         headers,
       },
-      (response) => {
+      async (response) => {
+        const clientResponse = await ClientResponse.fromResponse(response);
+
         /**
          * When receiving response, resolve promise from request that the server received.
          */
         const requestInfo = requests.get(id);
-        resolve({ ...requestInfo, response });
+        resolve({ ...requestInfo, response: clientResponse });
       },
     ).end();
   });
-};
-
-/**
- * Get header from given request/response.
- * @param {import('http').IncomingMessage} requestOrResponse
- * @param {string} header
- * @returns {string}
- */
-const getHeader = (requestOrResponse, header) => {
-  const headerEntry = Object.entries(requestOrResponse.headers).find(
-    ([k]) => k.toLowerCase() === header,
-  );
-
-  if (!headerEntry) {
-    return '';
-  }
-
-  // @ts-ignore
-  return headerEntry[1];
 };
 
 module.exports = {
@@ -195,24 +178,4 @@ module.exports = {
    */
   requestSmartProxyDecidedToPrerender: (request) =>
     getHeader(request, 'x-proxy-should-prerender') === '1',
-
-  /**
-   * Get body from given response.
-   * @param {import('http').IncomingMessage} response
-   * @returns {Promise<string>}
-   */
-  getResponseBody: (response) =>
-    new Promise((resolve) => {
-      const isGzipped = getHeader(response, 'content-encoding') === 'gzip';
-      const stream = isGzipped ? response.pipe(createGunzip()) : response;
-      const buffer = [];
-
-      stream
-        .on('data', (/** @type {Buffer} */ chunk) => {
-          buffer.push(chunk.toString('utf-8'));
-        })
-        .on('end', () => {
-          resolve(buffer.join(''));
-        });
-    }),
 };

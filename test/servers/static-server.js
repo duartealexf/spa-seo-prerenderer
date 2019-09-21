@@ -15,9 +15,6 @@ const app = express();
 /** @type {import('http').Server} */
 let server;
 
-/** @type {import('../../dist/lib/prerenderer').Prerenderer} */
-let prerenderer;
-
 module.exports = {
   /**
    * Express app.
@@ -57,9 +54,6 @@ module.exports = {
   close: async () => {
     if (server) {
       await new Promise((resolve) => server.close(resolve));
-    }
-    if (prerenderer) {
-      await prerenderer.stop();
     }
   },
 

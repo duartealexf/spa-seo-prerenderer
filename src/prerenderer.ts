@@ -357,6 +357,7 @@ export class Prerenderer {
          * This should only occur when page is about:blank.
          * @see https://github.com/GoogleChrome/puppeteer/blob/v1.5.0/docs/api.md#pagegotourl-options.
          */
+        page.off('request', requestFilter);
         await page.close();
 
         this.lastResponse = {
@@ -373,6 +374,7 @@ export class Prerenderer {
       // Disable access to compute metadata. See
       // https://cloud.google.com/compute/docs/storing-retrieving-metadata.
       if (puppeteerResponse.headers()['metadata-flavor'] === 'Google') {
+        page.off('request', requestFilter);
         await page.close();
 
         this.lastResponse = {
@@ -414,6 +416,7 @@ export class Prerenderer {
       // Serialize page.
       const body = await page.content();
 
+      page.off('request', requestFilter);
       await page.close();
 
       this.lastResponse = {

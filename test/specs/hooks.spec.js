@@ -6,7 +6,16 @@ const prerendererServer = require('../servers/prerenderer-server');
 const staticServer = require('../servers/static-server');
 const appServer = require('../servers/app-server');
 
+/**
+ * @type {number}
+ */
+let startTime;
+
 mocha.before(async () => {
+  startTime = Date.now();
+
+  console.log('Starting test servers...');
+
   /**
    * Start prerenderer server.
    */
@@ -14,7 +23,7 @@ mocha.before(async () => {
   await prerendererServer.attachPrerenderWithConfig({
     snapshotsDirectory: join(process.cwd(), 'test', 'tmp'),
     snapshotsDriver: 'fs',
-    timeout: 8640000
+    timeout: 8640000,
   });
 
   /**
@@ -30,7 +39,7 @@ mocha.before(async () => {
   await appServer.attachMiddlewares({
     snapshotsDirectory: join(process.cwd(), 'test', 'tmp'),
     snapshotsDriver: 'fs',
-    timeout: 8640000
+    timeout: 8640000,
   });
 
   /**
@@ -39,10 +48,16 @@ mocha.before(async () => {
   const tmpDir = join(process.cwd(), 'test', 'tmp');
   await fsExtra.mkdirp(tmpDir);
   await fsExtra.emptyDir(tmpDir);
+
+  console.log('Starting tests...');
 });
 
 mocha.after(async () => {
+  console.log('Closing test servers...');
+
   await prerendererServer.close();
   await staticServer.close();
   await appServer.close();
+
+  console.log(`Finished tests in ${Date.now() - startTime}ms`);
 });
