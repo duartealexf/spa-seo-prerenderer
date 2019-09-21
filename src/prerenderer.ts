@@ -1,7 +1,7 @@
 import puppeteer, { Browser, Response as PuppeteerResponse, LaunchOptions } from 'puppeteer';
 import { extname } from 'path';
-import { Request as ExpressRequest, Response as ExpressResponse } from 'express';
 import { IncomingMessage } from 'http';
+import { URL } from 'url';
 
 import { Config } from './config';
 import { Logger } from './logger';
@@ -187,31 +187,11 @@ export class Prerenderer {
   }
 
   /**
-   * Get user agent header string from request.
-   * @param request NodeJS request.
-   */
-  private static getRequestUserAgent(request: ExpressRequest): string {
-    const keys = Object.getOwnPropertyNames(request.headers);
-    const length = keys.length;
-
-    for (let i = 0; i < length; i += 1) {
-      const key = keys[i];
-      const header = request.headers[key] as string;
-
-      if (key.toLowerCase() === 'user-agent') {
-        return header;
-      }
-    }
-
-    return '';
-  }
-
-  /**
    * Get whether given request should be prerendered, considering request
    * method, blacklisted and whitelisted user agents, extensions and paths.
    * @param request NodeJS request.
    */
-  public shouldPrerender(request: ExpressRequest): boolean {
+  public shouldPrerender(request: IncomingMessage): boolean {
     if (!request) {
       this.lastRejectedPrerenderReason = 'no-request';
       return false;
@@ -230,7 +210,7 @@ export class Prerenderer {
       return false;
     }
 
-    let userAgent = Prerenderer.getRequestUserAgent(request);
+    let userAgent = Prerenderer.getRequestHeader(request, 'user-agent');
 
     /**
      * No user agent, don't prerender.
@@ -250,8 +230,9 @@ export class Prerenderer {
       return false;
     }
 
-    // TODO: improve this when testing with query strings and fragments.
-    const path = request.url.substr(1);
+    const parsedUrl = Prerenderer.parseUrl(request);
+
+    const path = parsedUrl.pathname || '';
     const extension = extname(path)
       .substr(1)
       .toLowerCase();
@@ -276,24 +257,14 @@ export class Prerenderer {
     return true;
   }
 
-  public async prerender(request: ExpressRequest, response: ExpressResponse): Promise<void> {
-    // TODO: use IncomingMessage instead of express request and response.
-
+  public async prerender(request: IncomingMessage, response: IncomingMessage): Promise<void> {
     if (!this.browser) {
       throw new PrerendererNotReadyException(
         'Prerenderer needs to be started before prerendering an url. Did you call prerenderer.start()?',
       );
     }
 
-    const protocol = Prerenderer.getRequestHeader(request, 'x-forwarded-proto') || request.protocol;
-    const host = Prerenderer.getRequestHeader(request, 'x-forwarded-host') || request.hostname;
-    const port = Prerenderer.getRequestPort(request);
-
-    // TODO: check if originalUrl is what we want
-    const path = request.originalUrl;
-
-    // TODO: keep query paramss.
-    const requestedUrl = `${protocol}://${host}${port}${path}`;
+    const parsedUrl = Prerenderer.parseUrl(request);
 
     const renderStart = Date.now();
 
@@ -343,7 +314,7 @@ export class Prerenderer {
         /**
          * Navigate to page and wait for network to be idle.
          */
-        puppeteerResponse = await page.goto(requestedUrl, {
+        puppeteerResponse = await page.goto(parsedUrl.toString(), {
           timeout: this.config.getTimeout(),
           waitUntil: 'networkidle0',
         });
@@ -362,7 +333,7 @@ export class Prerenderer {
         this.lastResponse = {
           headers: {
             status: 400,
-            'X-Original-Location': requestedUrl,
+            'X-Original-Location': parsedUrl.toString(),
             'X-Prerendered-Ms': Date.now() - renderStart,
           },
           body: '',
@@ -379,7 +350,7 @@ export class Prerenderer {
         this.lastResponse = {
           headers: {
             status: 403,
-            'X-Original-Location': requestedUrl,
+            'X-Original-Location': parsedUrl.toString(),
             'X-Prerendered-Ms': Date.now() - renderStart,
           },
           body: '',
@@ -422,7 +393,7 @@ export class Prerenderer {
         body,
         headers: {
           status,
-          'X-Original-Location': requestedUrl,
+          'X-Original-Location': parsedUrl.toString(),
           'X-Prerendered-Ms': Date.now() - renderStart,
         },
       };
@@ -435,14 +406,14 @@ export class Prerenderer {
         body: '',
         headers: {
           status: 503,
-          'X-Original-Location': requestedUrl,
+          'X-Original-Location': parsedUrl.toString(),
           'X-Prerendered-Ms': Date.now() - renderStart,
         },
       };
     }
   }
 
-  private static getRequestHeader(request: ExpressRequest, header: string): string {
+  private static getRequestHeader(request: IncomingMessage, header: string): string {
     const headerEntry = Object.entries(request.headers).find(([k]) => k.toLowerCase() === header);
 
     if (!headerEntry) {
@@ -452,14 +423,45 @@ export class Prerenderer {
     return headerEntry[1] as string;
   }
 
-  private static getRequestPort(request: ExpressRequest): string {
-    const port =
-      Prerenderer.getRequestHeader(request, 'x-forwarded-port') || request.connection.localPort;
+  public static parseUrl(request: IncomingMessage): URL {
+    let protocol = Prerenderer.getRequestHeader(request, 'x-forwarded-proto');
+    let host = Prerenderer.getRequestHeader(request, 'x-forwarded-host');
+    let port = Prerenderer.getRequestHeader(request, 'x-forwarded-port');
 
-    if (port === 80 || port === 433) {
-      return '';
+    const path = request.url || '/'; // TODO: does it work with query strings?
+
+    if (!protocol) {
+      // protocol = request.connection // .encrypted
+      //   ? 'https'
+      //   : 'http';
+      protocol = 'http';
     }
 
-    return `:${port}`;
+    /**
+     * Adapted from express hostname getter.
+     */
+    const hostAndMaybePort = Prerenderer.getRequestHeader(request, 'host');
+    const offset = hostAndMaybePort[0] === '[' ? hostAndMaybePort.indexOf(']') + 1 : 0;
+    const index = hostAndMaybePort.indexOf(':', offset);
+
+    if (!host) {
+      host = index !== -1 ? hostAndMaybePort.substring(0, index) : hostAndMaybePort;
+    }
+
+    if (!port) {
+      port = index !== -1 ? hostAndMaybePort.substring(index + 1) : port;
+
+      if (!port) {
+        port = request.connection.localPort.toString();
+      }
+    }
+
+    if (port === '80' || port === '433') {
+      port = '';
+    } else {
+      port = `:${port}`;
+    }
+
+    return new URL(`${protocol}://${host}${port}${path}`);
   }
 }

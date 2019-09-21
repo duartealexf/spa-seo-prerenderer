@@ -13,6 +13,7 @@ describe('prerender requests to NodeJS behind smart Nginx proxy', () => {
     const { request } = await createSmartProxyHttpGetRequest('index.html', {}, true);
     assert.isTrue(requestPassedThroughSmartProxy(request));
   });
+  // TODO: add context test
 
   it('should pass through smart proxy with non-bot user agent.', async () => {
     const { request } = await createSmartProxyHttpGetRequest('index.html', {}, false);

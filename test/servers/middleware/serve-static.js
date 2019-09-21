@@ -1,5 +1,6 @@
 const { join } = require('path');
 const { existsSync, readFileSync, statSync } = require('fs');
+const { Prerenderer } = require('../../../dist/lib/prerenderer');
 
 /**
  * Trim slashes from string.
@@ -15,10 +16,11 @@ module.exports = {
    * @param {(err?: any) => void} next
    */
   serveStatic: (req, res, next) => {
-    const path = trimSlashes(req.path);
+    const parsedUrl = Prerenderer.parseUrl(req);
+    const pathname = trimSlashes(parsedUrl.pathname);
 
-    if (path) {
-      const filepath = join(process.cwd(), 'test', 'static', path);
+    if (pathname) {
+      const filepath = join(process.cwd(), 'test', 'static', pathname);
 
       if (existsSync(filepath)) {
         const stat = statSync(filepath);

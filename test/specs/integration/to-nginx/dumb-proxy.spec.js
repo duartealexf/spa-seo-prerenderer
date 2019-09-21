@@ -9,6 +9,7 @@ describe('prerender requests to NodeJS behind dumb Nginx proxy', () => {
     const { request } = await createDumbProxyHttpGetRequest('index.html', {}, true);
     assert.isTrue(requestPassedThroughDumbProxy(request));
   });
+  // TODO: add context test
 
   it('should pass through dumb proxy with non-bot user agent.', async () => {
     const { request } = await createDumbProxyHttpGetRequest('index.html', {}, false);
