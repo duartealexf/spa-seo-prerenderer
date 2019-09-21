@@ -40,6 +40,7 @@ mocha.before(async () => {
     snapshotsDirectory: join(process.cwd(), 'test', 'tmp'),
     snapshotsDriver: 'fs',
     timeout: 8640000,
+    whitelistedRequestURLs: ['ga.js'],
   });
 
   /**

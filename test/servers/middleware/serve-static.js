@@ -3,6 +3,24 @@ const { existsSync, readFileSync, statSync } = require('fs');
 const { Prerenderer } = require('../../../dist/lib/prerenderer');
 
 /**
+ * Hardcoded redirects for testing.
+ */
+const redirects = {
+  '/redirect-resource/from.js': '/redirect-resource/to.js',
+  '/redirect-index/from.html': '/redirect-index/to.html',
+};
+
+/**
+ * Hardcoded status responses for testing.
+ */
+const status = {
+  '/status/304.html': 304,
+  '/status/400.html': 400,
+  '/status/404.html': 404,
+  '/status/500.html': 500,
+};
+
+/**
  * Trim slashes from string.
  * @param {string} str
  */
@@ -17,6 +35,19 @@ module.exports = {
    */
   serveStatic: (req, res, next) => {
     const parsedUrl = Prerenderer.parseUrl(req);
+
+    if (redirects[parsedUrl.pathname]) {
+      return res.redirect(301, redirects[parsedUrl.pathname]);
+    }
+
+    if (status[parsedUrl.pathname]) {
+      if (status[parsedUrl.pathname] >= 400) {
+        return res.sendStatus(status[parsedUrl.pathname]);
+      } else {
+        res.status(status[parsedUrl.pathname]);
+      }
+    }
+
     const pathname = trimSlashes(parsedUrl.pathname);
 
     if (pathname) {
