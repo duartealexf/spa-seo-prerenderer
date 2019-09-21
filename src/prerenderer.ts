@@ -8,7 +8,7 @@ import { Logger } from './logger';
 import { PrerendererConfigParams } from './config/defaults';
 import { PrerendererNotReadyException } from './exceptions/prerenderer-not-ready-exception';
 
-interface PrerendererResponse {
+export interface PrerendererResponse {
   /**
    * Rendered HTML.
    */
@@ -274,30 +274,21 @@ export class Prerenderer {
       page.setUserAgent(Prerenderer.USER_AGENT);
       page.setRequestInterception(true);
 
-      // TODO: handle certificate error and continue
-      // TODO: follow redirects
+      // TODO: handle certificate error and continue - also test this
       const blacklist = this.config.getBlacklistedRequestURLs();
       const whitelist = this.config.getWhitelistedRequestURLs();
 
-      let requestFilter: (req: puppeteer.Request) => void;
-
-      if (whitelist.length) {
-        requestFilter = (req: puppeteer.Request) => {
-          if (whitelist.some((p) => req.url().includes(p))) {
-            req.continue();
-          } else {
-            req.abort();
-          }
-        };
-      } else {
-        requestFilter = (req: puppeteer.Request) => {
-          if (blacklist.some((p) => req.url().includes(p))) {
-            req.abort();
-          } else {
-            req.continue();
-          }
-        };
-      }
+      const requestFilter = (req: puppeteer.Request): void => {
+        if (whitelist.some((p) => req.url().includes(p))) {
+          req.continue();
+          return;
+        }
+        if (blacklist.some((p) => req.url().includes(p))) {
+          req.abort();
+          return;
+        }
+        req.continue();
+      };
 
       page.on('request', requestFilter);
 
@@ -319,15 +310,18 @@ export class Prerenderer {
           waitUntil: 'networkidle0',
         });
       } catch (e) {
-        // TODO: do something other than console error.
-        this.getLogger().error(JSON.stringify(e), 'puppeteer.page.goto');
-      }
+        let message: string;
 
-      if (!puppeteerResponse) {
-        /**
-         * This should only occur when page is about:blank.
-         * @see https://github.com/GoogleChrome/puppeteer/blob/v1.5.0/docs/api.md#pagegotourl-options.
-         */
+        if (e instanceof Error) {
+          message = e.message;
+        } else if (typeof e === 'object') {
+          message = JSON.stringify(e);
+        } else {
+          message = e;
+        }
+
+        this.getLogger().error(message, 'puppeteer:page-goto');
+
         await page.close();
 
         this.lastResponse = {
@@ -342,8 +336,25 @@ export class Prerenderer {
         return;
       }
 
-      // Disable access to compute metadata. See
-      // https://cloud.google.com/compute/docs/storing-retrieving-metadata.
+      if (!puppeteerResponse) {
+        await page.close();
+
+        this.lastResponse = {
+          headers: {
+            status: 400,
+            'X-Original-Location': parsedUrl.toString(),
+            'X-Prerendered-Ms': Date.now() - renderStart,
+          },
+          body: '',
+        };
+
+        return;
+      }
+
+      /**
+       * Disable access to compute metadata.
+       * @see https://cloud.google.com/compute/docs/storing-retrieving-metadata
+       */
       if (puppeteerResponse.headers()['metadata-flavor'] === 'Google') {
         await page.close();
 
@@ -359,34 +370,16 @@ export class Prerenderer {
         return;
       }
 
-      // Set status to the initial server's response code. Check for a <meta
-      // name="render:status_code" content="4xx" /> tag which overrides the status
-      // code.
       let status = puppeteerResponse.status();
 
-      const newStatusCode = await page
-        .$eval('meta[name="render:status_code"]', (element) =>
-          parseInt(element.getAttribute('content') || '', 10),
-        )
-        .catch(() => undefined);
-
-      // On a repeat visit to the same origin, browser cache is enabled, so we may
-      // encounter a 304 Not Modified. Instead we'll treat this as a 200 OK.
+      /**
+       * If browser uses cache and sees 304, consider 200.
+       */
       if (status === 304) {
         status = 200;
       }
 
-      // Original status codes which aren't 200 always return with that status
-      // code, regardless of meta tags.
-      if (status === 200 && newStatusCode) {
-        status = newStatusCode;
-      }
-
-      // Inject <base> tag with the origin of the request (ie. no path).
-
-      // Serialize page.
       const body = await page.content();
-
       await page.close();
 
       this.lastResponse = {
@@ -397,8 +390,6 @@ export class Prerenderer {
           'X-Prerendered-Ms': Date.now() - renderStart,
         },
       };
-
-      return;
     } catch (err) {
       this.getLogger().error(JSON.stringify(err), 'prerender');
 
