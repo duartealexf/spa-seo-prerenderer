@@ -285,19 +285,19 @@ export class Prerenderer {
       );
     }
 
+    const protocol = Prerenderer.getRequestHeader(request, 'x-forwarded-proto') || request.protocol;
+    const host = Prerenderer.getRequestHeader(request, 'x-forwarded-host') || request.hostname;
+    const port = Prerenderer.getRequestPort(request);
+
+    // TODO: check if originalUrl is what we want
+    const path = request.originalUrl;
+
+    // TODO: keep query paramss.
+    const requestedUrl = `${protocol}://${host}${port}${path}`;
+
+    const renderStart = Date.now();
+
     try {
-      const protocol =
-        Prerenderer.getRequestHeader(request, 'x-forwarded-proto') || request.protocol;
-      const host = Prerenderer.getRequestHeader(request, 'x-forwarded-host') || request.hostname;
-      const port = Prerenderer.getRequestPort(request);
-
-      // TODO: check if originalUrl is what we want
-      const path = request.originalUrl;
-
-      // TODO: keep query paramss.
-      const requestedUrl = `${protocol}://${host}${port}${path}`;
-
-      const renderStart = Date.now();
       const page = await this.browser.newPage();
 
       page.setUserAgent(Prerenderer.USER_AGENT);
@@ -349,7 +349,7 @@ export class Prerenderer {
         });
       } catch (e) {
         // TODO: do something other than console error.
-        this.getLogger().error(e, 'puppeteer.page.goto');
+        this.getLogger().error(JSON.stringify(e), 'puppeteer.page.goto');
       }
 
       if (!puppeteerResponse) {
@@ -357,12 +357,12 @@ export class Prerenderer {
          * This should only occur when page is about:blank.
          * @see https://github.com/GoogleChrome/puppeteer/blob/v1.5.0/docs/api.md#pagegotourl-options.
          */
-        page.off('request', requestFilter);
         await page.close();
 
         this.lastResponse = {
           headers: {
             status: 400,
+            'X-Original-Location': requestedUrl,
             'X-Prerendered-Ms': Date.now() - renderStart,
           },
           body: '',
@@ -374,12 +374,12 @@ export class Prerenderer {
       // Disable access to compute metadata. See
       // https://cloud.google.com/compute/docs/storing-retrieving-metadata.
       if (puppeteerResponse.headers()['metadata-flavor'] === 'Google') {
-        page.off('request', requestFilter);
         await page.close();
 
         this.lastResponse = {
           headers: {
             status: 403,
+            'X-Original-Location': requestedUrl,
             'X-Prerendered-Ms': Date.now() - renderStart,
           },
           body: '',
@@ -416,22 +416,29 @@ export class Prerenderer {
       // Serialize page.
       const body = await page.content();
 
-      page.off('request', requestFilter);
       await page.close();
 
       this.lastResponse = {
         body,
         headers: {
           status,
-          'X-Original-Location': path,
+          'X-Original-Location': requestedUrl,
           'X-Prerendered-Ms': Date.now() - renderStart,
         },
       };
 
       return;
     } catch (err) {
-      // console.error(err);
-      throw new Error('page.goto/waitForSelector timed out.');
+      this.getLogger().error(JSON.stringify(err), 'prerender');
+
+      this.lastResponse = {
+        body: '',
+        headers: {
+          status: 503,
+          'X-Original-Location': requestedUrl,
+          'X-Prerendered-Ms': Date.now() - renderStart,
+        },
+      };
     }
   }
 
