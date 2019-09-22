@@ -6,7 +6,7 @@ const { createDirectHttpGetRequest } = require('../../../client');
 
 describe('prerender requests sent directly to NodeJS', () => {
   // it('should receive prerendered index.html.', async () => {
-  //   const { response } = await createDirectHttpGetRequest('index.html', {}, true);
+  //   const { response } = await createDirectHttpGetRequest('index.html');
   //   const $ = cheerio.load(response.body);
   //   assert.equal($('#app').length, 1);
   // });

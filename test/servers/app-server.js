@@ -38,7 +38,6 @@ module.exports = {
 
   /**
    * Start test app server.
-   * TODO: create IPV6 server to just test URL parser: with and without proxy
    */
   start: async () => {
     const port = process.env.TEST_APP_NODEJS_SERVER_PORT
@@ -48,7 +47,7 @@ module.exports = {
     await killPort(port);
 
     server = await new Promise((resolve) => {
-      const s = app.listen(port, '0.0.0.0', () => {
+      const s = app.listen(port, () => {
         resolve(s);
       });
     });

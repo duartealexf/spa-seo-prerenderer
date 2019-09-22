@@ -4,7 +4,7 @@ const { assert } = require('chai');
 const { createSmartProxyHttpGetRequest } = require('../../../client');
 const { Prerenderer } = require('../../../../dist/lib/prerenderer');
 
-describe('prerenderer URL parser with X- headers.', () => {
+describe("prerenderer's URL parser with X-Forwarded-* headers.", () => {
   /**
    * @type {import('http').IncomingMessage}
    */
@@ -19,7 +19,7 @@ describe('prerenderer URL parser with X- headers.', () => {
   const host = process.env.TEST_SMART_NGINX_CONTAINER_HOST;
 
   before(async () => {
-    request = (await createSmartProxyHttpGetRequest(requestUri, {}, true)).request;
+    request = (await createSmartProxyHttpGetRequest(requestUri)).request;
     parsedUrl = Prerenderer.parseUrl(request);
   });
 

@@ -10,7 +10,7 @@ const {
 
 describe('prerender requests to NodeJS behind smart Nginx proxy', () => {
   it('should pass through smart proxy with bot user agent.', async () => {
-    const { request } = await createSmartProxyHttpGetRequest('index.html', {}, true);
+    const { request } = await createSmartProxyHttpGetRequest('index.html');
     assert.isTrue(requestPassedThroughSmartProxy(request));
   });
   // TODO: add context test
@@ -21,7 +21,7 @@ describe('prerender requests to NodeJS behind smart Nginx proxy', () => {
   });
 
   it('should pass through smart proxy and prerender.', async () => {
-    const { request, response } = await createSmartProxyHttpGetRequest('index.html', {}, true);
+    const { request, response } = await createSmartProxyHttpGetRequest('index.html');
     assert.isTrue(requestSmartProxyDecidedToPrerender(request));
 
     const $ = cheerio.load(response.body);

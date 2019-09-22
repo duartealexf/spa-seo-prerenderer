@@ -88,7 +88,7 @@ describe('whether it should prerender', () => {
     const p = new Prerenderer(config);
     await p.initialize();
 
-    const { request } = await createDirectHttpGetRequest('/pixel.png', {}, true);
+    const { request } = await createDirectHttpGetRequest('/pixel.png');
     assert.isNotOk(p.shouldPrerender(request));
 
     reasonToRejectLastPrerender = 'rejected-extension';
@@ -107,7 +107,7 @@ describe('whether it should prerender', () => {
     const p = new Prerenderer(config);
     await p.initialize();
 
-    const { request } = await createDirectHttpGetRequest('/', {}, true);
+    const { request } = await createDirectHttpGetRequest('/');
     assert.isNotOk(p.shouldPrerender(request));
 
     reasonToRejectLastPrerender = 'rejected-path';

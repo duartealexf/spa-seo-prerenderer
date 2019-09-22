@@ -16,6 +16,7 @@ const redirects = {
 const status = {
   '/status/304.html': 304,
   '/status/400.html': 400,
+  '/status/403-compute-metadata.html': 400,
   '/status/404.html': 404,
   '/status/500.html': 500,
 };

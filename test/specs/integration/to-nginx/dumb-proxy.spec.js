@@ -6,7 +6,7 @@ const { createDumbProxyHttpGetRequest, requestPassedThroughDumbProxy } = require
 
 describe('prerender requests to NodeJS behind dumb Nginx proxy', () => {
   it('should pass through dumb proxy with bot user agent.', async () => {
-    const { request } = await createDumbProxyHttpGetRequest('index.html', {}, true);
+    const { request } = await createDumbProxyHttpGetRequest('index.html');
     assert.isTrue(requestPassedThroughDumbProxy(request));
   });
   // TODO: add context test
@@ -17,7 +17,7 @@ describe('prerender requests to NodeJS behind dumb Nginx proxy', () => {
   });
 
   it('should pass through dumb proxy and prerender.', async () => {
-    const { response } = await createDumbProxyHttpGetRequest('index.html', {}, true);
+    const { response } = await createDumbProxyHttpGetRequest('index.html');
     const $ = cheerio.load(response.body);
     assert.equal($('#app').length, 1);
   });

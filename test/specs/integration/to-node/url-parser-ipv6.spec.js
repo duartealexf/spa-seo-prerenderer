@@ -4,7 +4,7 @@ const { assert } = require('chai');
 const { createDirectHttpGetRequest } = require('../../../client');
 const { Prerenderer } = require('../../../../dist/lib/prerenderer');
 
-describe('prerenderer URL parser without X- headers.', () => {
+describe("prerenderer's URL parser based on IPv6, without X-Forwarded-* headers.", () => {
   /**
    * @type {import('http').IncomingMessage}
    */
@@ -16,11 +16,11 @@ describe('prerenderer URL parser without X- headers.', () => {
   let parsedUrl;
 
   const requestUri = 'index.html?letters=abc&numbers=123&space=%50#fragment';
-  const host = process.env.TEST_NODEJS_CONTAINER_HOST;
+  const host = '[::1]';
   const port = process.env.TEST_APP_NODEJS_SERVER_PORT;
 
   before(async () => {
-    request = (await createDirectHttpGetRequest(requestUri, {}, true)).request;
+    request = (await createDirectHttpGetRequest(requestUri, {}, true, 'ipv6')).request;
     parsedUrl = Prerenderer.parseUrl(request);
   });
 

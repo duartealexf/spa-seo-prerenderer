@@ -103,18 +103,35 @@ module.exports = {
    * @param {string} path
    * @param {any} customHeaders
    * @param {boolean} botUserAgent
+   * @param {'hostname' | 'ipv4' | 'ipv6'} useTarget
    * @returns {ReturnType<typeof createRequest>}
    */
-  createDirectHttpGetRequest: (path = '', customHeaders = {}, botUserAgent = true) =>
-    createRequest(
+  createDirectHttpGetRequest: (
+    path = '',
+    customHeaders = {},
+    botUserAgent = true,
+    useTarget = 'hostname',
+  ) => {
+    let host;
+
+    if (useTarget === 'ipv4') {
+      host = '127.0.0.1';
+    } else if (useTarget === 'ipv6') {
+      host = '::1';
+    } else {
+      host = process.env.TEST_NODEJS_CONTAINER_HOST;
+    }
+
+    return createRequest(
       'GET',
       false,
-      process.env.TEST_NODEJS_CONTAINER_HOST,
+      host,
       process.env.TEST_APP_NODEJS_SERVER_PORT,
       path,
       customHeaders,
       botUserAgent,
-    ),
+    );
+  },
 
   /**
    * Create a HTTP GET request to Nginx hostname that does
