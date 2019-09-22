@@ -3,7 +3,7 @@
 ## Basic setup
 
 - [x] Setup repository
-- [ ] Create unit tests
+- [x] Create unit tests
 - [ ] Create integration tests
 - [x] Debug
 - [x] Keep headless browser open, create new pages per request
@@ -12,13 +12,10 @@
 - [x] Blacklisting tracking scripts
 - [ ] Simple prerenderer, save local file
 - [x] Add to docker, set tests in docker with nginx
-- [ ] Create a nginx proxy test
-- [ ] Create a subdomain test
-- [ ] Create a complex path test
-- [ ] Create a multi-route test
-- [ ] Preserve status codes (deliver 404, 500, etc)
+- [x] Create a nginx proxy test
+- [x] Preserve status codes (deliver 404, 500, etc)
 - [x] Setup in Docker
-- [ ] Testing in Docker with different NodeJS versions
+- [x] Testing in Docker with different NodeJS versions
 
 ## Creating an use-case
 
