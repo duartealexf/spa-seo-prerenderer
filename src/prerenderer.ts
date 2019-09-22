@@ -358,14 +358,6 @@ export class Prerenderer {
       throw new PrerendererResponseError(400, 'Puppeteer received no response.');
     }
 
-    /**
-     * Disable access to compute metadata.
-     * @see https://cloud.google.com/compute/docs/storing-retrieving-metadata
-     */
-    if (puppeteerResponse.headers()['metadata-flavor'] === 'Google') {
-      throw new PrerendererResponseError(403, 'Access to compute metadata is forbidden.');
-    }
-
     let status = puppeteerResponse.status();
 
     /**
