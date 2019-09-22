@@ -258,7 +258,7 @@ export class Prerenderer {
     return true;
   }
 
-  public async prerender(request: IncomingMessage, response: IncomingMessage): Promise<void> {
+  public async prerender(request: IncomingMessage): Promise<void> {
     if (!this.browser) {
       throw new PrerendererNotReadyException(
         'Prerenderer needs to be started before prerendering an url. Did you call prerenderer.start()?',
