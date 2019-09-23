@@ -3,6 +3,7 @@ import { extname } from 'path';
 import { IncomingMessage } from 'http';
 import { URL } from 'url';
 
+import { TLSSocket } from 'tls';
 import { Config } from './config';
 import { Logger } from './logger';
 import { PrerendererConfigParams } from './config/defaults';
@@ -152,6 +153,7 @@ export class Prerenderer {
     this.getLogger().info('Launching Puppeteer...', 'prerenderer');
     const options: LaunchOptions = {
       args: ['--no-sandbox'],
+      ignoreHTTPSErrors: true,
     };
 
     if (this.config.getChromiumExecutable()) {
@@ -319,7 +321,6 @@ export class Prerenderer {
     page.setUserAgent(Prerenderer.USER_AGENT);
     page.setRequestInterception(true);
 
-    // TODO: handle certificate error and continue - also test this
     const blacklist = this.config.getBlacklistedRequestURLs();
     const whitelist = this.config.getWhitelistedRequestURLs();
 
@@ -404,14 +405,11 @@ export class Prerenderer {
     let host = Prerenderer.getRequestHeader(request, 'x-forwarded-host');
     let port = Prerenderer.getRequestHeader(request, 'x-forwarded-port');
 
-    const path = request.url || '/'; // TODO: does it work with query strings?
+    const path = request.url || '/';
 
     if (!protocol) {
-      // TODO: get https.
-      // protocol = request.connection // .encrypted
-      //   ? 'https'
-      //   : 'http';
-      protocol = 'http';
+      protocol =
+        request.connection instanceof TLSSocket && request.connection.encrypted ? 'https' : 'http';
     }
 
     /**
