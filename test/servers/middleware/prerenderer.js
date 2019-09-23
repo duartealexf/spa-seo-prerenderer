@@ -24,14 +24,13 @@ module.exports = {
       middleware: (req, res, next) => {
         if (prerenderer.shouldPrerender(req)) {
           return prerenderer
-            .prerender(req, res)
+            .prerender(req)
             .then(() => {
               /**
                * @type {import('../../../dist/types/prerenderer').PrerendererResponse}
                */
               const response = prerenderer.getLastResponse();
 
-              // TODO: prerenderer should write response and send it.
               res
                 .status(response.headers.status)
                 .set(response.headers)
@@ -59,12 +58,14 @@ module.exports = {
       prerenderer,
       middleware: (req, res, next) => {
         return prerenderer
-          .prerender(req, res)
+          .prerender(req)
           .then(() => {
             const response = prerenderer.getLastResponse();
 
-            // TODO: prerenderer should write response, add correct headers and send it.
-            res.send(response.body);
+            res
+              .status(response.headers.status)
+              .set(response.headers)
+              .send(response.body);
           })
           .catch((err) => {
             next(err);

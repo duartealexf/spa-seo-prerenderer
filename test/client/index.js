@@ -1,5 +1,8 @@
-const { request } = require('http');
+const { request: httpRequest } = require('http');
+const { request: httpsRequest, Agent } = require('https');
 const { v4: uuidv4 } = require('uuid');
+const { readFileSync } = require('fs-extra');
+const { join } = require('path');
 
 const { requests } = require('../servers/app-server');
 const { DEFAULT_BOT_USER_AGENTS } = require('../../dist/lib/config/defaults');
@@ -35,7 +38,7 @@ const trimSlashes = (str) => str.replace(/^\/+|\/+$/g, '');
  * @param {boolean} botUserAgent
  * @returns {Promise<{ request: import('http').IncomingMessage, response: ClientResponse, context: 'prerender'|'static'|'app'}>}
  */
-const createRequest = (method, isSecure, host, port, path, customHeaders, botUserAgent) => {
+const createRequest = async (method, isSecure, host, port, path, customHeaders, botUserAgent) => {
   /**
    * Create random request id.
    */
@@ -54,30 +57,33 @@ const createRequest = (method, isSecure, host, port, path, customHeaders, botUse
     headers['User-Agent'] = DEFAULT_BOT_USER_AGENTS[0];
   }
 
-  return new Promise((resolve) => {
-    /**
-     * Make request.
-     */
-    request(
-      {
-        method,
-        protocol: isSecure ? 'https:' : 'http:',
-        host,
-        port,
-        path: `/${trimSlashes(path)}`,
-        headers,
-      },
-      async (response) => {
-        const clientResponse = await ClientResponse.fromResponse(response);
+  /**
+   * @type {import('https').RequestOptions}
+   */
+  const requestOptions = {
+    method,
+    host,
+    port,
+    path: `/${trimSlashes(path)}`,
+    headers,
+  };
 
-        /**
-         * When receiving response, resolve promise from request that the server received.
-         */
-        const requestInfo = requests.get(id);
-        resolve({ ...requestInfo, response: clientResponse });
-      },
-    ).end();
-  });
+  /**
+   * @type {import('http').request}
+   */
+  let requestMethod;
+
+  if (isSecure) {
+    requestOptions.rejectUnauthorized = false;
+    requestMethod = httpsRequest;
+  } else {
+    requestMethod = httpRequest;
+  }
+
+  const response = await new Promise((resolve) => requestMethod(requestOptions, resolve).end());
+  const clientResponse = await ClientResponse.fromResponse(response);
+  const requestInfo = requests.get(id);
+  return { ...requestInfo, response: clientResponse };
 };
 
 module.exports = {
@@ -132,6 +138,24 @@ module.exports = {
       botUserAgent,
     );
   },
+
+  /**
+   * Create a HTTPS GET request directly to NodeJS server.
+   * @param {string} path
+   * @param {any} customHeaders
+   * @param {boolean} botUserAgent
+   * @returns {ReturnType<typeof createRequest>}
+   */
+  createDirectHttpsGetRequest: (path = '', customHeaders = {}, botUserAgent = true) =>
+    createRequest(
+      'GET',
+      true,
+      process.env.TEST_NODEJS_CONTAINER_HOST,
+      process.env.TEST_APP_NODEJS_SERVER_PORT_SECURE,
+      path,
+      customHeaders,
+      botUserAgent,
+    ),
 
   /**
    * Create a HTTP GET request to Nginx hostname that does

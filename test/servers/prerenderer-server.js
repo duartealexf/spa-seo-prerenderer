@@ -20,16 +20,6 @@ let prerenderer;
 
 module.exports = {
   /**
-   * Express app.
-   */
-  app,
-
-  /**
-   * Active listening server.
-   */
-  server,
-
-  /**
    * Requests that have been captured.
    */
   requests,

@@ -2,9 +2,20 @@ const { describe, it } = require('mocha');
 const { assert } = require('chai');
 const cheerio = require('cheerio');
 
-const { createDirectHttpGetRequest } = require('../../../client');
+const { createDirectHttpGetRequest, createDirectHttpsGetRequest } = require('../../../client');
 
 describe("features that are in Prerenderer's Puppeteer", () => {
+  it('should have test requests flowing to the expected context.', async () => {
+    const { context } = await createDirectHttpsGetRequest('index.html');
+    assert.equal(context, 'app');
+  });
+
+  it('should ignore https errors.', async () => {
+    const { response } = await createDirectHttpsGetRequest('index.html');
+    const $ = cheerio.load(response.body);
+    assert.equal($('#app').length, 1);
+  });
+
   it('should follow page redirects.', async () => {
     const { response } = await createDirectHttpGetRequest('redirect-index/from.html');
     const $ = cheerio.load(response.body);

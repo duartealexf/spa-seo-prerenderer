@@ -7,6 +7,9 @@
 require('dotenv').config();
 const express = require('express');
 const killPort = require('kill-port');
+const { readFileSync } = require('fs-extra');
+const { join } = require('path');
+const { createServer } = require('https');
 
 const { captureRequests, requests } = require('./middleware/request-capture');
 const { configPrerendererMiddleware } = require('./middleware/prerenderer');
@@ -15,22 +18,15 @@ const { serveStatic } = require('./middleware/serve-static');
 const app = express();
 
 /** @type {import('http').Server} */
-let server;
+let httpServer;
+
+/** @type {import('https').Server} */
+let httpsServer;
 
 /** @type {import('../../dist/lib/prerenderer').Prerenderer} */
 let prerenderer;
 
 module.exports = {
-  /**
-   * Express app.
-   */
-  app,
-
-  /**
-   * Active listening server.
-   */
-  server,
-
   /**
    * Requests that have been captured.
    */
@@ -40,15 +36,32 @@ module.exports = {
    * Start test app server.
    */
   start: async () => {
-    const port = process.env.TEST_APP_NODEJS_SERVER_PORT
+    const httpPort = process.env.TEST_APP_NODEJS_SERVER_PORT
       ? parseInt(process.env.TEST_APP_NODEJS_SERVER_PORT, 10)
       : 7700;
 
-    await killPort(port);
+    await killPort(httpPort);
 
-    server = await new Promise((resolve) => {
-      const s = app.listen(port, () => {
+    httpServer = await new Promise((resolve) => {
+      const s = app.listen(httpPort, () => {
         resolve(s);
+      });
+    });
+
+    const key = readFileSync(join(__dirname, 'certificates', 'app-server.key')).toString();
+    const cert = readFileSync(join(__dirname, 'certificates', 'app-server.crt')).toString();
+
+    const httpsPort = process.env.TEST_APP_NODEJS_SERVER_PORT_SECURE
+      ? parseInt(process.env.TEST_APP_NODEJS_SERVER_PORT_SECURE, 10)
+      : 7733;
+
+    await killPort(httpsPort);
+
+    httpsServer = createServer({ key, cert }, app);
+
+    await new Promise((resolve) => {
+      httpsServer.listen(httpsPort, () => {
+        resolve();
       });
     });
   },
@@ -57,8 +70,11 @@ module.exports = {
    * Close test app server.
    */
   close: async () => {
-    if (server) {
-      await new Promise((resolve) => server.close(resolve));
+    if (httpServer) {
+      await new Promise((resolve) => httpServer.close(resolve));
+    }
+    if (httpsServer) {
+      await new Promise((resolve) => httpsServer.close(resolve));
     }
     if (prerenderer) {
       await prerenderer.stop();
