@@ -3,22 +3,24 @@
 ## Basic setup
 
 - [x] Setup repository
-- [ ] Create unit tests
-- [ ] Create integration tests
+- [x] Create unit tests
+- [x] Create integration tests: http NodeJS requests
+- [x] Create integration tests: https NodeJS requests
+- [x] Create integration tests: Nginx requests
+- [ ] Create integration tests: Apache requests
 - [x] Debug
 - [x] Keep headless browser open, create new pages per request
 - [x] Filter user agents
 - [x] Filter extensions
 - [x] Blacklisting tracking scripts
 - [ ] Simple prerenderer, save local file
+- [ ] Upload to s3 after sending response
+- [ ] 
 - [x] Add to docker, set tests in docker with nginx
-- [ ] Create a nginx proxy test
-- [ ] Create a subdomain test
-- [ ] Create a complex path test
-- [ ] Create a multi-route test
-- [ ] Preserve status codes (deliver 404, 500, etc)
+- [x] Create a nginx proxy test
+- [x] Preserve status codes (deliver 404, 500, etc)
 - [x] Setup in Docker
-- [ ] Testing in Docker with different NodeJS versions
+- [x] Testing in Docker with different NodeJS versions
 
 ## Creating an use-case
 
@@ -32,15 +34,13 @@
 
 ## Need-to-have
 
-- [ ] Upload to S3
 - [ ] See how to automatically clear prerendered pages (by commit, or something)
-- [ ] Create a recipe for using it with nginx
+- [ ] Create recipes for using it with nginx, apache and as an express middleware.
 - [ ] **Add to public NPM registry - release as 1.0.0**
 - [ ] **Publish a docker image**
 
 ## Nice-to-have
 
-- [ ] Create a recipes folder - add examples
 - [ ] Link prerenderer's clearance of cached pages to Github actions
 - [ ] Debug remotely
 - [ ] Add usage of server-timing API

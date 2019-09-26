@@ -14,7 +14,9 @@
       "protocol": "inspector",
       "address": "localhost",
       "smartStep": true,
-      "skipFiles": ["<node_internals>/**", "node_modules/**"]
+      "skipFiles": ["<node_internals>/**"],
+      "restart": true,
+      "timeout": 20000
     }
   ]
 }

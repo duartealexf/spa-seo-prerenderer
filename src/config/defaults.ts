@@ -22,13 +22,11 @@ export interface PrerendererConfigParams {
 
   /**
    * Chosen snapshots driver.
-   * @default 'fs'
    */
   snapshotsDriver: SnapshotsDriver;
 
   /**
    * Directory to store snapshots in.
-   * @default '../snapshots'
    */
   snapshotsDirectory: string;
 
@@ -42,7 +40,7 @@ export interface PrerendererConfigParams {
    * Chromium executable.
    * @default '''
    */
-  chromiumExecutable: string;
+  chromiumExecutable?: string;
 
   /**
    * Array of path RegExps that, when matched
@@ -93,11 +91,12 @@ export const DEFAULT_BOT_USER_AGENTS = [
   'google page speed',
   'chrome-lighthouse',
   'developers.google.com/+/web/snippet',
+  'xml-sitemaps',
+  'google-structureddatatestingtool',
   'facebookexternalhit',
   'bingbot',
   'linkedinbot',
   'pinterest',
-  'pinterestbot',
   'semrushbot',
   'twitterbot',
   'whatsapp',
@@ -106,13 +105,11 @@ export const DEFAULT_BOT_USER_AGENTS = [
   'applebot',
   'baiduspider',
   'bitlybot',
-  'bitrix link preview',
   'discordbot',
   'embedly',
   'flipboard',
   'nuzzel',
   'outbrain',
-  'pinterest/0.',
   'quora link preview',
   'qwantify',
   'redditbot',
@@ -121,8 +118,6 @@ export const DEFAULT_BOT_USER_AGENTS = [
   'skypeuripreview',
   'tumblr',
   'vkshare',
-  'x-bufferbot',
-  'xing-contenttabreceiver',
   'yahoo! slurp',
   'yandex',
 ];

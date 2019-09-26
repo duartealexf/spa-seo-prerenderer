@@ -16,6 +16,7 @@ describe('non-initialization errors', () => {
     } catch (e) {
       assert.instanceOf(e, PrerendererNotReadyException);
     }
+    await p.stop();
   });
 
   it('should throw an error if logging something without initialization.', async () => {
@@ -27,6 +28,7 @@ describe('non-initialization errors', () => {
     } catch (e) {
       assert.instanceOf(e, PrerendererNotReadyException);
     }
+    await p.stop();
   });
 
   it('should throw an error if trying to start without initialization.', async () => {
@@ -38,6 +40,7 @@ describe('non-initialization errors', () => {
     } catch (e) {
       assert.instanceOf(e, PrerendererNotReadyException);
     }
+    await p.stop();
   });
 
   it('should throw an error if trying to prerender without start.', async () => {
@@ -49,5 +52,6 @@ describe('non-initialization errors', () => {
     } catch (e) {
       assert.instanceOf(e, PrerendererNotReadyException);
     }
+    await p.stop();
   });
 });

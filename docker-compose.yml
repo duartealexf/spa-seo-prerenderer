@@ -1,4 +1,4 @@
-version: '3'
+version: '2.2'
 
 services:
   nginx:
@@ -6,14 +6,20 @@ services:
       context: .
       dockerfile: docker/nginx/nginx.dockerfile
       args:
-        TEST_NGINX_SERVER_HOST: ${TEST_NGINX_SERVER_HOST}
-        TEST_NODEJS_PROXY_PATH: ${TEST_NODEJS_PROXY_PATH}
+        TEST_SMART_NGINX_CONTAINER_HOST: ${TEST_SMART_NGINX_CONTAINER_HOST}
+        TEST_DUMB_NGINX_CONTAINER_HOST: ${TEST_DUMB_NGINX_CONTAINER_HOST}
+        TEST_PRERENDERER_NODEJS_SERVER_PORT: ${TEST_PRERENDERER_NODEJS_SERVER_PORT}
+        TEST_STATIC_NODEJS_SERVER_PORT: ${TEST_STATIC_NODEJS_SERVER_PORT}
+        TEST_APP_NODEJS_SERVER_PORT: ${TEST_APP_NODEJS_SERVER_PORT}
+    volumes:
+      - ./logs:/var/log/nginx
     networks:
-      prerender:
-        ipv4_address: 172.25.0.101
+      prerenderer:
+        ipv4_address: 173.20.0.101
+        ipv6_address: 2002:ac14:0:0:0:0:0:101
     extra_hosts:
-      - ${TEST_NGINX_SERVER_HOST}:170.0.0.1
-      - ${TEST_NODEJS_SERVER_HOST}:172.25.0.102
+      - ${TEST_NODEJS_CONTAINER_HOST}:173.20.0.102
+      - ${TEST_NODEJS_CONTAINER_HOST}:2002:ac14:0:0:0:0:0:102
 
   tests:
     depends_on:
@@ -22,21 +28,33 @@ services:
       context: .
       dockerfile: docker/tests/tests-node-12.dockerfile
     extra_hosts:
-      - ${TEST_NGINX_SERVER_HOST}:172.25.0.101
-      - ${TEST_NODEJS_SERVER_HOST}:127.0.0.1
+      - ${TEST_SMART_NGINX_CONTAINER_HOST}:173.20.0.101
+      - ${TEST_DUMB_NGINX_CONTAINER_HOST}:173.20.0.101
+      - ${TEST_NODEJS_CONTAINER_HOST}:127.0.0.1
+      - ${TEST_SMART_NGINX_CONTAINER_HOST}:2002:ac14:0:0:0:0:0:101
+      - ${TEST_DUMB_NGINX_CONTAINER_HOST}:2002:ac14:0:0:0:0:0:101
+      - ${TEST_NODEJS_CONTAINER_HOST}:::1
     volumes:
+      - ./logs:/var/www/logs
       - ./dist:/var/www/dist
       - ./src:/var/www/src
       - ./test:/var/www/test
     ports:
       - 9229:9229
     networks:
-      prerender:
-        ipv4_address: 172.25.0.102
+      prerenderer:
+        ipv4_address: 173.20.0.102
+        ipv6_address: 2002:ac14:0:0:0:0:0:102
+    command: npm run test:debug
 
 networks:
-  prerender:
+  prerenderer:
     driver: bridge
+    enable_ipv6: true
     ipam:
+      driver: default
       config:
-        - subnet: 172.25.0.0/24
+        - subnet: 173.20.0.0/24
+          gateway: 173.20.0.1
+        - subnet: 2002:ac14:0000::/48
+          gateway: 2002:ac14:0:0:0:0:0:1

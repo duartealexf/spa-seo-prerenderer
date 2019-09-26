@@ -168,7 +168,7 @@ export class Logger {
    * @param context
    */
   private static formatMessage(logLevel: number, message: string, context: string): string {
-    return `${new Date().toISOString()} prerenderer:${context} ${Logger.LOG_LEVELS[logLevel]
-      || ''}: ${message}`;
+    return `${new Date().toISOString()} prerenderer:${context} ${Logger.LOG_LEVELS[logLevel] ||
+      ''}: ${message}`;
   }
 }

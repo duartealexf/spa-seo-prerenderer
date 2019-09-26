@@ -12,9 +12,9 @@ Pluggable puppeteer prerenderer - make your SPA SEO-friendly.
 
 *Work in progress - for an idea of what's to come, see the [checklist.](https://github.com/duartealexf/seo-prerenderer/blob/master/CHECKLIST.md)*
 
-## About
+## How to use
 
-TODO
+TODO!
 
 ## Contributing
 

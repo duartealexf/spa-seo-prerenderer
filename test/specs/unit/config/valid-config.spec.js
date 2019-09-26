@@ -5,7 +5,11 @@ const { pathExists, existsSync } = require('fs-extra');
 const { v4: uuidv4 } = require('uuid');
 
 const { Prerenderer } = require('../../../../dist/lib/prerenderer');
-const { DEFAULT_BLACKLISTED_REQUEST_URLS, DEFAULT_BOT_USER_AGENTS, DEFAULT_PRERENDERABLE_EXTENSIONS } = require('../../../../dist/lib/config/defaults');
+const {
+  DEFAULT_BLACKLISTED_REQUEST_URLS,
+  DEFAULT_BOT_USER_AGENTS,
+  DEFAULT_PRERENDERABLE_EXTENSIONS,
+} = require('../../../../dist/lib/config/defaults');
 
 describe('valid env vars', () => {
   /**
@@ -145,7 +149,7 @@ describe('valid env vars', () => {
     );
   });
 
-  it('should set an empty request URL blacklist when both a blacklist and whitelist config is given.', async () => {
+  it('should set given whitelist and blacklist.', async () => {
     /**
      * @type {import('../../../../dist/types/config/defaults').PrerendererConfigParams}
      */
@@ -158,84 +162,26 @@ describe('valid env vars', () => {
     const p = new Prerenderer(config);
     await p.initialize();
 
-    assert.deepEqual(
-      p.getConfig().getWhitelistedRequestURLs(),
-      config.whitelistedRequestURLs
-    );
+    assert.deepEqual(p.getConfig().getWhitelistedRequestURLs(), config.whitelistedRequestURLs);
 
-    assert.deepEqual(
-      p.getConfig().getBlacklistedRequestURLs(),
-      []
-    );
+    assert.deepEqual(p.getConfig().getBlacklistedRequestURLs(), config.blacklistedRequestURLs);
   });
 
-  it('should set an empty request URL blacklist when both a whitelist config is given.', async () => {
+  it('should set empty whitelist and blacklist when empty arrays are given.', async () => {
     /**
      * @type {import('../../../../dist/types/config/defaults').PrerendererConfigParams}
      */
     const config = {
       ...initialConfig,
-      whitelistedRequestURLs: ['.test-1.'],
+      whitelistedRequestURLs: [],
+      blacklistedRequestURLs: [],
     };
 
     const p = new Prerenderer(config);
     await p.initialize();
 
-    assert.deepEqual(
-      p.getConfig().getWhitelistedRequestURLs(),
-      config.whitelistedRequestURLs
-    );
+    assert.deepEqual(p.getConfig().getWhitelistedRequestURLs(), []);
 
-    assert.deepEqual(
-      p.getConfig().getBlacklistedRequestURLs(),
-      []
-    );
-  });
-
-  it('should set a blacklist request URL when an empty whitelist and a valid blacklist config is given.', async () => {
-    /**
-     * @type {import('../../../../dist/types/config/defaults').PrerendererConfigParams}
-     */
-    const config = {
-      ...initialConfig,
-      blacklistedRequestURLs: ['.test-1.'],
-      whitelistedRequestURLs: []
-    };
-
-    const p = new Prerenderer(config);
-    await p.initialize();
-
-    assert.deepEqual(
-      p.getConfig().getBlacklistedRequestURLs(),
-      config.blacklistedRequestURLs
-    );
-
-    assert.deepEqual(
-      p.getConfig().getWhitelistedRequestURLs(),
-      []
-    );
-  });
-
-  it('should set a blacklist request URL when only a valid blacklist config is given.', async () => {
-    /**
-     * @type {import('../../../../dist/types/config/defaults').PrerendererConfigParams}
-     */
-    const config = {
-      ...initialConfig,
-      blacklistedRequestURLs: ['.test-1.'],
-    };
-
-    const p = new Prerenderer(config);
-    await p.initialize();
-
-    assert.deepEqual(
-      p.getConfig().getBlacklistedRequestURLs(),
-      config.blacklistedRequestURLs
-    );
-
-    assert.deepEqual(
-      p.getConfig().getWhitelistedRequestURLs(),
-      []
-    );
+    assert.deepEqual(p.getConfig().getBlacklistedRequestURLs(), []);
   });
 });

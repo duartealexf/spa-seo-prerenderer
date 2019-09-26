@@ -1,14 +1,16 @@
-import puppeteer, { Browser, Response as PuppeteerResponse, LaunchOptions } from 'puppeteer';
+import puppeteer, { Browser, Response as PuppeteerResponse, LaunchOptions, Page } from 'puppeteer';
 import { extname } from 'path';
-import { Request as ExpressRequest, Response as ExpressResponse } from 'express';
 import { IncomingMessage } from 'http';
+import { URL } from 'url';
 
+import { TLSSocket } from 'tls';
 import { Config } from './config';
 import { Logger } from './logger';
 import { PrerendererConfigParams } from './config/defaults';
 import { PrerendererNotReadyException } from './exceptions/prerenderer-not-ready-exception';
+import { PrerendererResponseError } from './error';
 
-interface PrerendererResponse {
+export interface PrerendererResponse {
   /**
    * Rendered HTML.
    */
@@ -105,7 +107,7 @@ export class Prerenderer {
   /**
    * Prerenderer user agent including version.
    */
-  public static readonly USER_AGENT = 'prerenderer/{{version}}';
+  public static readonly USER_AGENT = 'Mozilla/5.0 (compatible; prerenderer/{{version}})';
 
   constructor(config: PrerendererConfigParams) {
     this.config = new Config(config);
@@ -149,7 +151,10 @@ export class Prerenderer {
     }
 
     this.getLogger().info('Launching Puppeteer...', 'prerenderer');
-    const options: LaunchOptions = { args: ['--no-sandbox'] };
+    const options: LaunchOptions = {
+      args: ['--no-sandbox'],
+      ignoreHTTPSErrors: true,
+    };
 
     if (this.config.getChromiumExecutable()) {
       options.executablePath = this.config.getChromiumExecutable();
@@ -185,31 +190,11 @@ export class Prerenderer {
   }
 
   /**
-   * Get user agent header string from request.
-   * @param request NodeJS request.
-   */
-  private static getRequestUserAgent(request: ExpressRequest): string {
-    const keys = Object.getOwnPropertyNames(request.headers);
-    const length = keys.length;
-
-    for (let i = 0; i < length; i += 1) {
-      const key = keys[i];
-      const header = request.headers[key] as string;
-
-      if (key.toLowerCase() === 'user-agent') {
-        return header;
-      }
-    }
-
-    return '';
-  }
-
-  /**
    * Get whether given request should be prerendered, considering request
    * method, blacklisted and whitelisted user agents, extensions and paths.
    * @param request NodeJS request.
    */
-  public shouldPrerender(request: ExpressRequest): boolean {
+  public shouldPrerender(request: IncomingMessage): boolean {
     if (!request) {
       this.lastRejectedPrerenderReason = 'no-request';
       return false;
@@ -228,7 +213,7 @@ export class Prerenderer {
       return false;
     }
 
-    let userAgent = Prerenderer.getRequestUserAgent(request);
+    let userAgent = Prerenderer.getRequestHeader(request, 'user-agent');
 
     /**
      * No user agent, don't prerender.
@@ -248,7 +233,9 @@ export class Prerenderer {
       return false;
     }
 
-    const path = request.url.substr(1);
+    const parsedUrl = Prerenderer.parseUrl(request);
+
+    const path = parsedUrl.pathname || '';
     const extension = extname(path)
       .substr(1)
       .toLowerCase();
@@ -273,154 +260,183 @@ export class Prerenderer {
     return true;
   }
 
-  public async prerender(request: ExpressRequest, response: ExpressResponse): Promise<void> {
+  public async prerender(request: IncomingMessage): Promise<void> {
     if (!this.browser) {
       throw new PrerendererNotReadyException(
         'Prerenderer needs to be started before prerendering an url. Did you call prerenderer.start()?',
       );
     }
 
-    try {
-      const protocol = request.protocol;
-      const host = request.hostname;
-      const port = request.connection.localPort === 80 ? '' : `:${request.connection.localPort}`;
-      const path = request.originalUrl;
+    const page = await this.browser.newPage();
 
-      // TODO: keep query paramss.
-      const requestedUrl = `${protocol}://${host}${port}${path}`;
+    const renderStart = Date.now();
 
-      const renderStart = Date.now();
-      const page = await this.browser.newPage();
+    await this.navigatePageWithRequest(page, request)
+      .then((puppeteerResponse) => {
+        this.lastResponse = puppeteerResponse;
+      })
+      .catch(async (error) => {
+        let message: string;
+        let status = 400;
 
-      page.setUserAgent(Prerenderer.USER_AGENT);
-      page.setRequestInterception(true);
+        if (error instanceof PrerendererResponseError) {
+          status = error.statusCode;
+          message = error.message;
+        } else if (error instanceof Error) {
+          message = error.message;
+        } else if (typeof error === 'object') {
+          message = JSON.stringify(error);
+        } else {
+          message = error;
+        }
 
-      // TODO: handle certificate error and continue
-      // TODO: follow redirects
-      const blacklist = this.config.getBlacklistedRequestURLs();
-      const whitelist = this.config.getWhitelistedRequestURLs();
+        this.getLogger().error(message, 'puppeteer');
 
-      let requestFilter: (req: puppeteer.Request) => void;
-
-      if (whitelist.length) {
-        requestFilter = (req: puppeteer.Request) => {
-          if (whitelist.some((p) => req.url().includes(p))) {
-            req.continue();
-          } else {
-            req.abort();
-          }
-        };
-      } else {
-        requestFilter = (req: puppeteer.Request) => {
-          if (blacklist.some((p) => req.url().includes(p))) {
-            req.abort();
-          } else {
-            req.continue();
-          }
-        };
-      }
-
-      page.on('request', requestFilter);
-
-      /**
-       * Add shadow dom shim.
-       */
-      page.evaluateOnNewDocument('if (window.customElements) customElements.forcePolyfill = true;');
-      page.evaluateOnNewDocument('ShadyDOM = { force: true }');
-      page.evaluateOnNewDocument('ShadyCSS = { shimcssproperties: true }');
-
-      let puppeteerResponse: PuppeteerResponse | null = null;
-
-      try {
-        /**
-         * Navigate to page and wait for network to be idle.
-         */
-        puppeteerResponse = await page.goto(requestedUrl, {
-          timeout: this.config.getTimeout(),
-          waitUntil: 'networkidle0',
-        });
-      } catch (e) {
-        // TODO: do something other than console error.
-        // console.error(e);
-      }
-
-      if (!puppeteerResponse) {
-        /**
-         * This should only occur when page is about:blank.
-         * @see https://github.com/GoogleChrome/puppeteer/blob/v1.5.0/docs/api.md#pagegotourl-options.
-         */
         await page.close();
+        const url = Prerenderer.parseUrl(request);
 
         this.lastResponse = {
           headers: {
-            status: 400,
+            status,
+            'X-Original-Location': url.toString(),
             'X-Prerendered-Ms': Date.now() - renderStart,
           },
           body: '',
         };
+      });
+  }
 
+  /**
+   * Navigate given Puppeteer page according to request.
+   * @param page
+   * @param request
+   */
+  private async navigatePageWithRequest(
+    page: Page,
+    request: IncomingMessage,
+  ): Promise<PrerendererResponse> {
+    const url = Prerenderer.parseUrl(request);
+    const renderStart = Date.now();
+
+    page.setUserAgent(Prerenderer.USER_AGENT);
+    page.setRequestInterception(true);
+
+    const blacklist = this.config.getBlacklistedRequestURLs();
+    const whitelist = this.config.getWhitelistedRequestURLs();
+
+    const requestFilter = (req: puppeteer.Request): void => {
+      if (whitelist.some((p) => req.url().includes(p))) {
+        req.continue();
         return;
       }
-
-      // Disable access to compute metadata. See
-      // https://cloud.google.com/compute/docs/storing-retrieving-metadata.
-      if (puppeteerResponse.headers()['metadata-flavor'] === 'Google') {
-        await page.close();
-
-        this.lastResponse = {
-          headers: {
-            status: 403,
-            'X-Prerendered-Ms': Date.now() - renderStart,
-          },
-          body: '',
-        };
-
+      if (blacklist.some((p) => req.url().includes(p))) {
+        req.abort();
         return;
       }
+      req.continue();
+    };
 
-      // Set status to the initial server's response code. Check for a <meta
-      // name="render:status_code" content="4xx" /> tag which overrides the status
-      // code.
-      let status = puppeteerResponse.status();
+    page.on('request', requestFilter);
 
-      const newStatusCode = await page
-        .$eval('meta[name="render:status_code"]', (element) =>
-          parseInt(element.getAttribute('content') || '', 10),
-        )
-        .catch(() => undefined);
+    /**
+     * Add shadow dom shim.
+     */
+    page.evaluateOnNewDocument('if (window.customElements) customElements.forcePolyfill = true;');
+    page.evaluateOnNewDocument('ShadyDOM = { force: true }');
+    page.evaluateOnNewDocument('ShadyCSS = { shimcssproperties: true }');
 
-      // On a repeat visit to the same origin, browser cache is enabled, so we may
-      // encounter a 304 Not Modified. Instead we'll treat this as a 200 OK.
-      if (status === 304) {
-        status = 200;
-      }
+    let puppeteerResponse: PuppeteerResponse | null = null;
 
-      // Original status codes which aren't 200 always return with that status
-      // code, regardless of meta tags.
-      if (status === 200 && newStatusCode) {
-        status = newStatusCode;
-      }
+    /**
+     * Navigate to page and wait for network to be idle.
+     */
+    puppeteerResponse = await page.goto(url.toString(), {
+      timeout: this.config.getTimeout(),
+      waitUntil: 'networkidle0',
+    });
 
-      // Inject <base> tag with the origin of the request (ie. no path).
-
-      // Serialize page.
-      const body = await page.content();
-
-      await page.close();
-
-      this.lastResponse = {
-        body,
-        headers: {
-          status,
-          'X-Original-Location': path,
-          'X-Prerendered-Ms': Date.now() - renderStart,
-        },
-      };
-
-      return;
-    } catch (err) {
-      // console.error(err);
-      throw new Error('page.goto/waitForSelector timed out.');
+    if (!puppeteerResponse) {
+      throw new PrerendererResponseError(400, 'Puppeteer received no response.');
     }
+
+    let status = puppeteerResponse.status();
+
+    /**
+     * If browser uses cache and sees 304, consider 200.
+     */
+    if (status === 304) {
+      status = 200;
+    }
+
+    const body = await page.content();
+    await page.close();
+
+    return {
+      body,
+      headers: {
+        status,
+        'X-Original-Location': url.toString(),
+        'X-Prerendered-Ms': Date.now() - renderStart,
+      },
+    };
+  }
+
+  /**
+   * Get given header from given request.
+   * @param request
+   * @param header
+   */
+  private static getRequestHeader(request: IncomingMessage, header: string): string {
+    const headerEntry = Object.entries(request.headers).find(([k]) => k.toLowerCase() === header);
+
+    if (!headerEntry) {
+      return '';
+    }
+
+    return headerEntry[1] as string;
+  }
+
+  /**
+   * Parse URL from given request.
+   * @param request
+   */
+  public static parseUrl(request: IncomingMessage): URL {
+    let protocol = Prerenderer.getRequestHeader(request, 'x-forwarded-proto');
+    let host = Prerenderer.getRequestHeader(request, 'x-forwarded-host');
+    let port = Prerenderer.getRequestHeader(request, 'x-forwarded-port');
+
+    const path = request.url || '/';
+
+    if (!protocol) {
+      protocol =
+        request.connection instanceof TLSSocket && request.connection.encrypted ? 'https' : 'http';
+    }
+
+    /**
+     * Adapted from express hostname getter.
+     */
+    const hostAndMaybePort = Prerenderer.getRequestHeader(request, 'host');
+    const offset = hostAndMaybePort[0] === '[' ? hostAndMaybePort.indexOf(']') + 1 : 0;
+    const index = hostAndMaybePort.indexOf(':', offset);
+
+    if (!host) {
+      host = index !== -1 ? hostAndMaybePort.substring(0, index) : hostAndMaybePort;
+    }
+
+    if (!port) {
+      port = index !== -1 ? hostAndMaybePort.substring(index + 1) : port;
+
+      if (!port) {
+        port = request.connection.localPort.toString();
+      }
+    }
+
+    if (port === '80' || port === '433') {
+      port = '';
+    } else {
+      port = `:${port}`;
+    }
+
+    return new URL(`${protocol}://${host}${port}${path}`);
   }
 }
