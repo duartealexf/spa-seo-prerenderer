@@ -11,8 +11,8 @@ services:
         TEST_PRERENDERER_NODEJS_SERVER_PORT: ${TEST_PRERENDERER_NODEJS_SERVER_PORT}
         TEST_STATIC_NODEJS_SERVER_PORT: ${TEST_STATIC_NODEJS_SERVER_PORT}
         TEST_APP_NODEJS_SERVER_PORT: ${TEST_APP_NODEJS_SERVER_PORT}
-    # volumes:
-    #   - ./logs:/var/log/apache
+    volumes:
+      - ./logs:/usr/local/apache2/logs
     networks:
       prerenderer:
         ipv4_address: 173.20.0.100
