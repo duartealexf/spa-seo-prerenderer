@@ -19,13 +19,14 @@ WORKDIR $HOME
 
 # Copy and test Apache config
 
-# COPY ./docker/apache/httpd.conf /usr/local/apache2/conf/httpd.conf
-# COPY ./docker/apache/httpd-vhosts.conf /usr/local/apache2/conf/extra/httpd-vhosts.conf
+COPY ./docker/apache/httpd.conf /usr/local/apache2/conf/httpd.conf
+COPY ./docker/apache/httpd-vhosts.conf /usr/local/apache2/conf/extra/httpd-vhosts.conf
 
-# RUN sed -i "s/TEST_SMART_APACHE_CONTAINER_HOST/${TEST_SMART_APACHE_CONTAINER_HOST}/g" /etc/nginx/conf.d/default.conf
-# RUN sed -i "s/TEST_DUMB_APACHE_CONTAINER_HOST/${TEST_DUMB_APACHE_CONTAINER_HOST}/g" /etc/nginx/conf.d/default.conf
+# RUN sed -i "s/TEST_SMART_APACHE_CONTAINER_HOST/${TEST_SMART_APACHE_CONTAINER_HOST}/g" /usr/local/apache2/conf/extra/httpd-vhosts.conf
+RUN sed -i "s/TEST_DUMB_APACHE_CONTAINER_HOST/${TEST_DUMB_APACHE_CONTAINER_HOST}/g" /usr/local/apache2/conf/extra/httpd-vhosts.conf
 
-# RUN sed -i "s/TEST_PRERENDERER_NODEJS_SERVER_PORT/${TEST_PRERENDERER_NODEJS_SERVER_PORT}/g" /etc/nginx/conf.d/default.conf
-# RUN sed -i "s/TEST_STATIC_NODEJS_SERVER_PORT/${TEST_STATIC_NODEJS_SERVER_PORT}/g" /etc/nginx/conf.d/default.conf
-# RUN sed -i "s/TEST_APP_NODEJS_SERVER_PORT/${TEST_APP_NODEJS_SERVER_PORT}/g" /etc/nginx/conf.d/default.conf
+# RUN sed -i "s/TEST_PRERENDERER_NODEJS_SERVER_PORT/${TEST_PRERENDERER_NODEJS_SERVER_PORT}/g" /usr/local/apache2/conf/extra/httpd-vhosts.conf
+# RUN sed -i "s/TEST_STATIC_NODEJS_SERVER_PORT/${TEST_STATIC_NODEJS_SERVER_PORT}/g" /usr/local/apache2/conf/extra/httpd-vhosts.conf
+RUN sed -i "s/TEST_APP_NODEJS_SERVER_PORT/${TEST_APP_NODEJS_SERVER_PORT}/g" /usr/local/apache2/conf/extra/httpd-vhosts.conf
 
+RUN apachectl -t
