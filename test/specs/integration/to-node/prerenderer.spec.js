@@ -18,6 +18,7 @@ describe("features that are in Prerenderer's Puppeteer", () => {
 
   it('should follow page redirects.', async () => {
     const { response } = await createDirectHttpGetRequest('redirect-index/from.html');
+    // TODO: create this type of request through nginx and apache, to make sure proxy redirect is done.
     const $ = cheerio.load(response.body);
     assert.equal($('#app').length, 1);
   });
