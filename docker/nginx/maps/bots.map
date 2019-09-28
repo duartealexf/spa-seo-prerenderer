@@ -3,7 +3,7 @@ default                                  "no";
 "~*googlebot"                            "yes";
 "~*google page speed"                    "yes";
 "~*chrome-lighthouse"                    "yes";
-"~*developers.google.com/+/web/snippet"  "yes";
+"~*developers.google.com"                "yes";
 "~*xml-sitemaps"                         "yes";
 "~*google-structureddatatestingtool"     "yes";
 "~*facebookexternalhit"                  "yes";

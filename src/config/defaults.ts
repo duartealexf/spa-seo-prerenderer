@@ -90,7 +90,7 @@ export const DEFAULT_BOT_USER_AGENTS = [
   'googlebot',
   'google page speed',
   'chrome-lighthouse',
-  'developers.google.com/+/web/snippet',
+  'developers.google.com',
   'xml-sitemaps',
   'google-structureddatatestingtool',
   'facebookexternalhit',
