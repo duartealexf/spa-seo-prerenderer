@@ -12,7 +12,7 @@ services:
         TEST_STATIC_NODEJS_SERVER_PORT: ${TEST_STATIC_NODEJS_SERVER_PORT}
         TEST_APP_NODEJS_SERVER_PORT: ${TEST_APP_NODEJS_SERVER_PORT}
     volumes:
-      - ./logs:/usr/local/apache2/logs
+      - ./logs/apache:/usr/local/apache2/logs
     networks:
       prerenderer:
         ipv4_address: 173.20.0.100
@@ -32,7 +32,7 @@ services:
         TEST_STATIC_NODEJS_SERVER_PORT: ${TEST_STATIC_NODEJS_SERVER_PORT}
         TEST_APP_NODEJS_SERVER_PORT: ${TEST_APP_NODEJS_SERVER_PORT}
     volumes:
-      - ./logs:/var/log/nginx
+      - ./logs/nginx:/var/log/nginx
     networks:
       prerenderer:
         ipv4_address: 173.20.0.101
@@ -44,6 +44,7 @@ services:
   tests:
     depends_on:
       - nginx
+      - apache
     build:
       context: .
       dockerfile: docker/tests/tests-node-12.dockerfile
@@ -57,7 +58,7 @@ services:
       - ${TEST_DUMB_NGINX_CONTAINER_HOST}:2002:ac14:0:0:0:0:0:101
       - ${TEST_NODEJS_CONTAINER_HOST}:::1
     volumes:
-      - ./logs:/var/www/logs
+      - ./logs/node:/var/www/logs
       - ./dist:/var/www/dist
       - ./src:/var/www/src
       - ./test:/var/www/test
@@ -68,6 +69,7 @@ services:
         ipv4_address: 173.20.0.102
         ipv6_address: 2002:ac14:0:0:0:0:0:102
     command: npm run test:debug
+    # command: node --inspect=0.0.0.0:9229 ./node_modules/mocha/bin/_mocha -- -w -t 8640000 --colors test/specs/integration/to-apache/smart-proxy.spec.js
 
 networks:
   prerenderer:

@@ -1,8 +1,6 @@
 const { request: httpRequest } = require('http');
 const { request: httpsRequest, Agent } = require('https');
 const { v4: uuidv4 } = require('uuid');
-const { readFileSync } = require('fs-extra');
-const { join } = require('path');
 
 const { requests } = require('../servers/app-server');
 const { DEFAULT_BOT_USER_AGENTS } = require('../../dist/lib/config/defaults');
@@ -158,6 +156,44 @@ module.exports = {
     ),
 
   /**
+   * Create a HTTP GET request to Apache hostname that does
+   * not evaluate whether it should proxy to Prerenderer.
+   * @param {string} path
+   * @param {any} customHeaders
+   * @param {boolean} botUserAgent
+   * @returns {ReturnType<typeof createRequest>}
+   */
+  createDumbApacheProxyHttpGetRequest: (path = '', customHeaders = {}, botUserAgent = true) =>
+    createRequest(
+      'GET',
+      false,
+      process.env.TEST_DUMB_APACHE_CONTAINER_HOST,
+      80,
+      path,
+      customHeaders,
+      botUserAgent,
+    ),
+
+  /**
+   * Create a HTTP GET request to Apache hostname that
+   * evaluates whether it should proxy to Prerenderer.
+   * @param {string} path
+   * @param {any} customHeaders
+   * @param {boolean} botUserAgent
+   * @returns {ReturnType<typeof createRequest>}
+   */
+  createSmartApacheProxyHttpGetRequest: (path = '', customHeaders = {}, botUserAgent = true) =>
+    createRequest(
+      'GET',
+      false,
+      process.env.TEST_SMART_APACHE_CONTAINER_HOST,
+      80,
+      path,
+      customHeaders,
+      botUserAgent,
+    ),
+
+  /**
    * Create a HTTP GET request to Nginx hostname that does
    * not evaluate whether it should proxy to Prerenderer.
    * @param {string} path
@@ -165,7 +201,7 @@ module.exports = {
    * @param {boolean} botUserAgent
    * @returns {ReturnType<typeof createRequest>}
    */
-  createDumbProxyHttpGetRequest: (path = '', customHeaders = {}, botUserAgent = true) =>
+  createDumbNginxProxyHttpGetRequest: (path = '', customHeaders = {}, botUserAgent = true) =>
     createRequest(
       'GET',
       false,
@@ -184,7 +220,7 @@ module.exports = {
    * @param {boolean} botUserAgent
    * @returns {ReturnType<typeof createRequest>}
    */
-  createSmartProxyHttpGetRequest: (path = '', customHeaders = {}, botUserAgent = true) =>
+  createSmartNginxProxyHttpGetRequest: (path = '', customHeaders = {}, botUserAgent = true) =>
     createRequest(
       'GET',
       false,
@@ -196,24 +232,24 @@ module.exports = {
     ),
 
   /**
-   * Returns whether request passed through dumb Nginx's proxy.
-   * If it returns false, it passed through smart Nginx's proxy.
+   * Returns whether request passed through dumb proxy.
+   * If it returns false, it passed through smart proxy.
    * @param {import('http').IncomingMessage} request
    * @returns {boolean}
    */
   requestPassedThroughDumbProxy: (request) => getHeader(request, 'x-proxy-mode') === 'dumb',
 
   /**
-   * Returns whether request passed through smart Nginx's proxy.
-   * If it returns false, it passed through dumb Nginx's proxy.
+   * Returns whether request passed through smart proxy.
+   * If it returns false, it passed through dumb proxy.
    * @param {import('http').IncomingMessage} request
    * @returns {boolean}
    */
   requestPassedThroughSmartProxy: (request) => getHeader(request, 'x-proxy-mode') === 'smart',
 
   /**
-   * Returns whether request passed through smart Nginx's
-   * proxy and it decided to proxy to Prerenderer.
+   * Returns whether request passed through smart
+   * proxy and it decided to Prerenderer.
    * @param {import('http').IncomingMessage} request
    * @returns {boolean}
    */

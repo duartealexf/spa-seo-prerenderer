@@ -1,10 +1,10 @@
 const { describe, it } = require('mocha');
 const { assert } = require('chai');
 
-const { createSmartNginxProxyHttpGetRequest } = require('../../../client');
+const { createDumbApacheProxyHttpGetRequest } = require('../../../client');
 const { Prerenderer } = require('../../../../dist/lib/prerenderer');
 
-describe("prerenderer's URL parser with Nginx's X-Forwarded-* headers.", () => {
+describe("prerenderer's URL parser with Apache's X-Forwarded-* headers.", () => {
   /**
    * @type {import('http').IncomingMessage}
    */
@@ -15,11 +15,11 @@ describe("prerenderer's URL parser with Nginx's X-Forwarded-* headers.", () => {
    */
   let parsedUrl;
 
-  const requestUri = 'index.html?letters=abc&numbers=123&space=%50#fragment';
-  const host = process.env.TEST_SMART_NGINX_CONTAINER_HOST;
+  const requestUri = 'index.html?letters=abc&numbers=123&space=%50';
+  const host = process.env.TEST_DUMB_APACHE_CONTAINER_HOST;
 
   before(async () => {
-    request = (await createSmartNginxProxyHttpGetRequest(requestUri)).request;
+    request = (await createDumbApacheProxyHttpGetRequest(requestUri)).request;
     parsedUrl = Prerenderer.parseUrl(request);
   });
 
