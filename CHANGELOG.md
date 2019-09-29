@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.11](https://github.com/duartealexf/spa-seo-prerenderer/compare/v0.0.10...v0.0.11) (2019-09-29)
+
+
+### Bug Fixes
+
+* simplified one user-agent ([ccab6ce](https://github.com/duartealexf/spa-seo-prerenderer/commit/ccab6ce))
+
+
+### Features
+
+* add apache log volume ([f5c2088](https://github.com/duartealexf/spa-seo-prerenderer/commit/f5c2088))
+
 ### [0.0.10](https://github.com/duartealexf/spa-seo-prerenderer/compare/v0.0.9...v0.0.10) (2019-09-21)
 
 
