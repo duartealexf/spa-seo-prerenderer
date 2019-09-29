@@ -4,6 +4,8 @@ git:
 services:
   - docker
 env:
+  - APACHE_VERSION=2.2
+  - APACHE_VERSION=2.4
   - NODE_VERSION=8.3
   - NODE_VERSION=9
   - NODE_VERSION=10

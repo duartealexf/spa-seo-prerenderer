@@ -1,10 +1,8 @@
 const { describe, it } = require('mocha');
 const { assert } = require('chai');
-const cheerio = require('cheerio');
 
 const {
   createSmartNginxProxyHttpGetRequest,
-  requestSmartProxyDecidedToPrerender,
   requestPassedThroughSmartProxy,
 } = require('../../../client');
 
@@ -21,20 +19,13 @@ describe('prerender requests to NodeJS behind smart Nginx proxy', () => {
     assert.equal(context, 'static');
   });
 
-  it('should pass through smart Nginx proxy and prerender.', async () => {
-    const { request, response, context } = await createSmartNginxProxyHttpGetRequest('index.html');
-    assert.isTrue(requestSmartProxyDecidedToPrerender(request));
-    assert.equal(context, 'prerender');
-
-    const $ = cheerio.load(response.body);
-    assert.equal($('#app').length, 1);
-  });
-
-  it('should pass through smart Nginx proxy and not prerender.', async () => {
-    const { request, context } = await createSmartNginxProxyHttpGetRequest('index.html', {}, false);
-    assert.isFalse(requestSmartProxyDecidedToPrerender(request));
+  it('should pass through smart Nginx proxy and not prerender because of user-agent.', async () => {
+    const { context } = await createSmartNginxProxyHttpGetRequest('index.html', {}, false);
     assert.equal(context, 'static');
   });
 
-  // TODO: test non-html extension to not prerender
+  it('should pass through smart Apache proxy and not prerender because of extension.', async () => {
+    const { context } = await createSmartNginxProxyHttpGetRequest('pixel.png');
+    assert.equal(context, 'static');
+  });
 });

@@ -246,13 +246,4 @@ module.exports = {
    * @returns {boolean}
    */
   requestPassedThroughSmartProxy: (request) => getHeader(request, 'x-proxy-mode') === 'smart',
-
-  /**
-   * Returns whether request passed through smart
-   * proxy and it decided to Prerenderer.
-   * @param {import('http').IncomingMessage} request
-   * @returns {boolean}
-   */
-  requestSmartProxyDecidedToPrerender: (request) =>
-    getHeader(request, 'x-proxy-should-prerender') === '1',
 };

@@ -4,7 +4,7 @@ services:
   apache:
     build:
       context: .
-      dockerfile: docker/apache/apache.dockerfile
+      dockerfile: docker/apache/${APACHE_VERSION}/apache.dockerfile
       args:
         TEST_SMART_APACHE_CONTAINER_HOST: ${TEST_SMART_APACHE_CONTAINER_HOST}
         TEST_DUMB_APACHE_CONTAINER_HOST: ${TEST_DUMB_APACHE_CONTAINER_HOST}
