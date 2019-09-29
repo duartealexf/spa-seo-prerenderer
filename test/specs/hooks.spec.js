@@ -22,7 +22,7 @@ mocha.before(async () => {
   await prerendererServer.start();
   await prerendererServer.attachPrerenderWithConfig({
     snapshotsDirectory: join(process.cwd(), 'test', 'tmp'),
-    snapshotsDriver: 'fs',
+    filesystemDriver: 'fs',
     timeout: 8640000,
   });
 
@@ -38,7 +38,7 @@ mocha.before(async () => {
   await appServer.start();
   await appServer.attachMiddlewares({
     snapshotsDirectory: join(process.cwd(), 'test', 'tmp'),
-    snapshotsDriver: 'fs',
+    filesystemDriver: 'fs',
     timeout: 8640000,
     whitelistedRequestURLs: ['ga.js'],
   });

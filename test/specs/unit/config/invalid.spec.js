@@ -28,29 +28,29 @@ describe('invalid config', () => {
     }
   });
 
-  it('should throw an error when snapshotsDriver is invalid.', () => {
+  it('should throw an error when filesystemDriver is invalid.', () => {
     // @ts-ignore
-    buggedConfig = { snapshotsDriver: 'xyz' };
+    buggedConfig = { filesystemDriver: 'xyz' };
 
     try {
       new Prerenderer(buggedConfig);
       assert.ok(false);
     } catch (e) {
       assert.instanceOf(e, MismatchingConfigException);
-      assert.include(e.message, 'snapshotsDriver');
+      assert.include(e.message, 'filesystemDriver');
     }
   });
 
-  it('should throw an error when snapshotsDriver is not a string.', () => {
+  it('should throw an error when filesystemDriver is not a string.', () => {
     // @ts-ignore
-    buggedConfig = { snapshotsDriver: 123 };
+    buggedConfig = { filesystemDriver: 123 };
 
     try {
       new Prerenderer(buggedConfig);
       assert.ok(false);
     } catch (e) {
       assert.instanceOf(e, MismatchingConfigException);
-      assert.include(e.message, 'snapshotsDriver');
+      assert.include(e.message, 'filesystemDriver');
     }
   });
 
@@ -69,7 +69,7 @@ describe('invalid config', () => {
 
   it('should throw an error when snapshotsDirectory is s3 and snapshotsDirectory does not start with "/".', () => {
     // @ts-ignore
-    buggedConfig = { snapshotsDirectory: 'test/directory', snapshotsDriver: 's3' };
+    buggedConfig = { snapshotsDirectory: 'test/directory', filesystemDriver: 's3' };
 
     try {
       new Prerenderer(buggedConfig);
@@ -77,7 +77,7 @@ describe('invalid config', () => {
     } catch (e) {
       assert.instanceOf(e, InvalidConfigException);
       assert.include(e.message, 'snapshotsDirectory');
-      assert.include(e.message, 'snapshotsDriver');
+      assert.include(e.message, 'filesystemDriver');
     }
   });
 

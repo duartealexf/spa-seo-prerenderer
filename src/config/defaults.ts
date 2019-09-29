@@ -1,7 +1,7 @@
 /**
- * Correct values for snapshots driver environment config.
+ * Correct values for filesystem driver config.
  */
-export type SnapshotsDriver = 'fs' | 's3';
+export type FilesystemDriver = 'fs' | 's3';
 export const CORRECT_SNAPSHOTS_DRIVERS = ['fs', 's3'];
 
 /**
@@ -10,7 +10,7 @@ export const CORRECT_SNAPSHOTS_DRIVERS = ['fs', 's3'];
 export type NodeEnvironment = 'development' | 'production' | string | undefined;
 
 /**
- * Interface for needed values as in process.env.
+ * Interface for options passed in constructor.
  */
 export interface PrerendererConfigParams {
   [key: string]: number | string | string[] | RegExp[] | undefined;
@@ -22,10 +22,10 @@ export interface PrerendererConfigParams {
   nodeEnv?: NodeEnvironment;
 
   /**
-   * Chosen snapshots driver.
+   * Chosen filesystem driver.
    * @default 'fs'
    */
-  snapshotsDriver?: SnapshotsDriver;
+  filesystemDriver?: FilesystemDriver;
 
   /**
    * Directory to store snapshots in.

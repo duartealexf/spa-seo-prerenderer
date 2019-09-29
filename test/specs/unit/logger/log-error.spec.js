@@ -14,7 +14,7 @@ describe('log errors', () => {
     nodeEnv: 'development',
     prerendererLogFile: join('test', 'tmp', `${uuidv4()}.log`),
     snapshotsDirectory: join('test', 'tmp', uuidv4()),
-    snapshotsDriver: 'fs',
+    filesystemDriver: 'fs',
   };
 
   it('should close log write stream if it cannot write to log file.', async () => {

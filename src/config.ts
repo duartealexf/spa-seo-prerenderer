@@ -6,7 +6,7 @@ import { Filesystem } from './filesystem/filesystem';
 import {
   PrerendererConfigParams,
   NodeEnvironment,
-  SnapshotsDriver,
+  FilesystemDriver,
   DEFAULT_PRERENDERABLE_EXTENSIONS,
   DEFAULT_BOT_USER_AGENTS,
   DEFAULT_BLACKLISTED_REQUEST_URLS,
@@ -15,7 +15,7 @@ import {
 
 export class Config {
   /**
-   * Values as in process.env.
+   * Values passed in from constructor.
    */
   private constructSettings: PrerendererConfigParams;
 
@@ -25,9 +25,9 @@ export class Config {
   private nodeEnvironment: NodeEnvironment = 'production';
 
   /**
-   * Chosen snapshots driver.
+   * Chosen filesystem driver.
    */
-  private snapshotsDriver: SnapshotsDriver = 'fs';
+  private filesystemDriver: FilesystemDriver = 'fs';
 
   /**
    * Directory to store snapshots in.
@@ -118,19 +118,19 @@ export class Config {
     this.nodeEnvironment = c.nodeEnv;
 
     /**
-     * Setup snapshotsDriver config.
+     * Setup filesystemDriver config.
      */
-    c.snapshotsDriver =
-      typeof c.snapshotsDriver === 'undefined' ? this.snapshotsDriver : c.snapshotsDriver;
+    c.filesystemDriver =
+      typeof c.filesystemDriver === 'undefined' ? this.filesystemDriver : c.filesystemDriver;
 
-    if (!Config.isCorrectSnapshotsDriver(c.snapshotsDriver)) {
+    if (!Config.isCorrectFilesystemDriver(c.filesystemDriver)) {
       throw new MismatchingConfigException(
-        'snapshotsDriver',
-        c.snapshotsDriver,
+        'filesystemDriver',
+        c.filesystemDriver,
         CORRECT_SNAPSHOTS_DRIVERS,
       );
     }
-    this.snapshotsDriver = c.snapshotsDriver;
+    this.filesystemDriver = c.filesystemDriver;
 
     /**
      * Setup snapshotsDirectory config.
@@ -142,10 +142,10 @@ export class Config {
       throw new InvalidConfigException('snapshotsDirectory must be a string.');
     }
 
-    if (c.snapshotsDriver === 's3') {
+    if (c.filesystemDriver === 's3') {
       if (!(c.snapshotsDirectory as string).startsWith('/')) {
         throw new InvalidConfigException(
-          "snapshotsDirectory must start with '/' when snapshotsDriver is 's3'.",
+          "snapshotsDirectory must start with '/' when filesystemDriver is 's3'.",
         );
       }
     } else {
@@ -263,7 +263,7 @@ export class Config {
    * Initialize snapshots configuration.
    */
   private async initSnapshotConfig(): Promise<void> {
-    if (this.snapshotsDriver === 'fs') {
+    if (this.filesystemDriver === 'fs') {
       /**
        * Ensure directory exists.
        */
@@ -286,12 +286,12 @@ export class Config {
   }
 
   /**
-   * Whether given snapshots driver is correct.
+   * Whether given filesystem driver is correct.
    * @param driver
    */
-  private static isCorrectSnapshotsDriver(
-    driver: SnapshotsDriver | undefined,
-  ): driver is SnapshotsDriver {
+  private static isCorrectFilesystemDriver(
+    driver: FilesystemDriver | undefined,
+  ): driver is FilesystemDriver {
     return CORRECT_SNAPSHOTS_DRIVERS.includes(driver as string);
   }
 
@@ -303,10 +303,10 @@ export class Config {
   }
 
   /**
-   * Getter for snapshots driver.
+   * Getter for filesystem driver.
    */
-  public getSnapshotsDriver(): string {
-    return this.snapshotsDriver;
+  public getFilesystemDriver(): string {
+    return this.filesystemDriver;
   }
 
   /**

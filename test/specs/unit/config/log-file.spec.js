@@ -14,7 +14,7 @@ describe('log file config', () => {
     nodeEnv: 'development',
     prerendererLogFile: join('test', 'tmp', `${uuidv4()}.log`),
     snapshotsDirectory: join('test', 'tmp', uuidv4()),
-    snapshotsDriver: 'fs',
+    filesystemDriver: 'fs',
   };
 
   it('should set an absolute path for prerendererLogFile, from a relative directory.', async () => {

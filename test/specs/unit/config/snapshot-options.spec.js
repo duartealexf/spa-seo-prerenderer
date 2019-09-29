@@ -14,7 +14,7 @@ describe('snapshot options config', () => {
     nodeEnv: 'development',
     prerendererLogFile: join('test', 'tmp', `${uuidv4()}.log`),
     snapshotsDirectory: join('test', 'tmp', uuidv4()),
-    snapshotsDriver: 'fs',
+    filesystemDriver: 'fs',
   };
 
   it('should set an absolute path for snapshotsDirectory, from a relative directory.', async () => {
@@ -46,11 +46,11 @@ describe('snapshot options config', () => {
     assert.isOk(await pathExists(p.getConfig().getSnapshotsDirectory()));
   });
 
-  it('should not create a directory for snapshotsDirectory when snapshotsDriver is s3.', async () => {
+  it('should not create a directory for snapshotsDirectory when filesystemDriver is s3.', async () => {
     const config = {
       ...initialConfig,
       snapshotsDirectory: `${join(process.cwd(), 'test', 'tmp', uuidv4())}`,
-      snapshotsDriver: 's3',
+      filesystemDriver: 's3',
     };
 
     const p = new Prerenderer(config);
