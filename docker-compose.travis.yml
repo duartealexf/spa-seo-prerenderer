@@ -53,6 +53,7 @@ services:
 
   tests:
     depends_on:
+      - apache
       - nginx
     build:
       context: .
