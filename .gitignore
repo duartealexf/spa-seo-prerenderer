@@ -34,3 +34,4 @@ coverage.*
 # Project Files
 # -------------------------
 test/tmp
+./snapshots

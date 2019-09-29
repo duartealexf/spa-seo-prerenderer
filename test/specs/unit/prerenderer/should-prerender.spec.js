@@ -15,8 +15,14 @@ describe('whether it should prerender', () => {
     prerendererLogFile: join('test', 'tmp', `${uuidv4()}.log`),
     snapshotsDirectory: join('test', 'tmp', uuidv4()),
     snapshotsDriver: 'fs',
-    timeout: 8640000
+    timeout: 8640000,
   };
+
+  const prerenderer = new Prerenderer(initialConfig);
+
+  before(async () => {
+    await prerenderer.initialize();
+  });
 
   /**
    * @type {import('../../../../dist/types/prerenderer').ReasonsToRejectPrerender}
@@ -24,56 +30,42 @@ describe('whether it should prerender', () => {
   let reasonToRejectLastPrerender;
 
   it('should not prerender if there is no request.', async () => {
-    const p = new Prerenderer();
-    await p.initialize();
-
-    assert.isNotOk(p.shouldPrerender(null));
+    assert.isNotOk(prerenderer.shouldPrerender(null));
 
     reasonToRejectLastPrerender = 'no-request';
-    assert.equal(p.getLastRejectedPrerenderReason(), reasonToRejectLastPrerender);
+    assert.equal(prerenderer.getLastRejectedPrerenderReason(), reasonToRejectLastPrerender);
   });
 
   it('should not prerender if request is not an incoming message.', async () => {
-    const p = new Prerenderer();
-    await p.initialize();
-
-    assert.isNotOk(p.shouldPrerender(123));
+    // @ts-ignore
+    assert.isNotOk(prerenderer.shouldPrerender(123));
 
     reasonToRejectLastPrerender = 'rejected-request';
-    assert.equal(p.getLastRejectedPrerenderReason(), reasonToRejectLastPrerender);
+    assert.equal(prerenderer.getLastRejectedPrerenderReason(), reasonToRejectLastPrerender);
   });
 
   it('should not prerender if it is not a GET request.', async () => {
-    const p = new Prerenderer();
-    await p.initialize();
-
     const { request } = await createDirectHttpPostRequest();
-    assert.isNotOk(p.shouldPrerender(request));
+    assert.isNotOk(prerenderer.shouldPrerender(request));
 
     reasonToRejectLastPrerender = 'rejected-method';
-    assert.equal(p.getLastRejectedPrerenderReason(), reasonToRejectLastPrerender);
+    assert.equal(prerenderer.getLastRejectedPrerenderReason(), reasonToRejectLastPrerender);
   });
 
   it('should not prerender if has empty user agent.', async () => {
-    const p = new Prerenderer();
-    await p.initialize();
-
-    const { request } = await createDirectHttpGetRequest('', { 'user-agent': ''}, false);
-    assert.isNotOk(p.shouldPrerender(request));
+    const { request } = await createDirectHttpGetRequest('', { 'user-agent': '' }, false);
+    assert.isNotOk(prerenderer.shouldPrerender(request));
 
     reasonToRejectLastPrerender = 'no-user-agent';
-    assert.equal(p.getLastRejectedPrerenderReason(), reasonToRejectLastPrerender);
+    assert.equal(prerenderer.getLastRejectedPrerenderReason(), reasonToRejectLastPrerender);
   });
 
   it('should not prerender if it is not a bot user agent.', async () => {
-    const p = new Prerenderer();
-    await p.initialize();
-
     const { request } = await createDirectHttpGetRequest('', {}, false);
-    assert.isNotOk(p.shouldPrerender(request));
+    assert.isNotOk(prerenderer.shouldPrerender(request));
 
     reasonToRejectLastPrerender = 'rejected-user-agent';
-    assert.equal(p.getLastRejectedPrerenderReason(), reasonToRejectLastPrerender);
+    assert.equal(prerenderer.getLastRejectedPrerenderReason(), reasonToRejectLastPrerender);
   });
 
   it('should not prerender if it is not a prerenderable extension.', async () => {

@@ -2,6 +2,7 @@
  * Correct values for snapshots driver environment config.
  */
 export type SnapshotsDriver = 'fs' | 's3';
+export const CORRECT_SNAPSHOTS_DRIVERS = ['fs', 's3'];
 
 /**
  * NodeJS environment config.
@@ -22,13 +23,15 @@ export interface PrerendererConfigParams {
 
   /**
    * Chosen snapshots driver.
+   * @default 'fs'
    */
-  snapshotsDriver: SnapshotsDriver;
+  snapshotsDriver?: SnapshotsDriver;
 
   /**
    * Directory to store snapshots in.
+   * @default './snapshots'
    */
-  snapshotsDirectory: string;
+  snapshotsDirectory?: string;
 
   /**
    * Prerenderer log file location. Not specifying any will make it not log to a file.

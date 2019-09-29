@@ -1,30 +1,105 @@
 const { describe, it } = require('mocha');
 const { assert } = require('chai');
-const { join } = require('path');
-const { v4: uuidv4 } = require('uuid');
 
 const { Prerenderer } = require('../../../../dist/lib/prerenderer');
-const { InvalidConfigException } = require('../../../../dist/lib/exceptions/invalid-config-exception');
+const {
+  InvalidConfigException,
+} = require('../../../../dist/lib/exceptions/invalid-config-exception');
+const {
+  MismatchingConfigException,
+} = require('../../../../dist/lib/exceptions/mismatching-config-exception');
 
 describe('invalid config', () => {
   /**
    * @type {import('../../../../dist/types/config/defaults').PrerendererConfigParams}
    */
-  const initialConfig = {
-    nodeEnv: 'development',
-    prerendererLogFile: join('test', 'tmp', `${uuidv4()}.log`),
-    snapshotsDirectory: join('test', 'tmp', uuidv4()),
-    snapshotsDriver: 'fs',
-  };
+  let buggedConfig = {};
 
-  it('should throw an error when prerenderablePathRegExps is not an array.', async () => {
-    const buggedConfig = Object.assign({}, initialConfig, {
-      prerenderablePathRegExps: 123,
-    });
+  it('should throw an error when nodeEnv is not a string.', () => {
+    // @ts-ignore
+    buggedConfig = { nodeEnv: 123 };
 
     try {
-      const p = new Prerenderer(buggedConfig);
-      await p.initialize();
+      new Prerenderer(buggedConfig);
+      assert.ok(false);
+    } catch (e) {
+      assert.instanceOf(e, InvalidConfigException);
+      assert.include(e.message, 'nodeEnv');
+    }
+  });
+
+  it('should throw an error when snapshotsDriver is invalid.', () => {
+    // @ts-ignore
+    buggedConfig = { snapshotsDriver: 'xyz' };
+
+    try {
+      new Prerenderer(buggedConfig);
+      assert.ok(false);
+    } catch (e) {
+      assert.instanceOf(e, MismatchingConfigException);
+      assert.include(e.message, 'snapshotsDriver');
+    }
+  });
+
+  it('should throw an error when snapshotsDriver is not a string.', () => {
+    // @ts-ignore
+    buggedConfig = { snapshotsDriver: 123 };
+
+    try {
+      new Prerenderer(buggedConfig);
+      assert.ok(false);
+    } catch (e) {
+      assert.instanceOf(e, MismatchingConfigException);
+      assert.include(e.message, 'snapshotsDriver');
+    }
+  });
+
+  it('should throw an error when snapshotsDirectory is not a string.', () => {
+    // @ts-ignore
+    buggedConfig = { snapshotsDirectory: 123 };
+
+    try {
+      new Prerenderer(buggedConfig);
+      assert.ok(false);
+    } catch (e) {
+      assert.instanceOf(e, InvalidConfigException);
+      assert.include(e.message, 'snapshotsDirectory');
+    }
+  });
+
+  it('should throw an error when snapshotsDirectory is s3 and snapshotsDirectory does not start with "/".', () => {
+    // @ts-ignore
+    buggedConfig = { snapshotsDirectory: 'test/directory', snapshotsDriver: 's3' };
+
+    try {
+      new Prerenderer(buggedConfig);
+      assert.ok(false);
+    } catch (e) {
+      assert.instanceOf(e, InvalidConfigException);
+      assert.include(e.message, 'snapshotsDirectory');
+      assert.include(e.message, 'snapshotsDriver');
+    }
+  });
+
+  it('should throw an error when prerendererLogFile is not a string.', () => {
+    // @ts-ignore
+    buggedConfig = { prerendererLogFile: 123 };
+
+    try {
+      new Prerenderer(buggedConfig);
+      assert.ok(false);
+    } catch (e) {
+      assert.instanceOf(e, InvalidConfigException);
+      assert.include(e.message, 'prerendererLogFile');
+    }
+  });
+
+  it('should throw an error when prerenderablePathRegExps is not an array.', () => {
+    // @ts-ignore
+    buggedConfig = { prerenderablePathRegExps: 123 };
+
+    try {
+      new Prerenderer(buggedConfig);
       assert.ok(false);
     } catch (e) {
       assert.instanceOf(e, InvalidConfigException);
@@ -32,14 +107,12 @@ describe('invalid config', () => {
     }
   });
 
-  it('should throw an error when prerenderablePathRegExps is not RegExp[].', async () => {
-    const buggedConfig = Object.assign({}, initialConfig, {
-      prerenderablePathRegExps: [123],
-    });
+  it('should throw an error when prerenderablePathRegExps is not RegExp[].', () => {
+    // @ts-ignore
+    buggedConfig = { prerenderablePathRegExps: [123] };
 
     try {
-      const p = new Prerenderer(buggedConfig);
-      await p.initialize();
+      new Prerenderer(buggedConfig);
       assert.ok(false);
     } catch (e) {
       assert.instanceOf(e, InvalidConfigException);
@@ -47,14 +120,12 @@ describe('invalid config', () => {
     }
   });
 
-  it('should throw an error when prerenderableExtensions is not an array.', async () => {
-    const buggedConfig = Object.assign({}, initialConfig, {
-      prerenderableExtensions: 123,
-    });
+  it('should throw an error when prerenderableExtensions is not an array.', () => {
+    // @ts-ignore
+    buggedConfig = { prerenderableExtensions: 123 };
 
     try {
-      const p = new Prerenderer(buggedConfig);
-      await p.initialize();
+      new Prerenderer(buggedConfig);
       assert.ok(false);
     } catch (e) {
       assert.instanceOf(e, InvalidConfigException);
@@ -62,14 +133,12 @@ describe('invalid config', () => {
     }
   });
 
-  it('should throw an error when prerenderableExtensions is not string[].', async () => {
-    const buggedConfig = Object.assign({}, initialConfig, {
-      prerenderableExtensions: [123],
-    });
+  it('should throw an error when prerenderableExtensions is not string[].', () => {
+    // @ts-ignore
+    buggedConfig = { prerenderableExtensions: [123] };
 
     try {
-      const p = new Prerenderer(buggedConfig);
-      await p.initialize();
+      new Prerenderer(buggedConfig);
       assert.ok(false);
     } catch (e) {
       assert.instanceOf(e, InvalidConfigException);
@@ -77,14 +146,12 @@ describe('invalid config', () => {
     }
   });
 
-  it('should throw an error when botUserAgents is not an array.', async () => {
-    const buggedConfig = Object.assign({}, initialConfig, {
-      botUserAgents: 123,
-    });
+  it('should throw an error when botUserAgents is not an array.', () => {
+    // @ts-ignore
+    buggedConfig = { botUserAgents: 123 };
 
     try {
-      const p = new Prerenderer(buggedConfig);
-      await p.initialize();
+      new Prerenderer(buggedConfig);
       assert.ok(false);
     } catch (e) {
       assert.instanceOf(e, InvalidConfigException);
@@ -92,14 +159,12 @@ describe('invalid config', () => {
     }
   });
 
-  it('should throw an error when botUserAgents is not string[].', async () => {
-    const buggedConfig = Object.assign({}, initialConfig, {
-      botUserAgents: [123],
-    });
+  it('should throw an error when botUserAgents is not string[].', () => {
+    // @ts-ignore
+    buggedConfig = { botUserAgents: [123] };
 
     try {
-      const p = new Prerenderer(buggedConfig);
-      await p.initialize();
+      new Prerenderer(buggedConfig);
       assert.ok(false);
     } catch (e) {
       assert.instanceOf(e, InvalidConfigException);
@@ -107,14 +172,12 @@ describe('invalid config', () => {
     }
   });
 
-  it('should throw an error when timeout is not a number.', async () => {
-    const buggedConfig = Object.assign({}, initialConfig, {
-      timeout: 'abc',
-    });
+  it('should throw an error when timeout is not a number.', () => {
+    // @ts-ignore
+    buggedConfig = { timeout: 'abc' };
 
     try {
-      const p = new Prerenderer(buggedConfig);
-      await p.initialize();
+      new Prerenderer(buggedConfig);
       assert.ok(false);
     } catch (e) {
       assert.instanceOf(e, InvalidConfigException);
@@ -122,14 +185,11 @@ describe('invalid config', () => {
     }
   });
 
-  it('should throw an error when timeout is equal to zero.', async () => {
-    const buggedConfig = Object.assign({}, initialConfig, {
-      timeout: 0,
-    });
+  it('should throw an error when timeout is equal to zero.', () => {
+    buggedConfig = { timeout: 0 };
 
     try {
-      const p = new Prerenderer(buggedConfig);
-      await p.initialize();
+      new Prerenderer(buggedConfig);
       assert.ok(false);
     } catch (e) {
       assert.instanceOf(e, InvalidConfigException);
@@ -137,14 +197,11 @@ describe('invalid config', () => {
     }
   });
 
-  it('should throw an error when timeout is less than zero.', async () => {
-    const buggedConfig = Object.assign({}, initialConfig, {
-      timeout: -50,
-    });
+  it('should throw an error when timeout is less than zero.', () => {
+    buggedConfig = { timeout: -50 };
 
     try {
-      const p = new Prerenderer(buggedConfig);
-      await p.initialize();
+      new Prerenderer(buggedConfig);
       assert.ok(false);
     } catch (e) {
       assert.instanceOf(e, InvalidConfigException);
@@ -152,14 +209,12 @@ describe('invalid config', () => {
     }
   });
 
-  it('should throw an error when whitelistedRequestURLs is not an array.', async () => {
-    const buggedConfig = Object.assign({}, initialConfig, {
-      whitelistedRequestURLs: 123,
-    });
+  it('should throw an error when whitelistedRequestURLs is not an array.', () => {
+    // @ts-ignore
+    buggedConfig = { whitelistedRequestURLs: 123 };
 
     try {
-      const p = new Prerenderer(buggedConfig);
-      await p.initialize();
+      new Prerenderer(buggedConfig);
       assert.ok(false);
     } catch (e) {
       assert.instanceOf(e, InvalidConfigException);
@@ -167,14 +222,12 @@ describe('invalid config', () => {
     }
   });
 
-  it('should throw an error when whitelistedRequestURLs is not string[].', async () => {
-    const buggedConfig = Object.assign({}, initialConfig, {
-      whitelistedRequestURLs: [123],
-    });
+  it('should throw an error when whitelistedRequestURLs is not string[].', () => {
+    // @ts-ignore
+    buggedConfig = { whitelistedRequestURLs: [123] };
 
     try {
-      const p = new Prerenderer(buggedConfig);
-      await p.initialize();
+      new Prerenderer(buggedConfig);
       assert.ok(false);
     } catch (e) {
       assert.instanceOf(e, InvalidConfigException);
@@ -182,14 +235,12 @@ describe('invalid config', () => {
     }
   });
 
-  it('should throw an error when blacklistedRequestURLs is not an array.', async () => {
-    const buggedConfig = Object.assign({}, initialConfig, {
-      blacklistedRequestURLs: 123,
-    });
+  it('should throw an error when blacklistedRequestURLs is not an array.', () => {
+    // @ts-ignore
+    buggedConfig = { blacklistedRequestURLs: 123 };
 
     try {
-      const p = new Prerenderer(buggedConfig);
-      await p.initialize();
+      new Prerenderer(buggedConfig);
       assert.ok(false);
     } catch (e) {
       assert.instanceOf(e, InvalidConfigException);
@@ -197,14 +248,12 @@ describe('invalid config', () => {
     }
   });
 
-  it('should throw an error when blacklistedRequestURLs is not string[].', async () => {
-    const buggedConfig = Object.assign({}, initialConfig, {
-      blacklistedRequestURLs: [123],
-    });
+  it('should throw an error when blacklistedRequestURLs is not string[].', () => {
+    // @ts-ignore
+    buggedConfig = { blacklistedRequestURLs: [123] };
 
     try {
-      const p = new Prerenderer(buggedConfig);
-      await p.initialize();
+      new Prerenderer(buggedConfig);
       assert.ok(false);
     } catch (e) {
       assert.instanceOf(e, InvalidConfigException);

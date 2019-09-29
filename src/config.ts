@@ -1,6 +1,5 @@
 import { join } from 'path';
 
-import { MissingEnvException } from './exceptions/missing-env-exception';
 import { InvalidConfigException } from './exceptions/invalid-config-exception';
 import { MismatchingConfigException } from './exceptions/mismatching-config-exception';
 import { Filesystem } from './filesystem/filesystem';
@@ -11,6 +10,7 @@ import {
   DEFAULT_PRERENDERABLE_EXTENSIONS,
   DEFAULT_BOT_USER_AGENTS,
   DEFAULT_BLACKLISTED_REQUEST_URLS,
+  CORRECT_SNAPSHOTS_DRIVERS,
 } from './config/defaults';
 
 export class Config {
@@ -32,7 +32,7 @@ export class Config {
   /**
    * Directory to store snapshots in.
    */
-  private snapshotsDirectory = '../snapshots';
+  private snapshotsDirectory = './snapshots';
 
   /**
    * Prerenderer log file location.
@@ -42,7 +42,7 @@ export class Config {
   /**
    * Chromium executable
    */
-  private chromiumExecutable?: string;
+  private chromiumExecutable = '';
 
   /**
    * Array of path RegExps that, when matched
@@ -87,16 +87,7 @@ export class Config {
   private initialized = false;
 
   constructor(config: PrerendererConfigParams) {
-    this.constructSettings = {
-      nodeEnv: process.env.NODE_ENV || 'production',
-      snapshotsDriver: process.env.SNAPSHOTS_DRIVER || 'fs',
-      snapshotsDirectory: process.env.SNAPSHOTS_DIRECTORY || '../snapshots',
-      prerendererLogFile: process.env.PRERENDERER_LOG_FILE || '',
-      chromiumExecutable: process.env.CHROMIUM_EXECUTABLE,
-      ...config,
-    };
-
-    this.checkRequiredConfig();
+    this.constructSettings = { ...config };
     this.validateAndAssignConfigValues();
   }
 
@@ -107,22 +98,7 @@ export class Config {
     await this.initSnapshotConfig();
     await this.initLoggingConfig();
 
-    this.chromiumExecutable = this.constructSettings.chromiumExecutable;
-
     this.initialized = true;
-  }
-
-  /**
-   * Check that all required configuration is set.
-   */
-  private checkRequiredConfig(): void {
-    const c = this.constructSettings;
-
-    ['nodeEnv', 'snapshotsDriver', 'snapshotsDirectory'].forEach((env) => {
-      if (!c[env] || (typeof c[env] === 'string' && !(c[env] as string).length)) {
-        throw new MissingEnvException(env);
-      }
-    });
   }
 
   /**
@@ -131,10 +107,85 @@ export class Config {
   private validateAndAssignConfigValues(): void {
     const c = this.constructSettings;
 
-    if (c.nodeEnv && c.nodeEnv.length) {
-      this.nodeEnvironment = c.nodeEnv;
+    /**
+     * Setup nodeEnv config.
+     */
+    c.nodeEnv = typeof c.nodeEnv === 'undefined' ? this.nodeEnvironment : c.nodeEnv;
+
+    if (typeof c.nodeEnv !== 'string') {
+      throw new InvalidConfigException('nodeEnv given in constructor must be a string!');
+    }
+    this.nodeEnvironment = c.nodeEnv;
+
+    /**
+     * Setup snapshotsDriver config.
+     */
+    c.snapshotsDriver =
+      typeof c.snapshotsDriver === 'undefined' ? this.snapshotsDriver : c.snapshotsDriver;
+
+    if (!Config.isCorrectSnapshotsDriver(c.snapshotsDriver)) {
+      throw new MismatchingConfigException(
+        'snapshotsDriver',
+        c.snapshotsDriver,
+        CORRECT_SNAPSHOTS_DRIVERS,
+      );
+    }
+    this.snapshotsDriver = c.snapshotsDriver;
+
+    /**
+     * Setup snapshotsDirectory config.
+     */
+    c.snapshotsDirectory =
+      typeof c.snapshotsDirectory === 'undefined' ? this.snapshotsDirectory : c.snapshotsDirectory;
+
+    if (typeof c.snapshotsDirectory !== 'string') {
+      throw new InvalidConfigException('snapshotsDirectory must be a string.');
     }
 
+    if (c.snapshotsDriver === 's3') {
+      if (!(c.snapshotsDirectory as string).startsWith('/')) {
+        throw new InvalidConfigException(
+          "snapshotsDirectory must start with '/' when snapshotsDriver is 's3'.",
+        );
+      }
+    } else {
+      /**
+       * Make the directory absolute.
+       */
+      c.snapshotsDirectory = c.snapshotsDirectory.startsWith('/')
+        ? c.snapshotsDirectory
+        : join(process.cwd(), c.snapshotsDirectory);
+    }
+    this.snapshotsDirectory = c.snapshotsDirectory;
+
+    /**
+     * Setup prerendererLogFile config.
+     */
+    c.prerendererLogFile = typeof c.prerendererLogFile === 'undefined' ? '' : c.prerendererLogFile;
+
+    if (typeof c.prerendererLogFile !== 'string') {
+      throw new InvalidConfigException('prerendererLogFile must be a string.');
+    }
+
+    if (c.prerendererLogFile.length) {
+      /**
+       * Make the directory absolute.
+       */
+      c.prerendererLogFile = c.prerendererLogFile.startsWith('/')
+        ? c.prerendererLogFile
+        : join(process.cwd(), c.prerendererLogFile);
+    }
+    this.prerendererLogFile = c.prerendererLogFile;
+
+    /**
+     * Setup chromiumExecutable config.
+     */
+    this.chromiumExecutable =
+      typeof c.chromiumExecutable === 'undefined' ? '' : c.chromiumExecutable;
+
+    /**
+     * Setup prerenderablePathRegExps config.
+     */
     if (typeof c.prerenderablePathRegExps !== 'undefined') {
       const regexps = c.prerenderablePathRegExps as RegExp[];
 
@@ -212,67 +263,36 @@ export class Config {
    * Initialize snapshots configuration.
    */
   private async initSnapshotConfig(): Promise<void> {
-    const snapshotsDriver: SnapshotsDriver = this.constructSettings
-      .snapshotsDriver as SnapshotsDriver;
-    let snapshotsDirectory: string = this.constructSettings.snapshotsDirectory;
-
-    const correctDrivers = ['fs', 's3'];
-
-    if (!correctDrivers.includes(snapshotsDriver)) {
-      throw new MismatchingConfigException(
-        'snapshotsDriver',
-        this.constructSettings.nodeEnv as string,
-        correctDrivers,
-      );
-    }
-
-    if (snapshotsDriver === 's3') {
-      if (/^\.|^\//.test(snapshotsDirectory)) {
-        throw new InvalidConfigException(
-          "snapshotsDirectory cannot start with '.' or '/' when snapshotsDriver is 's3'. Adjust it to choose to a valid relative directory in s3.",
-        );
-      }
-    } else {
-      /**
-       * Make the directory absolute.
-       */
-      snapshotsDirectory = snapshotsDirectory.startsWith('/')
-        ? snapshotsDirectory
-        : join(process.cwd(), snapshotsDirectory);
-    }
-
-    if (snapshotsDriver === 'fs') {
+    if (this.snapshotsDriver === 'fs') {
       /**
        * Ensure directory exists.
        */
-      await Filesystem.ensureDir(snapshotsDirectory);
+      await Filesystem.ensureDir(this.snapshotsDirectory);
     }
-
-    this.snapshotsDriver = snapshotsDriver;
-    this.snapshotsDirectory = snapshotsDirectory;
   }
 
   /**
    * Initialize logging configuration.
    */
   private async initLoggingConfig(): Promise<void> {
-    if (!this.constructSettings.prerendererLogFile) {
+    if (!this.prerendererLogFile) {
       return;
     }
 
     /**
-     * Make the directory absolute.
-     */
-    const logFile = this.constructSettings.prerendererLogFile.startsWith('/')
-      ? this.constructSettings.prerendererLogFile
-      : join(process.cwd(), this.constructSettings.prerendererLogFile);
-
-    /**
      * Ensure file exists and is writeable.
      */
-    await Filesystem.ensureFile(logFile);
+    await Filesystem.ensureFile(this.prerendererLogFile);
+  }
 
-    this.prerendererLogFile = logFile;
+  /**
+   * Whether given snapshots driver is correct.
+   * @param driver
+   */
+  private static isCorrectSnapshotsDriver(
+    driver: SnapshotsDriver | undefined,
+  ): driver is SnapshotsDriver {
+    return CORRECT_SNAPSHOTS_DRIVERS.includes(driver as string);
   }
 
   /**

@@ -5,7 +5,7 @@
 export class MismatchingConfigException extends Error {
   public message: string;
 
-  constructor(varName: string, currentValue: string, correctValues: string[]) {
+  constructor(varName: string, currentValue: string | undefined, correctValues: string[]) {
     super(
       `Config variable ${varName} must be one of: [${correctValues.join(
         ' | ',

@@ -1,8 +1,6 @@
 const { describe, it } = require('mocha');
 const { assert } = require('chai');
 
-require('../../hooks.spec');
-
 const {
   createSmartApacheProxyHttpGetRequest,
   requestPassedThroughSmartProxy,
