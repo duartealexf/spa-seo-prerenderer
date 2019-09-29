@@ -7,7 +7,7 @@
 - [x] Create integration tests: http NodeJS requests
 - [x] Create integration tests: https NodeJS requests
 - [x] Create integration tests: Nginx requests
-- [ ] Create integration tests: Apache requests
+- [x] Create integration tests: Apache requests
 - [x] Debug
 - [x] Keep headless browser open, create new pages per request
 - [x] Filter user agents
@@ -15,7 +15,6 @@
 - [x] Blacklisting tracking scripts
 - [ ] Simple prerenderer, save local file
 - [ ] Upload to s3 after sending response
-- [ ] 
 - [x] Add to docker, set tests in docker with nginx
 - [x] Create a nginx proxy test
 - [x] Preserve status codes (deliver 404, 500, etc)
@@ -34,8 +33,9 @@
 
 ## Need-to-have
 
+- [ ] Set a ttl of cached files
 - [ ] See how to automatically clear prerendered pages (by commit, or something)
-- [ ] Create recipes for using it with nginx, apache and as an express middleware.
+- [ ] Create recipes for using it with nginx, apache and as an express middleware
 - [ ] **Add to public NPM registry - release as 1.0.0**
 - [ ] **Publish a docker image**
 

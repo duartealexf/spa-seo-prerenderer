@@ -33,5 +33,4 @@ coverage.*
 # -------------------------
 # Project Files
 # -------------------------
-prerenderer.log
 test/tmp
