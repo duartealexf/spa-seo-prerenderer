@@ -24,7 +24,9 @@ module.exports = {
       middleware: (req, res, next) => {
         if (prerenderer.shouldPrerender(req)) {
           return prerenderer
-            .prerender(req)
+            .handleRequest(req, {
+              createSnapshot: req.headers['x-create-snapshot'] === '1',
+            })
             .then(() => {
               /**
                * @type {import('../../../dist/types/prerenderer').PrerendererResponse}
@@ -58,7 +60,9 @@ module.exports = {
       prerenderer,
       middleware: (req, res, next) => {
         return prerenderer
-          .prerender(req)
+          .handleRequest(req, {
+            createSnapshot: req.headers['x-create-snapshot'] === '1',
+          })
           .then(() => {
             const response = prerenderer.getLastResponse();
 

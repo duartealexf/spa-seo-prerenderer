@@ -69,7 +69,7 @@ services:
         ipv4_address: 173.20.0.102
         ipv6_address: 2002:ac14:0:0:0:0:0:102
     command: npm run test:debug
-    # command: node --inspect=0.0.0.0:9229 ./node_modules/mocha/bin/_mocha -- -w -t 8640000 --colors test/specs/integration/to-apache/*.spec.js
+    # command: node --inspect=0.0.0.0:9229 ./node_modules/mocha/bin/_mocha -- -w -t 8640000 --colors test/specs/unit/config/*.spec.js
 
 networks:
   prerenderer:

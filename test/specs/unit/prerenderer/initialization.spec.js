@@ -43,11 +43,11 @@ describe('non-initialization errors', () => {
     await p.stop();
   });
 
-  it('should throw an error if trying to prerender without start.', async () => {
+  it('should throw an error if trying to prerender without starting.', async () => {
     const p = new Prerenderer();
 
     try {
-      await p.prerender(null);
+      await p.handleRequest(null);
       assert.ok(false);
     } catch (e) {
       assert.instanceOf(e, PrerendererNotReadyException);

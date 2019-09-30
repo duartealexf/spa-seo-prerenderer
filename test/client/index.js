@@ -107,20 +107,21 @@ module.exports = {
    * @param {string} path
    * @param {any} customHeaders
    * @param {boolean} botUserAgent
-   * @param {'hostname' | 'ipv4' | 'ipv6'} useTarget
+   * @param {'hostname' | 'ipv4' | 'ipv6'} hostMode
    * @returns {ReturnType<typeof createRequest>}
    */
   createDirectHttpGetRequest: (
     path = '',
     customHeaders = {},
     botUserAgent = true,
-    useTarget = 'hostname',
+    hostMode = 'hostname',
+    createSnapshot = false,
   ) => {
     let host;
 
-    if (useTarget === 'ipv4') {
+    if (hostMode === 'ipv4') {
       host = '127.0.0.1';
-    } else if (useTarget === 'ipv6') {
+    } else if (hostMode === 'ipv6') {
       host = '::1';
     } else {
       host = process.env.TEST_NODEJS_CONTAINER_HOST;
@@ -132,7 +133,10 @@ module.exports = {
       host,
       process.env.TEST_APP_NODEJS_SERVER_PORT,
       path,
-      customHeaders,
+      {
+        ...customHeaders,
+        'x-create-snapshot': createSnapshot ? '1' : '0',
+      },
       botUserAgent,
     );
   },
