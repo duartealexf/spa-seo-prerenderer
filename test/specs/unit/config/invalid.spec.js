@@ -69,7 +69,14 @@ describe('invalid config', () => {
 
   it('should throw an error when snapshotsDirectory is s3 and snapshotsDirectory does not start with "/".', () => {
     // @ts-ignore
-    buggedConfig = { snapshotsDirectory: 'test/directory', filesystemDriver: 's3' };
+    buggedConfig = {
+      snapshotsDirectory: 'test/directory',
+      filesystemDriver: 's3',
+      awsS3AccessKeyID: 'test',
+      awsS3SecretAccessKey: 'test',
+      awsS3BucketName: 'test',
+      awsS3RegionName: 'test',
+    };
 
     try {
       new Prerenderer(buggedConfig);
@@ -78,6 +85,86 @@ describe('invalid config', () => {
       assert.instanceOf(e, InvalidConfigException);
       assert.include(e.message, 'snapshotsDirectory');
       assert.include(e.message, 'filesystemDriver');
+    }
+  });
+
+  it('should throw an error when filesystemDriver is s3 and awsS3AccessKeyID is not set.', () => {
+    // @ts-ignore
+    buggedConfig = {
+      snapshotsDirectory: '/test/directory',
+      filesystemDriver: 's3',
+      awsS3SecretAccessKey: 'test',
+      awsS3BucketName: 'test',
+      awsS3RegionName: 'test',
+    };
+
+    try {
+      new Prerenderer(buggedConfig);
+      assert.ok(false);
+    } catch (e) {
+      assert.instanceOf(e, InvalidConfigException);
+      assert.include(e.message, 'filesystemDriver');
+      assert.include(e.message, 'awsS3AccessKeyID');
+    }
+  });
+
+  it('should throw an error when filesystemDriver is s3 and awsS3SecretAccessKey is not set.', () => {
+    // @ts-ignore
+    buggedConfig = {
+      snapshotsDirectory: '/test/directory',
+      filesystemDriver: 's3',
+      awsS3AccessKeyID: 'test',
+      awsS3BucketName: 'test',
+      awsS3RegionName: 'test',
+    };
+
+    try {
+      new Prerenderer(buggedConfig);
+      assert.ok(false);
+    } catch (e) {
+      assert.instanceOf(e, InvalidConfigException);
+      assert.include(e.message, 'filesystemDriver');
+      assert.include(e.message, 'awsS3SecretAccessKey');
+    }
+  });
+
+  it('should throw an error when filesystemDriver is s3 and awsS3BucketName is not set.', () => {
+    // @ts-ignore
+    buggedConfig = {
+      snapshotsDirectory: '/test/directory',
+      filesystemDriver: 's3',
+      awsS3AccessKeyID: 'test',
+      awsS3SecretAccessKey: 'test',
+      awsS3RegionName: 'test',
+    };
+
+    try {
+      new Prerenderer(buggedConfig);
+      assert.ok(false);
+    } catch (e) {
+      assert.instanceOf(e, InvalidConfigException);
+      assert.include(e.message, 'filesystemDriver');
+      assert.include(e.message, 'awsS3BucketName');
+    }
+  });
+
+  it('should throw an error when filesystemDriver is s3 and awsS3RegionName is not set.', () => {
+    // @ts-ignore
+    buggedConfig = {
+      snapshotsDirectory: '/test/directory',
+      filesystemDriver: 's3',
+      awsS3AccessKeyID: 'test',
+      awsS3SecretAccessKey: 'test',
+      awsS3BucketName: 'test',
+    };
+
+    try {
+      new Prerenderer(buggedConfig);
+      assert.ok(false);
+    } catch (e) {
+      assert.instanceOf(e, InvalidConfigException);
+      assert.include(e.message, 'filesystemDriver');
+      assert.include(e.message, 'awsS3RegionName');
     }
   });
 

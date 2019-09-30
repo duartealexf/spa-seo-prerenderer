@@ -45,17 +45,4 @@ describe('snapshot options config', () => {
 
     assert.isOk(await pathExists(p.getConfig().getSnapshotsDirectory()));
   });
-
-  it('should not create a directory for snapshotsDirectory when filesystemDriver is s3.', async () => {
-    const config = {
-      ...initialConfig,
-      snapshotsDirectory: `${join(process.cwd(), 'test', 'tmp', uuidv4())}`,
-      filesystemDriver: 's3',
-    };
-
-    const p = new Prerenderer(config);
-    await p.initialize();
-
-    assert.isNotOk(await pathExists(p.getConfig().getSnapshotsDirectory()));
-  });
 });

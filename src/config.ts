@@ -35,6 +35,26 @@ export class Config {
   private snapshotsDirectory = './snapshots';
 
   /**
+   * AWS S3 access key id. Required if filesystemDriver is 's3'.
+   */
+  private awsS3AccessKeyID = '';
+
+  /**
+   * AWS S3 secret access key. Required if filesystemDriver is 's3'.
+   */
+  private awsS3SecretAccessKey = '';
+
+  /**
+   * AWS S3 Bucket name. Required if filesystemDriver is 's3'.
+   */
+  private awsS3BucketName = '';
+
+  /**
+   * AWS S3 region name. Required if filesystemDriver is 's3'.
+   */
+  private awsS3RegionName = '';
+
+  /**
    * Prerenderer log file location.
    */
   private prerendererLogFile = '';
@@ -157,6 +177,28 @@ export class Config {
         : join(process.cwd(), c.snapshotsDirectory);
     }
     this.snapshotsDirectory = c.snapshotsDirectory;
+
+    if (c.filesystemDriver === 's3') {
+      const invalid = [
+        'awsS3AccessKeyID',
+        'awsS3SecretAccessKey',
+        'awsS3BucketName',
+        'awsS3RegionName',
+      ].filter((k: string): boolean => typeof c[k] !== 'string' || !(c[k] as string).length);
+
+      if (invalid.length) {
+        throw new InvalidConfigException(
+          `when filesystemDriver is 's3', '${invalid.join(
+            "', '",
+          )}' must be set to a non-empty string.`,
+        );
+      }
+
+      this.awsS3AccessKeyID = c.awsS3AccessKeyID as string;
+      this.awsS3SecretAccessKey = c.awsS3SecretAccessKey as string;
+      this.awsS3BucketName = c.awsS3BucketName as string;
+      this.awsS3RegionName = c.awsS3RegionName as string;
+    }
 
     /**
      * Setup prerendererLogFile config.
@@ -314,6 +356,34 @@ export class Config {
    */
   public getSnapshotsDirectory(): string {
     return this.snapshotsDirectory;
+  }
+
+  /**
+   * Getter for AWS S3 access key id.
+   */
+  public getAWSS3AccessKeyId(): string {
+    return this.awsS3AccessKeyID;
+  }
+
+  /**
+   * Getter for AWS S3 secret access key.
+   */
+  public getAWSS3SecretAccessKey(): string {
+    return this.awsS3SecretAccessKey;
+  }
+
+  /**
+   * Getter for AWS S3 bucket name.
+   */
+  public getAWSS3BucketName(): string {
+    return this.awsS3BucketName;
+  }
+
+  /**
+   * Getter for AWS S3 region name.
+   */
+  public getAWSS3RegionName(): string {
+    return this.awsS3RegionName;
   }
 
   /**

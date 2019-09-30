@@ -36,7 +36,7 @@ describe('config initialization', () => {
       nodeEnv: 'development',
       prerendererLogFile: join(process.cwd(), 'test', 'tmp', `${uuidv4()}.log`),
       snapshotsDirectory: join(process.cwd(), 'test', 'tmp', uuidv4()),
-      filesystemDriver: 's3',
+      filesystemDriver: 'fs',
       chromiumExecutable: 'chromium',
       prerenderablePathRegExps: [/test/],
       prerenderableExtensions: ['.test'],

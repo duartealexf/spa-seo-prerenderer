@@ -34,6 +34,31 @@ export interface PrerendererConfigParams {
   snapshotsDirectory?: string;
 
   /**
+   * AWS S3 access key id. Required if filesystemDriver is 's3'.
+   * @example 'AIANWAUKJWX7NYCGP2C4'
+   * @default ''
+   */
+  awsS3AccessKeyID?: string;
+  /**
+   * AWS S3 secret access key. Required if filesystemDriver is 's3'.
+   * @example '40XJfErXSwMvTh+qcxbETWv64xE4axNlG5sTh7Jc'
+   * @default ''
+   */
+  awsS3SecretAccessKey?: string;
+  /**
+   * AWS S3 Bucket name. Required if filesystemDriver is 's3'.
+   * @example 'prerenderer-snapshots'
+   * @default ''
+   */
+  awsS3BucketName?: string;
+  /**
+   * AWS S3 region name. Required if filesystemDriver is 's3'.
+   * @example 'us-east-1'
+   * @default ''
+   */
+  awsS3RegionName?: string;
+
+  /**
    * Prerenderer log file location. Not specifying any will make it not log to a file.
    * @default ''
    */
