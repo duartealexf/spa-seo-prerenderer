@@ -47,7 +47,7 @@ describe('non-initialization errors', () => {
     const p = new Prerenderer();
 
     try {
-      await p.handleRequest(null);
+      await p.prerender(null);
       assert.ok(false);
     } catch (e) {
       assert.instanceOf(e, PrerendererNotReadyException);

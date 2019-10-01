@@ -22,27 +22,25 @@ module.exports = {
        * @param {(err?: any) => void} next
        */
       middleware: (req, res, next) => {
-        if (prerenderer.shouldPrerender(req)) {
-          return prerenderer
-            .handleRequest(req, {
-              createSnapshot: req.headers['x-create-snapshot'] === '1',
-            })
-            .then(() => {
-              /**
-               * @type {import('../../../dist/types/prerenderer').PrerendererResponse}
-               */
-              const response = prerenderer.getLastResponse();
-
-              res
-                .status(response.headers.status)
-                .set(response.headers)
-                .send(response.body);
-            })
-            .catch((err) => {
-              next(err);
-            });
+        if (!prerenderer.shouldPrerender(req)) {
+          return next();
         }
-        return next();
+        prerenderer
+          .prerender(req)
+          .then(() => {
+            /**
+             * @type {import('../../../dist/types/prerenderer').PrerendererResponse}
+             */
+            const response = prerenderer.getLastResponse();
+
+            res
+              .status(response.headers.status)
+              .set(response.headers)
+              .send(response.body);
+          })
+          .catch((err) => {
+            next(err);
+          });
       },
     };
   },
@@ -60,9 +58,7 @@ module.exports = {
       prerenderer,
       middleware: (req, res, next) => {
         return prerenderer
-          .handleRequest(req, {
-            createSnapshot: req.headers['x-create-snapshot'] === '1',
-          })
+          .prerender(req)
           .then(() => {
             const response = prerenderer.getLastResponse();
 
