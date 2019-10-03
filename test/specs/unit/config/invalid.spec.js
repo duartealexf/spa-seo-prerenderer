@@ -5,9 +5,6 @@ const { Prerenderer } = require('../../../../dist/lib/prerenderer');
 const {
   InvalidConfigException,
 } = require('../../../../dist/lib/exceptions/invalid-config-exception');
-const {
-  MismatchingConfigException,
-} = require('../../../../dist/lib/exceptions/mismatching-config-exception');
 
 describe('invalid config', () => {
   /**
