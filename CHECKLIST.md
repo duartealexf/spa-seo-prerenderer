@@ -15,11 +15,26 @@
 - [x] Blacklisting tracking scripts
 - [ ] Simple prerenderer, save local file
 - [ ] Upload to s3 after sending response
+- [ ] Database integration
 - [x] Add to docker, set tests in docker with nginx
 - [x] Create a nginx proxy test
 - [x] Preserve status codes (deliver 404, 500, etc)
 - [x] Setup in Docker
 - [x] Testing in Docker with different NodeJS versions
+
+## E2E testing
+
+- [ ] Check database that it has non-expired cache
+  - [ ] Deliver cache if it does
+  - [ ] Otherwise prerender and generate response
+    - [ ] Update database
+    - [ ] Send to s3 / localfile
+    - [ ] Make sure that response reaches before anything else
+      - [ ] If it does, ok
+      - [ ] If it does not, store in memory
+        - [ ] Queue it in memory
+        - [ ] Send it to s3
+        - [ ] Update database
 
 ## Creating an use-case
 
