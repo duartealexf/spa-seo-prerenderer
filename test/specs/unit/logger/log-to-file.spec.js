@@ -13,8 +13,6 @@ describe('log to file', () => {
   const initialConfig = {
     nodeEnv: 'production',
     prerendererLogFile: join('test', 'tmp', `${uuidv4()}.log`),
-    snapshotsDirectory: join('test', 'tmp', uuidv4()),
-    filesystemDriver: 'fs',
   };
 
   it('should log up to warning level on production env.', async () => {

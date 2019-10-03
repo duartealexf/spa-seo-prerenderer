@@ -1,16 +1,13 @@
 import { join } from 'path';
 
 import { InvalidConfigException } from './exceptions/invalid-config-exception';
-import { MismatchingConfigException } from './exceptions/mismatching-config-exception';
 import { Filesystem } from './filesystem/filesystem';
 import {
   PrerendererConfigParams,
   NodeEnvironment,
-  FilesystemDriver,
   DEFAULT_PRERENDERABLE_EXTENSIONS,
   DEFAULT_BOT_USER_AGENTS,
   DEFAULT_BLACKLISTED_REQUEST_URLS,
-  CORRECT_SNAPSHOTS_DRIVERS,
 } from './config/defaults';
 
 export class Config {
@@ -25,34 +22,9 @@ export class Config {
   private nodeEnvironment: NodeEnvironment = 'production';
 
   /**
-   * Chosen filesystem driver.
-   */
-  private filesystemDriver: FilesystemDriver = 'fs';
-
-  /**
    * Directory to store snapshots in.
    */
-  private snapshotsDirectory = './snapshots';
-
-  /**
-   * AWS S3 access key id. Required if filesystemDriver is 's3'.
-   */
-  private awsS3AccessKeyID = '';
-
-  /**
-   * AWS S3 secret access key. Required if filesystemDriver is 's3'.
-   */
-  private awsS3SecretAccessKey = '';
-
-  /**
-   * AWS S3 Bucket name. Required if filesystemDriver is 's3'.
-   */
-  private awsS3BucketName = '';
-
-  /**
-   * AWS S3 region name. Required if filesystemDriver is 's3'.
-   */
-  private awsS3RegionName = '';
+  private responses = './snapshots';
 
   /**
    * Prerenderer log file location.
@@ -115,7 +87,6 @@ export class Config {
    * Initialize configuration, which is required before starting app.
    */
   public async initialize(): Promise<void> {
-    await this.initSnapshotConfig();
     await this.initLoggingConfig();
 
     this.initialized = true;
@@ -136,69 +107,6 @@ export class Config {
       throw new InvalidConfigException('nodeEnv given in constructor must be a string!');
     }
     this.nodeEnvironment = c.nodeEnv;
-
-    /**
-     * Setup filesystemDriver config.
-     */
-    c.filesystemDriver =
-      typeof c.filesystemDriver === 'undefined' ? this.filesystemDriver : c.filesystemDriver;
-
-    if (!Config.isCorrectFilesystemDriver(c.filesystemDriver)) {
-      throw new MismatchingConfigException(
-        'filesystemDriver',
-        c.filesystemDriver,
-        CORRECT_SNAPSHOTS_DRIVERS,
-      );
-    }
-    this.filesystemDriver = c.filesystemDriver;
-
-    /**
-     * Setup snapshotsDirectory config.
-     */
-    c.snapshotsDirectory =
-      typeof c.snapshotsDirectory === 'undefined' ? this.snapshotsDirectory : c.snapshotsDirectory;
-
-    if (typeof c.snapshotsDirectory !== 'string') {
-      throw new InvalidConfigException('snapshotsDirectory must be a string.');
-    }
-
-    if (c.filesystemDriver === 's3') {
-      if (!(c.snapshotsDirectory as string).startsWith('/')) {
-        throw new InvalidConfigException(
-          "snapshotsDirectory must start with '/' when filesystemDriver is 's3'.",
-        );
-      }
-    } else {
-      /**
-       * Make the directory absolute.
-       */
-      c.snapshotsDirectory = c.snapshotsDirectory.startsWith('/')
-        ? c.snapshotsDirectory
-        : join(process.cwd(), c.snapshotsDirectory);
-    }
-    this.snapshotsDirectory = c.snapshotsDirectory;
-
-    if (c.filesystemDriver === 's3') {
-      const invalid = [
-        'awsS3AccessKeyID',
-        'awsS3SecretAccessKey',
-        'awsS3BucketName',
-        'awsS3RegionName',
-      ].filter((k: string): boolean => typeof c[k] !== 'string' || !(c[k] as string).length);
-
-      if (invalid.length) {
-        throw new InvalidConfigException(
-          `when filesystemDriver is 's3', '${invalid.join(
-            "', '",
-          )}' must be set to a non-empty string.`,
-        );
-      }
-
-      this.awsS3AccessKeyID = c.awsS3AccessKeyID as string;
-      this.awsS3SecretAccessKey = c.awsS3SecretAccessKey as string;
-      this.awsS3BucketName = c.awsS3BucketName as string;
-      this.awsS3RegionName = c.awsS3RegionName as string;
-    }
 
     /**
      * Setup prerendererLogFile config.
@@ -302,18 +210,6 @@ export class Config {
   }
 
   /**
-   * Initialize snapshots configuration.
-   */
-  private async initSnapshotConfig(): Promise<void> {
-    if (this.filesystemDriver === 'fs') {
-      /**
-       * Ensure directory exists.
-       */
-      await Filesystem.ensureDir(this.snapshotsDirectory);
-    }
-  }
-
-  /**
    * Initialize logging configuration.
    */
   private async initLoggingConfig(): Promise<void> {
@@ -328,16 +224,6 @@ export class Config {
   }
 
   /**
-   * Whether given filesystem driver is correct.
-   * @param driver
-   */
-  private static isCorrectFilesystemDriver(
-    driver: FilesystemDriver | undefined,
-  ): driver is FilesystemDriver {
-    return CORRECT_SNAPSHOTS_DRIVERS.includes(driver as string);
-  }
-
-  /**
    * Whether configuration has been initialized.
    */
   public isInitialized(): boolean {
@@ -345,45 +231,10 @@ export class Config {
   }
 
   /**
-   * Getter for filesystem driver.
-   */
-  public getFilesystemDriver(): string {
-    return this.filesystemDriver;
-  }
-
-  /**
    * Getter for snapshots directory.
    */
-  public getSnapshotsDirectory(): string {
-    return this.snapshotsDirectory;
-  }
-
-  /**
-   * Getter for AWS S3 access key id.
-   */
-  public getAWSS3AccessKeyId(): string {
-    return this.awsS3AccessKeyID;
-  }
-
-  /**
-   * Getter for AWS S3 secret access key.
-   */
-  public getAWSS3SecretAccessKey(): string {
-    return this.awsS3SecretAccessKey;
-  }
-
-  /**
-   * Getter for AWS S3 bucket name.
-   */
-  public getAWSS3BucketName(): string {
-    return this.awsS3BucketName;
-  }
-
-  /**
-   * Getter for AWS S3 region name.
-   */
-  public getAWSS3RegionName(): string {
-    return this.awsS3RegionName;
+  public getResponses(): string {
+    return this.responses;
   }
 
   /**

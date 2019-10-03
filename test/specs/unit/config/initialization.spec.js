@@ -17,8 +17,6 @@ describe('config initialization', () => {
 
     assert.isTrue(c.isProductionEnv());
     assert.equal(c.getPrerendererLogFile(), '');
-    assert.equal(c.getSnapshotsDirectory(), join(process.cwd(), 'snapshots'));
-    assert.equal(c.getFilesystemDriver(), 'fs');
     assert.equal(c.getChromiumExecutable(), '');
     assert.deepEqual(c.getPrerenderablePathRegExps(), [/.*/]);
     assert.deepEqual(c.getPrerenderableExtensions(), DEFAULT_PRERENDERABLE_EXTENSIONS);
@@ -35,8 +33,6 @@ describe('config initialization', () => {
     const config = {
       nodeEnv: 'development',
       prerendererLogFile: join(process.cwd(), 'test', 'tmp', `${uuidv4()}.log`),
-      snapshotsDirectory: join(process.cwd(), 'test', 'tmp', uuidv4()),
-      filesystemDriver: 'fs',
       chromiumExecutable: 'chromium',
       prerenderablePathRegExps: [/test/],
       prerenderableExtensions: ['.test'],
@@ -51,8 +47,6 @@ describe('config initialization', () => {
 
     assert.isFalse(c.isProductionEnv());
     assert.equal(c.getPrerendererLogFile(), config.prerendererLogFile);
-    assert.equal(c.getSnapshotsDirectory(), config.snapshotsDirectory);
-    assert.equal(c.getFilesystemDriver(), config.filesystemDriver);
     assert.equal(c.getChromiumExecutable(), config.chromiumExecutable);
     assert.equal(
       c.getPrerenderablePathRegExps()[0].source,

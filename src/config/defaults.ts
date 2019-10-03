@@ -1,10 +1,4 @@
 /**
- * Correct values for filesystem driver config.
- */
-export type FilesystemDriver = 'fs' | 's3';
-export const CORRECT_SNAPSHOTS_DRIVERS = ['fs', 's3'];
-
-/**
  * NodeJS environment config.
  */
 export type NodeEnvironment = 'development' | 'production' | string | undefined;
@@ -22,41 +16,10 @@ export interface PrerendererConfigParams {
   nodeEnv?: NodeEnvironment;
 
   /**
-   * Chosen filesystem driver.
-   * @default 'fs'
-   */
-  filesystemDriver?: FilesystemDriver;
-
-  /**
    * Directory to store snapshots in.
    * @default './snapshots'
    */
   snapshotsDirectory?: string;
-
-  /**
-   * AWS S3 access key id. Required if filesystemDriver is 's3'.
-   * @example 'AIANWAUKJWX7NYCGP2C4'
-   * @default ''
-   */
-  awsS3AccessKeyID?: string;
-  /**
-   * AWS S3 secret access key. Required if filesystemDriver is 's3'.
-   * @example '40XJfErXSwMvTh+qcxbETWv64xE4axNlG5sTh7Jc'
-   * @default ''
-   */
-  awsS3SecretAccessKey?: string;
-  /**
-   * AWS S3 Bucket name. Required if filesystemDriver is 's3'.
-   * @example 'prerenderer-snapshots'
-   * @default ''
-   */
-  awsS3BucketName?: string;
-  /**
-   * AWS S3 region name. Required if filesystemDriver is 's3'.
-   * @example 'us-east-1'
-   * @default ''
-   */
-  awsS3RegionName?: string;
 
   /**
    * Prerenderer log file location. Not specifying any will make it not log to a file.

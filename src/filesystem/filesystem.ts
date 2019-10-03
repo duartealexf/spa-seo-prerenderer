@@ -1,15 +1,7 @@
 import fsExtra, { WriteFileOptions, CopyOptions } from 'fs-extra';
 import { join, dirname, basename, extname } from 'path';
 
-import { FilesystemDriver } from '../config/defaults';
-
 export class Filesystem {
-  private driver: string;
-
-  constructor(driver: FilesystemDriver) {
-    this.driver = driver;
-  }
-
   /**
    * Return given file's extension name.
    * @param filepath
