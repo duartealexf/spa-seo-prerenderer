@@ -86,6 +86,24 @@ const createRequest = async (method, isSecure, host, port, path, customHeaders, 
 
 module.exports = {
   /**
+   * Create a HTTP GET request directly to NodeJS static server, which does not prerender.
+   * @param {string} path
+   * @param {any} customHeaders
+   * @returns {ReturnType<typeof createRequest>}
+   */
+  createStaticHttpGetRequest: (path = '', customHeaders = {}) => {
+    return createRequest(
+      'GET',
+      false,
+      '127.0.0.1',
+      process.env.TEST_STATIC_NODEJS_SERVER_PORT,
+      path,
+      customHeaders,
+      true,
+    );
+  },
+
+  /**
    * Create a HTTP POST request directly to NodeJS server. Note that there are not
    * many options to make a post request. This is because we don't need to focus
    * on them as much, as the Prerenderer only create snapshots for GET requests.
@@ -115,7 +133,6 @@ module.exports = {
     customHeaders = {},
     botUserAgent = true,
     hostMode = 'hostname',
-    createSnapshot = false,
   ) => {
     let host;
 
@@ -133,10 +150,7 @@ module.exports = {
       host,
       process.env.TEST_APP_NODEJS_SERVER_PORT,
       path,
-      {
-        ...customHeaders,
-        'x-create-snapshot': createSnapshot ? '1' : '0',
-      },
+      customHeaders,
       botUserAgent,
     );
   },
