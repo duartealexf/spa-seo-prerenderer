@@ -22,11 +22,6 @@ export class Config {
   private nodeEnvironment: NodeEnvironment = 'production';
 
   /**
-   * Directory to store snapshots in.
-   */
-  private responses = './snapshots';
-
-  /**
    * Prerenderer log file location.
    */
   private prerendererLogFile = '';
@@ -228,13 +223,6 @@ export class Config {
    */
   public isInitialized(): boolean {
     return this.initialized;
-  }
-
-  /**
-   * Getter for snapshots directory.
-   */
-  public getResponses(): string {
-    return this.responses;
   }
 
   /**

@@ -19,8 +19,4 @@ describe('prerenderer property checks after initialization', async () => {
   it('config should be a Config instance.', async () => {
     assert.instanceOf(prerenderer.getConfig(), Config);
   });
-
-  it('last response is not set when no prerenders were made.', async () => {
-    assert.notOk(prerenderer.getLastResponse());
-  });
 });

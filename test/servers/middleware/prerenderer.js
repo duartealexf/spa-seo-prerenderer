@@ -1,4 +1,5 @@
 const { Prerenderer } = require('../../../dist/lib/prerenderer');
+const { Responses } = require('../../../dist/lib/response');
 
 module.exports = {
   /**
@@ -29,9 +30,10 @@ module.exports = {
           .prerender(req)
           .then(() => {
             /**
-             * @type {import('../../../dist/types/prerenderer').PrerendererResponse}
+             * @type {Array<import('../../../dist/types/response').PrerendererResponse>}
              */
-            const response = prerenderer.getLastResponse();
+            const responses = Array.from(Responses.values());
+            const response = responses[responses.length - 1];
 
             res
               .status(response.headers.status)
@@ -60,7 +62,11 @@ module.exports = {
         return prerenderer
           .prerender(req)
           .then(() => {
-            const response = prerenderer.getLastResponse();
+            /**
+             * @type {Array<import('../../../dist/types/response').PrerendererResponse>}
+             */
+            const responses = Array.from(Responses.values());
+            const response = responses[responses.length - 1];
 
             res
               .status(response.headers.status)

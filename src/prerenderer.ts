@@ -6,26 +6,10 @@ import { URL } from 'url';
 
 import { PrerendererNotReadyException } from './exceptions/prerenderer-not-ready-exception';
 import { PrerendererConfigParams } from './config/defaults';
-import { Filesystem } from './filesystem/filesystem';
 import { PrerendererResponseError } from './error';
+import { PrerendererResponse, Responses } from './response';
 import { Config } from './config';
 import { Logger } from './logger';
-
-export interface PrerendererResponse {
-  /**
-   * Rendered HTML.
-   */
-  body: string;
-
-  /**
-   * Headers from Prerenderer.
-   */
-  headers: {
-    status: number;
-    'X-Prerendered-Ms': number;
-    [header: string]: string | number;
-  };
-}
 
 /**
  * Reasons why the Prerender rejects prerendering a request, on shouldPrerender() method.
@@ -94,11 +78,6 @@ export class Prerenderer {
    * Whether prerenderer has been initialized.
    */
   private initialized = false;
-
-  /**
-   * Last prerender response object.
-   */
-  private lastResponse?: PrerendererResponse;
 
   /**
    * Reason why it has decided to not prerender last time.
@@ -174,13 +153,6 @@ export class Prerenderer {
       await this.browser.close();
       this.getLogger().info('Stopped Puppeteer!', 'prerenderer');
     }
-  }
-
-  /**
-   * Get response from last call to prerender().
-   */
-  public getLastResponse(): PrerendererResponse | undefined {
-    return this.lastResponse;
   }
 
   /**
@@ -271,10 +243,11 @@ export class Prerenderer {
     const page = await this.browser.newPage();
 
     const renderStart = Date.now();
+    const url = Prerenderer.parseUrl(request);
 
-    await this.navigatePageWithRequest(page, request)
-      .then((puppeteerResponse) => {
-        this.lastResponse = puppeteerResponse;
+    await this.navigatePageWithRequest(page, url)
+      .then((response) => {
+        Responses.set(url.toString(), response);
       })
       .catch(async (error) => {
         let message: string;
@@ -294,16 +267,16 @@ export class Prerenderer {
         this.getLogger().error(message, 'puppeteer');
 
         await page.close();
-        const url = Prerenderer.parseUrl(request);
 
-        this.lastResponse = {
+        // TODO: store error responses?
+        Responses.set(url.toString(), {
           headers: {
             status,
             'X-Original-Location': url.toString(),
             'X-Prerendered-Ms': Date.now() - renderStart,
           },
           body: '',
-        };
+        });
       });
   }
 
@@ -312,11 +285,7 @@ export class Prerenderer {
    * @param page
    * @param request
    */
-  private async navigatePageWithRequest(
-    page: Page,
-    request: IncomingMessage,
-  ): Promise<PrerendererResponse> {
-    const url = Prerenderer.parseUrl(request);
+  private async navigatePageWithRequest(page: Page, url: URL): Promise<PrerendererResponse> {
     const renderStart = Date.now();
 
     page.setUserAgent(Prerenderer.USER_AGENT);
