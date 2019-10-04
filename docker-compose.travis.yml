@@ -64,6 +64,7 @@ services:
 
   tests:
     depends_on:
+      - mongodb
       - apache
       - nginx
     build:
