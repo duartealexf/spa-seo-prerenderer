@@ -1,25 +1,30 @@
 import { join } from 'path';
 
-import { InvalidConfigException } from './exceptions/invalid-config-exception';
-import { Filesystem } from './filesystem/filesystem';
+import { InvalidConfigException } from '../exceptions/invalid-config-exception';
 import {
-  PrerendererConfigParams,
+  PrerendererConfig,
   NodeEnvironment,
   DEFAULT_PRERENDERABLE_EXTENSIONS,
   DEFAULT_BOT_USER_AGENTS,
   DEFAULT_BLACKLISTED_REQUEST_URLS,
-} from './config/defaults';
+  DatabaseOptions,
+} from './defaults';
 
 export class Config {
   /**
    * Values passed in from constructor.
    */
-  private constructSettings: PrerendererConfigParams;
+  private constructSettings: PrerendererConfig;
 
   /**
    * NodeJS environment.
    */
   private nodeEnvironment: NodeEnvironment = 'production';
+
+  /**
+   * Database connection options.
+   */
+  private databaseOptions!: DatabaseOptions;
 
   /**
    * Prerenderer log file location.
@@ -55,36 +60,18 @@ export class Config {
   private timeout = 10000;
 
   /**
-   * Case insensitive list with URL parts that Puppeteer will exclusively allow the rendering
-   * page to make requests to. Defaults to an empty array. If any URL part is added to this
-   * list, Puppeteer will only consider this whitelist and ignore blacklistedRequestURLs.
+   * Network URL part whitelist set from config.
    */
   private whitelistedRequestURLs: string[] = [];
 
   /**
-   * Case insensitive list with URL parts that Puppeteer will disallow the rendering page to
-   * make requests to. Useful for disallowing the prerendered page to make network requests
-   * to, e.g. services like Google Analytics, GTM, chat services, Facebook, Hubspot, etc.
+   * Network URL part blacklist set from config.
    */
   private blacklistedRequestURLs: string[] = DEFAULT_BLACKLISTED_REQUEST_URLS;
 
-  /**
-   * Whether config has been initialized.
-   */
-  private initialized = false;
-
-  constructor(config: PrerendererConfigParams) {
+  constructor(config: PrerendererConfig) {
     this.constructSettings = { ...config };
     this.validateAndAssignConfigValues();
-  }
-
-  /**
-   * Initialize configuration, which is required before starting app.
-   */
-  public async initialize(): Promise<void> {
-    await this.initLoggingConfig();
-
-    this.initialized = true;
   }
 
   /**
@@ -102,6 +89,19 @@ export class Config {
       throw new InvalidConfigException('nodeEnv given in constructor must be a string!');
     }
     this.nodeEnvironment = c.nodeEnv;
+
+    /**
+     * Validate database options.
+     */
+    if (typeof c.databaseOptions !== 'object') {
+      throw new InvalidConfigException('databaseOptions given in constructor must be an object!');
+    }
+    if (!Object.keys(c.databaseOptions).length) {
+      throw new InvalidConfigException(
+        "databaseOptions given in constructor must contain database credentials using either the 'url' format or at least 'host', 'username', and 'database'!",
+      );
+    }
+    this.databaseOptions = c.databaseOptions;
 
     /**
      * Setup prerendererLogFile config.
@@ -205,31 +205,17 @@ export class Config {
   }
 
   /**
-   * Initialize logging configuration.
-   */
-  private async initLoggingConfig(): Promise<void> {
-    if (!this.prerendererLogFile) {
-      return;
-    }
-
-    /**
-     * Ensure file exists and is writeable.
-     */
-    await Filesystem.ensureFile(this.prerendererLogFile);
-  }
-
-  /**
-   * Whether configuration has been initialized.
-   */
-  public isInitialized(): boolean {
-    return this.initialized;
-  }
-
-  /**
    * Whether this is running in production environment.
    */
   public isProductionEnv(): boolean {
     return this.nodeEnvironment === 'production';
+  }
+
+  /**
+   * Get database options.
+   */
+  public getDatabaseOptions(): DatabaseOptions {
+    return this.databaseOptions;
   }
 
   /**

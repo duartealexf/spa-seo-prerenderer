@@ -1,14 +1,19 @@
+import { MongoConnectionOptions } from 'typeorm/driver/mongodb/MongoConnectionOptions';
+
 /**
  * NodeJS environment config.
  */
 export type NodeEnvironment = 'development' | 'production' | string | undefined;
 
 /**
- * Interface for options passed in constructor.
+ * Database connection options.
  */
-export interface PrerendererConfigParams {
-  [key: string]: number | string | string[] | RegExp[] | undefined;
+export type DatabaseOptions = Partial<MongoConnectionOptions>;
 
+/**
+ * Interface for options passed in prerenderer service constructor.
+ */
+export interface PrerendererConfig {
   /**
    * NodeJS environment.
    * @default 'production'
@@ -16,20 +21,20 @@ export interface PrerendererConfigParams {
   nodeEnv?: NodeEnvironment;
 
   /**
-   * Directory to store snapshots in.
-   * @default './snapshots'
+   * Database connection options.
    */
-  snapshotsDirectory?: string;
+  databaseOptions: DatabaseOptions;
 
   /**
-   * Prerenderer log file location. Not specifying any will make it not log to a file.
+   * Prerenderer log file location. Not specifying any will make it not log to any file.
    * @default ''
    */
   prerendererLogFile?: string;
 
   /**
-   * Chromium executable.
-   * @default '''
+   * Chromium executable. By default will use the one installed with Puppeteer,
+   * which is the best option. Only set this is you know what you are doing.
+   * @default ''
    */
   chromiumExecutable?: string;
 
@@ -61,17 +66,20 @@ export interface PrerendererConfigParams {
   timeout?: number;
 
   /**
-   * Case insensitive list with URL parts that Puppeteer will exclusively allow the rendering
-   * page to make requests to. Defaults to an empty array. If any URL part is added to this
-   * list, Puppeteer will only consider this whitelist and ignore blacklistedRequestURLs.
+   * Case insensitive list with parts of URL that Puppeteer will allow the prerendered page to
+   * make network requests to (e.g. resources). Defaults to an empty array. It makes sense to
+   * use the this when setting the blacklist to all URLs, and specify which specific URLs to
+   * allow. Only do this if you are sure which URLs your pages make requests to.
    * @default []
    */
   whitelistedRequestURLs?: string[];
 
   /**
-   * Case insensitive list with URL parts that Puppeteer will disallow the rendering page to
-   * make requests to. Useful for disallowing the prerendered page to make network requests
-   * to, e.g. services like Google Analytics, GTM, chat services, Facebook, Hubspot, etc.
+   * Case insensitive list with URL parts that Puppeteer will disallow the rendering page to make
+   * requests to. Useful for disallowing the prerendered page to make network requests to, services
+   * like Google Analytics, GTM, chat services, Facebook, etc. Useful when used along with the
+   * whitelist, but only do this if you are sure which URLs your pages make requests to – in this
+   * case, you can ignore all URLs by setting blacklist to `['.']`.
    * @default DEFAULT_BLACKLISTED_REQUEST_URLS
    */
   blacklistedRequestURLs?: string[];

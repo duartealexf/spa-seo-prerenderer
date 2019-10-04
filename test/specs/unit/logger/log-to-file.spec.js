@@ -4,23 +4,44 @@ const { createReadStream } = require('fs-extra');
 const { join, basename } = require('path');
 const { v4: uuidv4 } = require('uuid');
 
-const { Prerenderer } = require('../../../../dist/lib/prerenderer');
+const { PrerendererService } = require('../../../../dist/lib/service');
 
 describe('log to file', () => {
   /**
-   * @type {import('../../../../dist/types/config/defaults').PrerendererConfigParams}
+   * @type {import('../../../../dist/types/config/defaults').PrerendererConfig}
    */
   const initialConfig = {
+    databaseOptions: {
+      authSource: 'admin',
+      host: process.env.TEST_DB_HOST,
+      username: process.env.TEST_DB_USERNAME,
+      password: process.env.TEST_DB_PASSWORD,
+      database: process.env.TEST_DB_DATABASE,
+    },
     nodeEnv: 'production',
     prerendererLogFile: join('test', 'tmp', `${uuidv4()}.log`),
   };
 
-  it('should log up to warning level on production env.', async () => {
-    const p = new Prerenderer(initialConfig);
-    await p.initialize();
+  const pProduction = new PrerendererService(initialConfig);
+  const pDevelopment = new PrerendererService({
+    ...initialConfig,
+    nodeEnv: 'development',
+    prerendererLogFile: join('test', 'tmp', `${uuidv4()}.log`),
+  });
 
-    const logger = p.getLogger();
-    const logFile = p.getConfig().getPrerendererLogFile();
+  before(async () => {
+    await pProduction.start();
+    await pDevelopment.start();
+  });
+
+  after(async () => {
+    await pProduction.stop();
+    await pDevelopment.stop();
+  });
+
+  it('should log up to warning level on production env.', async () => {
+    const logger = pProduction.getLogger();
+    const logFile = pProduction.getConfig().getPrerendererLogFile();
     let msg = '';
 
     const levelsToLog = ['emerg', 'alert', 'crit', 'error', 'warning'];
@@ -52,16 +73,8 @@ describe('log to file', () => {
   });
 
   it('should log all levels on development env.', async () => {
-    const config = Object.assign({}, initialConfig, {
-      nodeEnv: 'development',
-      prerendererLogFile: join('test', 'tmp', `${uuidv4()}.log`),
-    });
-
-    const p = new Prerenderer(config);
-    await p.initialize();
-
-    const logger = p.getLogger();
-    const logFile = p.getConfig().getPrerendererLogFile();
+    const logger = pDevelopment.getLogger();
+    const logFile = pDevelopment.getConfig().getPrerendererLogFile();
     let msg = '';
 
     const levelsToLog = ['emerg', 'alert', 'crit', 'error', 'warning', 'notice', 'info', 'debug'];

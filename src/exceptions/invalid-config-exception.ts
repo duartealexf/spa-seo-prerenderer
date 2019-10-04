@@ -1,5 +1,5 @@
 /**
- * Exception thrown when a config variable has an invalid value.
+ * Exception thrown when a config setting has an invalid value.
  */
 export class InvalidConfigException extends Error {
   public message: string;

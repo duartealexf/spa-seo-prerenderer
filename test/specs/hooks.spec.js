@@ -16,11 +16,20 @@ mocha.before(async () => {
 
   console.log('Starting test servers...');
 
+  const databaseOptions = {
+    authSource: 'admin',
+    host: process.env.TEST_DB_HOST,
+    username: process.env.TEST_DB_USERNAME,
+    password: process.env.TEST_DB_PASSWORD,
+    database: process.env.TEST_DB_DATABASE,
+  };
+
   /**
    * Start prerenderer server.
    */
   await prerendererServer.start();
   await prerendererServer.attachPrerenderWithConfig({
+    databaseOptions,
     timeout: 8640000,
   });
 
@@ -35,6 +44,7 @@ mocha.before(async () => {
    */
   await appServer.start();
   await appServer.attachMiddlewares({
+    databaseOptions,
     timeout: 8640000,
     whitelistedRequestURLs: ['ga.js'],
   });

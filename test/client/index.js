@@ -106,7 +106,7 @@ module.exports = {
   /**
    * Create a HTTP POST request directly to NodeJS server. Note that there are not
    * many options to make a post request. This is because we don't need to focus
-   * on them as much, as the Prerenderer only create snapshots for GET requests.
+   * on them as much, as the Prerenderer only prerenders GET requests.
    * @returns {ReturnType<typeof createRequest>}
    */
   createDirectHttpPostRequest: () =>

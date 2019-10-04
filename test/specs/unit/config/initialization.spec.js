@@ -3,16 +3,29 @@ const { assert } = require('chai');
 const { join } = require('path');
 const { v4: uuidv4 } = require('uuid');
 
-const { Prerenderer } = require('../../../../dist/lib/prerenderer');
+const { PrerendererService } = require('../../../../dist/lib/service');
 const {
   DEFAULT_BLACKLISTED_REQUEST_URLS,
   DEFAULT_BOT_USER_AGENTS,
   DEFAULT_PRERENDERABLE_EXTENSIONS,
 } = require('../../../../dist/lib/config/defaults');
 
-describe('config initialization', () => {
+require('../../hooks.spec');
+
+describe('config start up', () => {
   it('should use default config when no config is given.', async () => {
-    const p = new Prerenderer();
+    /**
+     * @type {import('../../../../dist/types/config/defaults').PrerendererConfig}
+     */
+    const config = {
+      databaseOptions: {
+        authSource: 'admin',
+        host: process.env.TEST_DB_HOST,
+        username: process.env.TEST_DB_USERNAME,
+      },
+    };
+
+    const p = new PrerendererService(config);
     const c = p.getConfig();
 
     assert.isTrue(c.isProductionEnv());
@@ -28,10 +41,15 @@ describe('config initialization', () => {
 
   it('should set all configuration as passed to constructor.', async () => {
     /**
-     * @type {import('../../../../dist/types/config/defaults').PrerendererConfigParams}
+     * @type {import('../../../../dist/types/config/defaults').PrerendererConfig}
      */
     const config = {
       nodeEnv: 'development',
+      databaseOptions: {
+        authSource: 'admin',
+        host: process.env.TEST_DB_HOST,
+        username: process.env.TEST_DB_USERNAME,
+      },
       prerendererLogFile: join(process.cwd(), 'test', 'tmp', `${uuidv4()}.log`),
       chromiumExecutable: 'chromium',
       prerenderablePathRegExps: [/test/],
@@ -42,10 +60,11 @@ describe('config initialization', () => {
       blacklistedRequestURLs: ['.test-2.'],
     };
 
-    const p = new Prerenderer(config);
+    const p = new PrerendererService(config);
     const c = p.getConfig();
 
     assert.isFalse(c.isProductionEnv());
+    assert.deepEqual(c.getDatabaseOptions(), config.databaseOptions);
     assert.equal(c.getPrerendererLogFile(), config.prerendererLogFile);
     assert.equal(c.getChromiumExecutable(), config.chromiumExecutable);
     assert.equal(
@@ -61,16 +80,18 @@ describe('config initialization', () => {
 
   it('should set empty whitelist and blacklist when empty arrays are given.', async () => {
     /**
-     * @type {import('../../../../dist/types/config/defaults').PrerendererConfigParams}
+     * @type {import('../../../../dist/types/config/defaults').PrerendererConfig}
      */
     const config = {
+      databaseOptions: {
+        username: process.env.TEST_DB_USERNAME,
+        authSource: 'admin',
+      },
       whitelistedRequestURLs: [],
       blacklistedRequestURLs: [],
     };
 
-    const p = new Prerenderer(config);
-    await p.initialize();
-
+    const p = new PrerendererService(config);
     assert.deepEqual(p.getConfig().getWhitelistedRequestURLs(), []);
     assert.deepEqual(p.getConfig().getBlacklistedRequestURLs(), []);
   });

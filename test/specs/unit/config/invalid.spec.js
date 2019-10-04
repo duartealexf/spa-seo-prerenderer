@@ -1,23 +1,23 @@
 const { describe, it } = require('mocha');
 const { assert } = require('chai');
 
-const { Prerenderer } = require('../../../../dist/lib/prerenderer');
+const { PrerendererService } = require('../../../../dist/lib/service');
 const {
   InvalidConfigException,
 } = require('../../../../dist/lib/exceptions/invalid-config-exception');
 
 describe('invalid config', () => {
-  /**
-   * @type {import('../../../../dist/types/config/defaults').PrerendererConfigParams}
-   */
   let buggedConfig = {};
+  const databaseOptions = {
+    authSource: 'admin',
+    username: process.env.TEST_DB_USERNAME,
+  };
 
   it('should throw an error when nodeEnv is not a string.', () => {
-    // @ts-ignore
     buggedConfig = { nodeEnv: 123 };
 
     try {
-      new Prerenderer(buggedConfig);
+      new PrerendererService(buggedConfig);
       assert.ok(false);
     } catch (e) {
       assert.instanceOf(e, InvalidConfigException);
@@ -25,12 +25,37 @@ describe('invalid config', () => {
     }
   });
 
-  it('should throw an error when prerendererLogFile is not a string.', () => {
-    // @ts-ignore
-    buggedConfig = { prerendererLogFile: 123 };
+  it('should throw an error when databaseOptions is not an object.', () => {
+    buggedConfig = {};
 
     try {
-      new Prerenderer(buggedConfig);
+      new PrerendererService(buggedConfig);
+      assert.ok(false);
+    } catch (e) {
+      assert.instanceOf(e, InvalidConfigException);
+      assert.include(e.message, 'databaseOptions');
+      assert.include(e.message, 'must be an object');
+    }
+  });
+
+  it('should throw an error when databaseOptions is an empty object.', () => {
+    buggedConfig = { databaseOptions: {} };
+
+    try {
+      new PrerendererService(buggedConfig);
+      assert.ok(false);
+    } catch (e) {
+      assert.instanceOf(e, InvalidConfigException);
+      assert.include(e.message, 'databaseOptions');
+      assert.include(e.message, 'must contain database credentials');
+    }
+  });
+
+  it('should throw an error when prerendererLogFile is not a string.', () => {
+    buggedConfig = { prerendererLogFile: 123, databaseOptions };
+
+    try {
+      new PrerendererService(buggedConfig);
       assert.ok(false);
     } catch (e) {
       assert.instanceOf(e, InvalidConfigException);
@@ -39,11 +64,10 @@ describe('invalid config', () => {
   });
 
   it('should throw an error when prerenderablePathRegExps is not an array.', () => {
-    // @ts-ignore
-    buggedConfig = { prerenderablePathRegExps: 123 };
+    buggedConfig = { prerenderablePathRegExps: 123, databaseOptions };
 
     try {
-      new Prerenderer(buggedConfig);
+      new PrerendererService(buggedConfig);
       assert.ok(false);
     } catch (e) {
       assert.instanceOf(e, InvalidConfigException);
@@ -52,11 +76,10 @@ describe('invalid config', () => {
   });
 
   it('should throw an error when prerenderablePathRegExps is not RegExp[].', () => {
-    // @ts-ignore
-    buggedConfig = { prerenderablePathRegExps: [123] };
+    buggedConfig = { prerenderablePathRegExps: [123], databaseOptions };
 
     try {
-      new Prerenderer(buggedConfig);
+      new PrerendererService(buggedConfig);
       assert.ok(false);
     } catch (e) {
       assert.instanceOf(e, InvalidConfigException);
@@ -65,11 +88,10 @@ describe('invalid config', () => {
   });
 
   it('should throw an error when prerenderableExtensions is not an array.', () => {
-    // @ts-ignore
-    buggedConfig = { prerenderableExtensions: 123 };
+    buggedConfig = { prerenderableExtensions: 123, databaseOptions };
 
     try {
-      new Prerenderer(buggedConfig);
+      new PrerendererService(buggedConfig);
       assert.ok(false);
     } catch (e) {
       assert.instanceOf(e, InvalidConfigException);
@@ -78,11 +100,10 @@ describe('invalid config', () => {
   });
 
   it('should throw an error when prerenderableExtensions is not string[].', () => {
-    // @ts-ignore
-    buggedConfig = { prerenderableExtensions: [123] };
+    buggedConfig = { prerenderableExtensions: [123], databaseOptions };
 
     try {
-      new Prerenderer(buggedConfig);
+      new PrerendererService(buggedConfig);
       assert.ok(false);
     } catch (e) {
       assert.instanceOf(e, InvalidConfigException);
@@ -91,11 +112,10 @@ describe('invalid config', () => {
   });
 
   it('should throw an error when botUserAgents is not an array.', () => {
-    // @ts-ignore
-    buggedConfig = { botUserAgents: 123 };
+    buggedConfig = { botUserAgents: 123, databaseOptions };
 
     try {
-      new Prerenderer(buggedConfig);
+      new PrerendererService(buggedConfig);
       assert.ok(false);
     } catch (e) {
       assert.instanceOf(e, InvalidConfigException);
@@ -104,11 +124,10 @@ describe('invalid config', () => {
   });
 
   it('should throw an error when botUserAgents is not string[].', () => {
-    // @ts-ignore
-    buggedConfig = { botUserAgents: [123] };
+    buggedConfig = { botUserAgents: [123], databaseOptions };
 
     try {
-      new Prerenderer(buggedConfig);
+      new PrerendererService(buggedConfig);
       assert.ok(false);
     } catch (e) {
       assert.instanceOf(e, InvalidConfigException);
@@ -117,11 +136,10 @@ describe('invalid config', () => {
   });
 
   it('should throw an error when timeout is not a number.', () => {
-    // @ts-ignore
-    buggedConfig = { timeout: 'abc' };
+    buggedConfig = { timeout: 'abc', databaseOptions };
 
     try {
-      new Prerenderer(buggedConfig);
+      new PrerendererService(buggedConfig);
       assert.ok(false);
     } catch (e) {
       assert.instanceOf(e, InvalidConfigException);
@@ -130,10 +148,10 @@ describe('invalid config', () => {
   });
 
   it('should throw an error when timeout is equal to zero.', () => {
-    buggedConfig = { timeout: 0 };
+    buggedConfig = { timeout: 0, databaseOptions };
 
     try {
-      new Prerenderer(buggedConfig);
+      new PrerendererService(buggedConfig);
       assert.ok(false);
     } catch (e) {
       assert.instanceOf(e, InvalidConfigException);
@@ -142,10 +160,10 @@ describe('invalid config', () => {
   });
 
   it('should throw an error when timeout is less than zero.', () => {
-    buggedConfig = { timeout: -50 };
+    buggedConfig = { timeout: -50, databaseOptions };
 
     try {
-      new Prerenderer(buggedConfig);
+      new PrerendererService(buggedConfig);
       assert.ok(false);
     } catch (e) {
       assert.instanceOf(e, InvalidConfigException);
@@ -154,11 +172,10 @@ describe('invalid config', () => {
   });
 
   it('should throw an error when whitelistedRequestURLs is not an array.', () => {
-    // @ts-ignore
-    buggedConfig = { whitelistedRequestURLs: 123 };
+    buggedConfig = { whitelistedRequestURLs: 123, databaseOptions };
 
     try {
-      new Prerenderer(buggedConfig);
+      new PrerendererService(buggedConfig);
       assert.ok(false);
     } catch (e) {
       assert.instanceOf(e, InvalidConfigException);
@@ -167,11 +184,10 @@ describe('invalid config', () => {
   });
 
   it('should throw an error when whitelistedRequestURLs is not string[].', () => {
-    // @ts-ignore
-    buggedConfig = { whitelistedRequestURLs: [123] };
+    buggedConfig = { whitelistedRequestURLs: [123], databaseOptions };
 
     try {
-      new Prerenderer(buggedConfig);
+      new PrerendererService(buggedConfig);
       assert.ok(false);
     } catch (e) {
       assert.instanceOf(e, InvalidConfigException);
@@ -180,11 +196,10 @@ describe('invalid config', () => {
   });
 
   it('should throw an error when blacklistedRequestURLs is not an array.', () => {
-    // @ts-ignore
-    buggedConfig = { blacklistedRequestURLs: 123 };
+    buggedConfig = { blacklistedRequestURLs: 123, databaseOptions };
 
     try {
-      new Prerenderer(buggedConfig);
+      new PrerendererService(buggedConfig);
       assert.ok(false);
     } catch (e) {
       assert.instanceOf(e, InvalidConfigException);
@@ -193,11 +208,10 @@ describe('invalid config', () => {
   });
 
   it('should throw an error when blacklistedRequestURLs is not string[].', () => {
-    // @ts-ignore
-    buggedConfig = { blacklistedRequestURLs: [123] };
+    buggedConfig = { blacklistedRequestURLs: [123], databaseOptions };
 
     try {
-      new Prerenderer(buggedConfig);
+      new PrerendererService(buggedConfig);
       assert.ok(false);
     } catch (e) {
       assert.instanceOf(e, InvalidConfigException);

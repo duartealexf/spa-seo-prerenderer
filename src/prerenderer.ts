@@ -5,7 +5,6 @@ import { extname } from 'path';
 import { URL } from 'url';
 
 import { PrerendererNotReadyException } from './exceptions/prerenderer-not-ready-exception';
-import { PrerendererConfigParams } from './config/defaults';
 import { PrerendererResponseError } from './error';
 import { PrerendererResponse, Responses } from './response';
 import { Config } from './config';
@@ -65,19 +64,14 @@ export class Prerenderer {
   private browser?: Browser;
 
   /**
-   * Prerenderer configuration singleton.
+   * Prerenderer service configuration singleton.
    */
   private config: Config;
 
   /**
-   * Prerenderer logger singleton.
+   * Prerenderer service logger singleton.
    */
-  private logger?: Logger;
-
-  /**
-   * Whether prerenderer has been initialized.
-   */
-  private initialized = false;
+  private logger: Logger;
 
   /**
    * Reason why it has decided to not prerender last time.
@@ -89,48 +83,16 @@ export class Prerenderer {
    */
   public static readonly USER_AGENT = 'Mozilla/5.0 (compatible; prerenderer/{{version}})';
 
-  constructor(config: PrerendererConfigParams) {
-    this.config = new Config(config);
-  }
-
-  /**
-   * Initialize prerenderer setup, which is required before starting it.
-   */
-  public async initialize(): Promise<void> {
-    await this.config.initialize();
-    this.logger = new Logger(this.config);
-    this.initialized = true;
-  }
-
-  /**
-   * Getter for prerenderer configuration singleton.
-   */
-  public getConfig(): Config {
-    return this.config;
-  }
-
-  /**
-   * Getter for prerenderer logger singleton.
-   */
-  public getLogger(): Logger {
-    if (!this.logger) {
-      this.logger = new Logger(this.config);
-    }
-
-    return this.logger;
+  constructor(config: Config, logger: Logger) {
+    this.config = config;
+    this.logger = logger;
   }
 
   /**
    * Start prerenderer headless browser.
    */
   public async start(): Promise<void> {
-    if (!this.initialized) {
-      throw new PrerendererNotReadyException(
-        'Prerenderer needs to be initialized before starting. Did you call prerenderer.initialize()?',
-      );
-    }
-
-    this.getLogger().info('Launching Puppeteer...', 'prerenderer');
+    this.logger.info('Launching Puppeteer...', 'prerenderer');
     const options: LaunchOptions = {
       args: ['--no-sandbox'],
       ignoreHTTPSErrors: true,
@@ -141,7 +103,7 @@ export class Prerenderer {
     }
 
     this.browser = await puppeteer.launch(options);
-    this.getLogger().info('Launched Puppeteer!', 'prerenderer');
+    this.logger.info('Launched Puppeteer!', 'prerenderer');
   }
 
   /**
@@ -149,9 +111,9 @@ export class Prerenderer {
    */
   public async stop(): Promise<void> {
     if (this.browser) {
-      this.getLogger().info('Stopping Puppeteer...', 'prerenderer');
+      this.logger.info('Stopping Puppeteer...', 'prerenderer');
       await this.browser.close();
-      this.getLogger().info('Stopped Puppeteer!', 'prerenderer');
+      this.logger.info('Stopped Puppeteer!', 'prerenderer');
     }
   }
 
@@ -236,7 +198,7 @@ export class Prerenderer {
   public async prerender(request: IncomingMessage): Promise<void> {
     if (!this.browser) {
       throw new PrerendererNotReadyException(
-        'Prerenderer needs to be started before prerendering an url. Did you call prerenderer.start()?',
+        "Prerenderer service needs to be started before prerendering an url. Did you call prerenderer service's start()?",
       );
     }
 
@@ -264,7 +226,7 @@ export class Prerenderer {
           message = error;
         }
 
-        this.getLogger().error(message, 'puppeteer');
+        this.logger.error(message, 'puppeteer');
 
         await page.close();
 
@@ -352,7 +314,7 @@ export class Prerenderer {
   }
 
   /**
-   * Get given header from given request.
+   * Get header from request.
    * @param request
    * @param header
    */
@@ -363,7 +325,10 @@ export class Prerenderer {
       return '';
     }
 
-    return headerEntry[1] as string;
+    let [, headerValue] = headerEntry;
+    headerValue = Array.isArray(headerValue) ? headerValue.join(',') : headerValue;
+
+    return headerValue || '';
   }
 
   /**

@@ -1,6 +1,17 @@
 version: '2.2'
 
 services:
+  mongodb:
+    image: mongo
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${TEST_DB_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${TEST_DB_PASSWORD}
+      MONGO_INITDB_DATABASE: ${TEST_DB_DATABASE}
+    networks:
+      prerenderer:
+        ipv4_address: 173.20.0.50
+        ipv6_address: 2002:ac14:0:0:0:0:0:50
+
   apache:
     build:
       context: .
@@ -43,12 +54,14 @@ services:
 
   tests:
     depends_on:
-      - nginx
+      - mongodb
       - apache
+      - nginx
     build:
       context: .
       dockerfile: docker/tests/tests-node-12.dockerfile
     extra_hosts:
+      - ${TEST_DB_HOST}:173.20.0.50
       - ${TEST_SMART_APACHE_CONTAINER_HOST}:173.20.0.100
       - ${TEST_DUMB_APACHE_CONTAINER_HOST}:173.20.0.100
       - ${TEST_SMART_NGINX_CONTAINER_HOST}:173.20.0.101

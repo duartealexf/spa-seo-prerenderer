@@ -1,19 +1,19 @@
-const { Prerenderer } = require('../../../dist/lib/prerenderer');
+const { PrerendererService } = require('../../../dist/lib/service');
 const { Responses } = require('../../../dist/lib/response');
 
 module.exports = {
   /**
    * Attach prerenderer middleware, which evaluates whether it should prerender.
    * Prerenders if needed, otherwise will pass request to next middleware.
-   * @param {import('../../../dist/types/config/defaults').PrerendererConfigParams} config
+   * @param {import('../../../dist/types/config/defaults').PrerendererConfig} config
    */
   configPrerendererMiddleware: async (config) => {
-    const prerenderer = new Prerenderer(config);
-    await prerenderer.initialize();
-    await prerenderer.start();
+    const service = new PrerendererService(config);
+    await service.start();
+    const prerenderer = service.getPrerenderer();
 
     return {
-      prerenderer,
+      service,
 
       /**
        * Prerenderer middleware that evaluates whether it
@@ -49,15 +49,22 @@ module.exports = {
 
   /**
    * Attach middleware that forces prerender, without evaluating whether it should prerender.
-   * @param {import('../../../dist/types/config/defaults').PrerendererConfigParams} config
+   * @param {import('../../../dist/types/config/defaults').PrerendererConfig} config
    */
-  initializePrerenderer: async (config) => {
-    const prerenderer = new Prerenderer(config);
-    await prerenderer.initialize();
-    await prerenderer.start();
+  startPrerenderer: async (config) => {
+    const service = new PrerendererService(config);
+    await service.start();
+    const prerenderer = service.getPrerenderer();
 
     return {
-      prerenderer,
+      service,
+
+      /**
+       * Prerenderer middleware that always prerenders, to send prerendered response.
+       * @param {import('express').Request} req
+       * @param {import('express').Response} res
+       * @param {(err?: any) => void} next
+       */
       middleware: (req, res, next) => {
         return prerenderer
           .prerender(req)

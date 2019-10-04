@@ -1,36 +1,40 @@
-const { describe, it } = require('mocha');
+const { describe, it, before, after } = require('mocha');
 const { assert } = require('chai');
 const { join } = require('path');
 const { v4: uuidv4 } = require('uuid');
 
 const { createDirectHttpGetRequest, createDirectHttpPostRequest } = require('../../../client');
-const { Prerenderer } = require('../../../../dist/lib/prerenderer');
+const { PrerendererService } = require('../../../../dist/lib/service');
 
 describe('whether it should prerender', () => {
   /**
-   * @type {import('../../../../dist/types/config/defaults').PrerendererConfigParams}
+   * @type {import('../../../../dist/types/config/defaults').PrerendererConfig}
    */
   const initialConfig = {
     nodeEnv: 'development',
-    prerendererLogFile: join('test', 'tmp', `${uuidv4()}.log`),
+    databaseOptions: {
+      authSource: 'admin',
+      host: process.env.TEST_DB_HOST,
+      username: process.env.TEST_DB_USERNAME,
+      password: process.env.TEST_DB_PASSWORD,
+      database: process.env.TEST_DB_DATABASE,
+    },
     timeout: 8640000,
   };
 
-  const prerenderer = new Prerenderer(initialConfig);
+  const service = new PrerendererService(initialConfig);
+  const prerenderer = service.getPrerenderer();
 
-  before(async () => {
-    await prerenderer.initialize();
-  });
-
-  /**
-   * @type {import('../../../../dist/types/prerenderer').ReasonsToRejectPrerender}
-   */
-  let reasonToRejectLastPrerender;
+  before(() => service.start());
+  after(() => service.stop());
 
   it('should not prerender if there is no request.', async () => {
     assert.isNotOk(prerenderer.shouldPrerender(null));
 
-    reasonToRejectLastPrerender = 'no-request';
+    /**
+     * @type {import('../../../../dist/types/prerenderer').ReasonsToRejectPrerender}
+     */
+    const reasonToRejectLastPrerender = 'no-request';
     assert.equal(prerenderer.getLastRejectedPrerenderReason(), reasonToRejectLastPrerender);
   });
 
@@ -38,7 +42,10 @@ describe('whether it should prerender', () => {
     // @ts-ignore
     assert.isNotOk(prerenderer.shouldPrerender(123));
 
-    reasonToRejectLastPrerender = 'rejected-request';
+    /**
+     * @type {import('../../../../dist/types/prerenderer').ReasonsToRejectPrerender}
+     */
+    const reasonToRejectLastPrerender = 'rejected-request';
     assert.equal(prerenderer.getLastRejectedPrerenderReason(), reasonToRejectLastPrerender);
   });
 
@@ -46,7 +53,10 @@ describe('whether it should prerender', () => {
     const { request } = await createDirectHttpPostRequest();
     assert.isNotOk(prerenderer.shouldPrerender(request));
 
-    reasonToRejectLastPrerender = 'rejected-method';
+    /**
+     * @type {import('../../../../dist/types/prerenderer').ReasonsToRejectPrerender}
+     */
+    const reasonToRejectLastPrerender = 'rejected-method';
     assert.equal(prerenderer.getLastRejectedPrerenderReason(), reasonToRejectLastPrerender);
   });
 
@@ -54,7 +64,10 @@ describe('whether it should prerender', () => {
     const { request } = await createDirectHttpGetRequest('', { 'user-agent': '' }, false);
     assert.isNotOk(prerenderer.shouldPrerender(request));
 
-    reasonToRejectLastPrerender = 'no-user-agent';
+    /**
+     * @type {import('../../../../dist/types/prerenderer').ReasonsToRejectPrerender}
+     */
+    const reasonToRejectLastPrerender = 'no-user-agent';
     assert.equal(prerenderer.getLastRejectedPrerenderReason(), reasonToRejectLastPrerender);
   });
 
@@ -62,45 +75,44 @@ describe('whether it should prerender', () => {
     const { request } = await createDirectHttpGetRequest('', {}, false);
     assert.isNotOk(prerenderer.shouldPrerender(request));
 
-    reasonToRejectLastPrerender = 'rejected-user-agent';
+    /**
+     * @type {import('../../../../dist/types/prerenderer').ReasonsToRejectPrerender}
+     */
+    const reasonToRejectLastPrerender = 'rejected-user-agent';
     assert.equal(prerenderer.getLastRejectedPrerenderReason(), reasonToRejectLastPrerender);
   });
 
   it('should not prerender if it is not a prerenderable extension.', async () => {
-    /**
-     * @type {import('../../../../dist/types/config/defaults').PrerendererConfigParams}
-     */
-    const config = {
-      ...initialConfig,
-      prerenderableExtensions: ['', '.html'],
-    };
-
-    const p = new Prerenderer(config);
-    await p.initialize();
-
     const { request } = await createDirectHttpGetRequest('/pixel.png');
-    assert.isNotOk(p.shouldPrerender(request));
+    assert.isNotOk(prerenderer.shouldPrerender(request));
 
-    reasonToRejectLastPrerender = 'rejected-extension';
-    assert.equal(p.getLastRejectedPrerenderReason(), reasonToRejectLastPrerender);
+    /**
+     * @type {import('../../../../dist/types/prerenderer').ReasonsToRejectPrerender}
+     */
+    const reasonToRejectLastPrerender = 'rejected-extension';
+    assert.equal(prerenderer.getLastRejectedPrerenderReason(), reasonToRejectLastPrerender);
   });
 
   it('should not prerender if it is not a prerenderable path.', async () => {
     /**
-     * @type {import('../../../../dist/types/config/defaults').PrerendererConfigParams}
+     * @type {import('../../../../dist/types/config/defaults').PrerendererConfig}
      */
     const config = {
       ...initialConfig,
       prerenderablePathRegExps: [/nonexistingpath/],
     };
 
-    const p = new Prerenderer(config);
-    await p.initialize();
+    const p = new PrerendererService(config);
+    await p.start();
 
     const { request } = await createDirectHttpGetRequest('/');
-    assert.isNotOk(p.shouldPrerender(request));
+    assert.isNotOk(p.getPrerenderer().shouldPrerender(request));
 
-    reasonToRejectLastPrerender = 'rejected-path';
-    assert.equal(p.getLastRejectedPrerenderReason(), reasonToRejectLastPrerender);
+    /**
+     * @type {import('../../../../dist/types/prerenderer').ReasonsToRejectPrerender}
+     */
+    const reasonToRejectLastPrerender = 'rejected-path';
+    assert.equal(p.getPrerenderer().getLastRejectedPrerenderReason(), reasonToRejectLastPrerender);
+    await p.stop();
   });
 });
