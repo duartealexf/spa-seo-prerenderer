@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.12](https://github.com/duartealexf/spa-seo-prerenderer/compare/v0.0.11...v0.0.12) (2019-10-04)
+
+
+### Features
+
+* add AWS S3 config values ([a792bfd](https://github.com/duartealexf/spa-seo-prerenderer/commit/a792bfd))
+
 ### [0.0.11](https://github.com/duartealexf/spa-seo-prerenderer/compare/v0.0.10...v0.0.11) (2019-09-29)
 
 
