@@ -1,12 +1,12 @@
-import puppeteer, { Browser, Response as PuppeteerResponse, LaunchOptions, Page } from 'puppeteer';
+import puppeteer, { Browser, Response, LaunchOptions, Page } from 'puppeteer';
 import { IncomingMessage } from 'http';
 import { TLSSocket } from 'tls';
 import { extname } from 'path';
 import { URL } from 'url';
 
 import { PrerendererNotReadyException } from './exceptions/prerenderer-not-ready-exception';
-import { PrerendererResponseError } from './error';
-import { PrerendererResponse, Responses } from './response';
+import { PuppeteerException } from './exceptions/puppeteer-exception';
+import { Snapshot } from './snapshot';
 import { Config } from './config';
 import { Logger } from './logger';
 
@@ -195,7 +195,11 @@ export class Prerenderer {
     return true;
   }
 
-  public async prerender(request: IncomingMessage): Promise<void> {
+  /**
+   * Prerender given request and return a snapshot, that can be stored later.
+   * @param request Original incoming request.
+   */
+  public async prerenderAndGetSnapshot(request: IncomingMessage): Promise<Snapshot> {
     if (!this.browser) {
       throw new PrerendererNotReadyException(
         "Prerenderer service needs to be started before prerendering an url. Did you call prerenderer service's start()?",
@@ -207,39 +211,39 @@ export class Prerenderer {
     const renderStart = Date.now();
     const url = Prerenderer.parseUrl(request);
 
-    await this.navigatePageWithRequest(page, url)
-      .then((response) => {
-        Responses.set(url.toString(), response);
-      })
-      .catch(async (error) => {
-        let message: string;
-        let status = 400;
+    try {
+      const response = await this.navigatePageAndGetSnapshot(page, url);
+      return response;
+    } catch (error) {
+      let message: string;
+      let status = 400;
 
-        if (error instanceof PrerendererResponseError) {
-          status = error.statusCode;
-          message = error.message;
-        } else if (error instanceof Error) {
-          message = error.message;
-        } else if (typeof error === 'object') {
-          message = JSON.stringify(error);
-        } else {
-          message = error;
-        }
+      if (error instanceof PuppeteerException) {
+        status = error.statusCode;
+        message = error.message;
+      } else if (error instanceof Error) {
+        message = error.message;
+      } else if (typeof error === 'object') {
+        message = JSON.stringify(error);
+      } else {
+        message = error;
+      }
 
-        this.logger.error(message, 'puppeteer');
+      this.logger.error(message, 'puppeteer');
 
-        await page.close();
+      await page.close();
 
-        // TODO: store error responses?
-        Responses.set(url.toString(), {
-          headers: {
-            status,
-            'X-Original-Location': url.toString(),
-            'X-Prerendered-Ms': Date.now() - renderStart,
-          },
-          body: '',
-        });
-      });
+      const snapshot = new Snapshot();
+      snapshot.url = url.toString();
+      snapshot.body = '';
+      snapshot.status = status;
+      snapshot.headers = {
+        'X-Original-Location': url.toString(),
+        'X-Prerendered-Ms': (Date.now() - renderStart).toString(),
+      };
+
+      return snapshot;
+    }
   }
 
   /**
@@ -247,7 +251,7 @@ export class Prerenderer {
    * @param page
    * @param request
    */
-  private async navigatePageWithRequest(page: Page, url: URL): Promise<PrerendererResponse> {
+  private async navigatePageAndGetSnapshot(page: Page, url: URL): Promise<Snapshot> {
     const renderStart = Date.now();
 
     page.setUserAgent(Prerenderer.USER_AGENT);
@@ -277,7 +281,7 @@ export class Prerenderer {
     page.evaluateOnNewDocument('ShadyDOM = { force: true }');
     page.evaluateOnNewDocument('ShadyCSS = { shimcssproperties: true }');
 
-    let puppeteerResponse: PuppeteerResponse | null = null;
+    let puppeteerResponse: Response | null = null;
 
     /**
      * Navigate to page and wait for network to be idle.
@@ -288,7 +292,7 @@ export class Prerenderer {
     });
 
     if (!puppeteerResponse) {
-      throw new PrerendererResponseError(400, 'Puppeteer received no response.');
+      throw new PuppeteerException(400, 'Puppeteer received no response.');
     }
 
     let status = puppeteerResponse.status();
@@ -303,14 +307,16 @@ export class Prerenderer {
     const body = await page.content();
     await page.close();
 
-    return {
-      body,
-      headers: {
-        status,
-        'X-Original-Location': url.toString(),
-        'X-Prerendered-Ms': Date.now() - renderStart,
-      },
+    const snapshot = new Snapshot();
+    snapshot.url = url.toString();
+    snapshot.body = body;
+    snapshot.status = status;
+    snapshot.headers = {
+      'X-Original-Location': url.toString(),
+      'X-Prerendered-Ms': (Date.now() - renderStart).toString(),
     };
+
+    return snapshot;
   }
 
   /**
