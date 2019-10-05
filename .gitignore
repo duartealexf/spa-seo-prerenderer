@@ -34,4 +34,5 @@ coverage.*
 # Project Files
 # -------------------------
 test/tmp
-./snapshots
+/snapshots
+/db

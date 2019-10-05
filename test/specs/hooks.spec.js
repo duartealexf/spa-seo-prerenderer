@@ -1,10 +1,24 @@
 const mocha = require('mocha');
 const fsExtra = require('fs-extra');
 const { join } = require('path');
+const { createConnection, getConnectionManager } = require('typeorm');
 
 const prerendererServer = require('../servers/prerenderer-server');
 const staticServer = require('../servers/static-server');
 const appServer = require('../servers/app-server');
+
+const waitForDatabaseAvailability = (databaseOptions) =>
+  new Promise((resolve) => {
+    if (getConnectionManager().has('default')) {
+      return resolve();
+    }
+
+    createConnection({ type: 'mongodb', ...databaseOptions })
+      .then(resolve)
+      .catch(() => {
+        setTimeout(() => waitForDatabaseAvailability(databaseOptions).then(resolve), 2000);
+      });
+  });
 
 /**
  * @type {number}
@@ -14,8 +28,9 @@ let startTime;
 mocha.before(async () => {
   startTime = Date.now();
 
-  console.log('Starting test servers...');
-
+  /**
+   * @type {import('../../dist/types/config/defaults').DatabaseOptions}
+   */
   const databaseOptions = {
     authSource: 'admin',
     host: process.env.TEST_DB_HOST,
@@ -23,6 +38,12 @@ mocha.before(async () => {
     password: process.env.TEST_DB_PASSWORD,
     database: process.env.TEST_DB_DATABASE,
   };
+
+  console.log('Waiting for database availability...');
+
+  await waitForDatabaseAvailability(databaseOptions);
+
+  console.log('Starting test servers...');
 
   /**
    * Start prerenderer server.
