@@ -181,11 +181,11 @@ module.exports = {
    * @param {boolean} botUserAgent
    * @returns {ReturnType<typeof createRequest>}
    */
-  createDumbApacheProxyHttpGetRequest: (path = '', customHeaders = {}, botUserAgent = true) =>
+  createCommonApacheProxyHttpGetRequest: (path = '', customHeaders = {}, botUserAgent = true) =>
     createRequest(
       'GET',
       false,
-      process.env.TEST_DUMB_APACHE_CONTAINER_HOST,
+      process.env.TEST_COMMON_APACHE_CONTAINER_HOST,
       80,
       path,
       customHeaders,
@@ -219,11 +219,11 @@ module.exports = {
    * @param {boolean} botUserAgent
    * @returns {ReturnType<typeof createRequest>}
    */
-  createDumbNginxProxyHttpGetRequest: (path = '', customHeaders = {}, botUserAgent = true) =>
+  createCommonNginxProxyHttpGetRequest: (path = '', customHeaders = {}, botUserAgent = true) =>
     createRequest(
       'GET',
       false,
-      process.env.TEST_DUMB_NGINX_CONTAINER_HOST,
+      process.env.TEST_COMMON_NGINX_CONTAINER_HOST,
       80,
       path,
       customHeaders,
@@ -250,16 +250,16 @@ module.exports = {
     ),
 
   /**
-   * Returns whether request passed through dumb proxy.
+   * Returns whether request passed through common proxy.
    * If it returns false, it passed through smart proxy.
    * @param {import('http').IncomingMessage} request
    * @returns {boolean}
    */
-  requestPassedThroughDumbProxy: (request) => getHeader(request, 'x-proxy-mode') === 'dumb',
+  requestPassedThroughCommonProxy: (request) => getHeader(request, 'x-proxy-mode') === 'common',
 
   /**
    * Returns whether request passed through smart proxy.
-   * If it returns false, it passed through dumb proxy.
+   * If it returns false, it passed through common proxy.
    * @param {import('http').IncomingMessage} request
    * @returns {boolean}
    */
