@@ -1,5 +1,4 @@
 const { PrerendererService } = require('../../../dist/lib/service');
-const { Responses } = require('../../../dist/lib/response');
 
 module.exports = {
   /**
@@ -27,18 +26,12 @@ module.exports = {
           return next();
         }
         prerenderer
-          .prerender(req)
-          .then(() => {
-            /**
-             * @type {Array<import('../../../dist/types/response').PrerendererResponse>}
-             */
-            const responses = Array.from(Responses.values());
-            const response = responses[responses.length - 1];
-
+          .prerenderAndGetSnapshot(req)
+          .then((/** @type {import('../../../dist/types/snapshot').Snapshot} */ snapshot) => {
             res
-              .status(response.headers.status)
-              .set(response.headers)
-              .send(response.body);
+              .status(snapshot.status)
+              .set(snapshot.headers)
+              .send(snapshot.body);
           })
           .catch((err) => {
             next(err);
@@ -67,18 +60,12 @@ module.exports = {
        */
       middleware: (req, res, next) => {
         return prerenderer
-          .prerender(req)
-          .then(() => {
-            /**
-             * @type {Array<import('../../../dist/types/response').PrerendererResponse>}
-             */
-            const responses = Array.from(Responses.values());
-            const response = responses[responses.length - 1];
-
+          .prerenderAndGetSnapshot(req)
+          .then((/** @type {import('../../../dist/types/snapshot').Snapshot} */ snapshot) => {
             res
-              .status(response.headers.status)
-              .set(response.headers)
-              .send(response.body);
+              .status(snapshot.status)
+              .set(snapshot.headers)
+              .send(snapshot.body);
           })
           .catch((err) => {
             next(err);

@@ -22,14 +22,17 @@
     "eslint": "eslint",
     "tsc": "tsc",
     "nyc": "nyc",
+    "mocha": "mocha",
+    "npm-run-all": "npm-run-all",
     "lint": "eslint src --ext .ts",
     "coverage": "nyc npm run test",
-    "test": "node ./node_modules/mocha/bin/_mocha test/specs/**/*.spec.js",
-    "test:debug": "node --inspect=0.0.0.0:9229 ./node_modules/mocha/bin/_mocha -- -w -t 8640000 --colors test/specs/**/*.spec.js",
-    "release": "standard-version && git push --follow-tags",
     "build": "tsc",
-    "postbuild": "node scripts/postbuild.js",
-    "build:watch": "nodemon -e ts -w src --exec 'npm run build'"
+    "test": "mocha test/specs/**/*.spec.js",
+    "release": "standard-version && git push --follow-tags",
+    "dev": "npm-run-all -p build:watch test:watch",
+    "test:watch": "nodemon --inspect=0.0.0.0:9229 node_modules/mocha/bin/_mocha -- -t 8640000 --colors ${TESTFILE:-test/specs/**/*.spec.js}",
+    "build:watch": "nodemon -C -e ts -w src --exec 'npm run build'",
+    "postbuild": "node scripts/postbuild.js"
   },
   "dependencies": {
     "debug": "^4.1.1",
@@ -62,6 +65,7 @@
     "kill-port": "^1.5.1",
     "mocha": "^6.2.0",
     "nodemon": "^1.19.1",
+    "npm-run-all": "^4.1.5",
     "nyc": "^14.1.1",
     "prettier": "^1.18.2",
     "standard-version": "^7.0.0",
@@ -87,5 +91,16 @@
     "exclude": [
       "**/*.spec.js"
     ]
+  },
+  "nodemonConfig": {
+    "delay": "1000",
+    "watch": [
+      "dist",
+      "test/client",
+      "test/server",
+      "test/specs",
+      "test/static"
+    ],
+    "ext": "js ts"
   }
 }

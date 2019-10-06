@@ -20,7 +20,7 @@ describe('non-startup errors', () => {
 
     try {
       // @ts-ignore
-      await p.getPrerenderer().prerender(null);
+      await p.getPrerenderer().prerenderAndGetSnapshot(null);
       assert.ok(false);
     } catch (e) {
       assert.instanceOf(e, PrerendererNotReadyException);
