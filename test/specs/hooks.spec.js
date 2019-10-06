@@ -1,7 +1,7 @@
 const mocha = require('mocha');
 const fsExtra = require('fs-extra');
 const { join } = require('path');
-const { createConnection, getConnectionManager } = require('typeorm');
+const { createConnection } = require('typeorm');
 
 const prerendererServer = require('../servers/prerenderer-server');
 const staticServer = require('../servers/static-server');
@@ -9,11 +9,10 @@ const appServer = require('../servers/app-server');
 
 const waitForDatabaseAvailability = (databaseOptions) =>
   new Promise((resolve) => {
-    if (getConnectionManager().has('default')) {
-      return resolve();
-    }
-
     createConnection({ type: 'mongodb', ...databaseOptions })
+      .then((connection) => {
+        return connection.close();
+      })
       .then(resolve)
       .catch(() => {
         setTimeout(() => waitForDatabaseAvailability(databaseOptions).then(resolve), 2000);

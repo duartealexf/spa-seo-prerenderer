@@ -5,6 +5,8 @@ const { v4: uuidv4 } = require('uuid');
 const { PrerendererService } = require('../../../../dist/lib/service');
 const { Snapshot } = require('../../../../dist/lib/snapshot');
 
+require('../../hooks.spec');
+
 describe('database unit tests', () => {
   const makeUrl = () => `http://${uuidv4()}.com`;
 
@@ -60,7 +62,7 @@ describe('database unit tests', () => {
     assert.equal(retrievedSnapshot.url, snapshot.url);
     assert.equal(retrievedSnapshot.body, snapshot.body);
     assert.equal(retrievedSnapshot.status, snapshot.status);
-    assert.equal(retrievedSnapshot.headers, snapshot.headers);
+    assert.deepEqual(retrievedSnapshot.headers, snapshot.headers);
   });
 
   it('saved snapshot should have an updatedAt date.', async () => {
