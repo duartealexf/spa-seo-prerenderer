@@ -1,3 +1,5 @@
+import 'reflect-metadata';
+
 import { Entity, ObjectID, ObjectIdColumn, Column, BaseEntity, UpdateDateColumn } from 'typeorm';
 
 export type PrerendererHeaders = {
@@ -49,6 +51,11 @@ export class Snapshot extends BaseEntity {
    */
   @UpdateDateColumn()
   updatedAt!: Date;
+
+  // constructor() {
+  //   super();
+  //   Snapshot.useConnection(getManager('default').connection);
+  // }
 
   /**
    * Find the stored snapshot with given url.

@@ -2,6 +2,7 @@ import { createConnection, Connection, ConnectionOptions, getConnectionManager }
 
 import { Config } from './config';
 import { Logger } from './logger';
+import { Snapshot } from './snapshot';
 
 export class Database {
   /**
@@ -32,13 +33,19 @@ export class Database {
       ...this.config.getDatabaseOptions(),
       type: 'mongodb',
       name: 'default',
+      dropSchema: false,
+      entities: [Snapshot],
     };
 
     if (this.connection && this.connection.isConnected) {
       return;
     }
 
-    if (getConnectionManager().has('default')) {
+    if (
+      getConnectionManager().has('default') &&
+      getConnectionManager().get('default').isConnected
+    ) {
+      this.connection = getConnectionManager().get('default');
       return;
     }
 
@@ -51,7 +58,7 @@ export class Database {
    * Stop database connection.
    */
   public async disconnect(): Promise<void> {
-    if (this.connection) {
+    if (this.connection && this.connection.isConnected) {
       this.logger.info('Stopping MongoDB connection...', 'database');
       await this.connection.close();
       this.logger.info('Stopped MongoDB connection.', 'database');
