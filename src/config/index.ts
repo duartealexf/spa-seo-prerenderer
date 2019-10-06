@@ -8,6 +8,7 @@ import {
   DEFAULT_BOT_USER_AGENTS,
   DEFAULT_BLACKLISTED_REQUEST_URLS,
   DatabaseOptions,
+  DEFAULT_IGNORED_QUERY_PARAMETERS,
 } from './defaults';
 
 export class Config {
@@ -25,6 +26,16 @@ export class Config {
    * Database connection options.
    */
   private databaseOptions!: DatabaseOptions;
+
+  /**
+   * Marimum cache age, in days.
+   */
+  private cacheMaxAge = 7;
+
+  /**
+   * URL query parameters that are discarded before prerendering.
+   */
+  private ignoredQueryParameters = DEFAULT_IGNORED_QUERY_PARAMETERS;
 
   /**
    * Prerenderer log file location.
@@ -104,6 +115,34 @@ export class Config {
     this.databaseOptions = c.databaseOptions;
 
     /**
+     * Setup cacheMaxAge config.
+     */
+    c.cacheMaxAge = typeof c.cacheMaxAge === 'undefined' ? this.cacheMaxAge : c.cacheMaxAge;
+
+    if (typeof c.cacheMaxAge !== 'number') {
+      throw new InvalidConfigException('cacheMaxAge given in constructor must be a number!');
+    }
+    this.cacheMaxAge = c.cacheMaxAge;
+
+    /**
+     * Setup ignoredQueryParameters config.
+     */
+    if (typeof c.ignoredQueryParameters !== 'undefined') {
+      const ignoredQueryParameters = c.ignoredQueryParameters as string[];
+
+      if (
+        !Array.isArray(ignoredQueryParameters) ||
+        ignoredQueryParameters.some((v) => typeof v !== 'string')
+      ) {
+        throw new InvalidConfigException(
+          'ignoredQueryParameters given in constructor must be of type string[]! Make sure all values in array are strings!',
+        );
+      }
+
+      this.ignoredQueryParameters = ignoredQueryParameters;
+    }
+
+    /**
      * Setup prerendererLogFile config.
      */
     c.prerendererLogFile = typeof c.prerendererLogFile === 'undefined' ? '' : c.prerendererLogFile;
@@ -148,7 +187,7 @@ export class Config {
 
       if (!Array.isArray(extensions) || extensions.some((v) => typeof v !== 'string')) {
         throw new InvalidConfigException(
-          'prerenderableExtensions given in constructor must be of type string[]!',
+          'prerenderableExtensions given in constructor must be of type string[]! Make sure all values in array are strings!',
         );
       }
 
@@ -160,7 +199,7 @@ export class Config {
 
       if (!Array.isArray(userAgents) || userAgents.some((v) => typeof v !== 'string')) {
         throw new InvalidConfigException(
-          'botUserAgents given in constructor must be of type string[]!',
+          'botUserAgents given in constructor must be of type string[]! Make sure all values in array are strings!',
         );
       }
 
@@ -184,7 +223,7 @@ export class Config {
 
       if (!Array.isArray(whitelist) || whitelist.some((v) => typeof v !== 'string')) {
         throw new InvalidConfigException(
-          'whitelistedRequestURLs given in constructor must be of type string[]!',
+          'whitelistedRequestURLs given in constructor must be of type string[]! Make sure all values in array are strings!',
         );
       }
 
@@ -196,7 +235,7 @@ export class Config {
 
       if (!Array.isArray(blacklist) || blacklist.some((v) => typeof v !== 'string')) {
         throw new InvalidConfigException(
-          'blacklistedRequestURLs given in constructor must be of type string[]!',
+          'blacklistedRequestURLs given in constructor must be of type string[]! Make sure all values in array are strings!',
         );
       }
 
@@ -216,6 +255,20 @@ export class Config {
    */
   public getDatabaseOptions(): DatabaseOptions {
     return this.databaseOptions;
+  }
+
+  /**
+   * Get cache maximum age.
+   */
+  public getCacheMaxAge(): number {
+    return this.cacheMaxAge;
+  }
+
+  /**
+   * Get configured ignored query parameters.
+   */
+  public getIgnoredQueryParameters(): string[] {
+    return this.ignoredQueryParameters;
   }
 
   /**

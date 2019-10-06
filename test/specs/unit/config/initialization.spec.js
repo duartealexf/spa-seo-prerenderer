@@ -8,9 +8,8 @@ const {
   DEFAULT_BLACKLISTED_REQUEST_URLS,
   DEFAULT_BOT_USER_AGENTS,
   DEFAULT_PRERENDERABLE_EXTENSIONS,
+  DEFAULT_IGNORED_QUERY_PARAMETERS,
 } = require('../../../../dist/lib/config/defaults');
-
-require('../../hooks.spec');
 
 describe('config start up', () => {
   it('should use default config when no config is given.', async () => {
@@ -29,12 +28,14 @@ describe('config start up', () => {
     const c = p.getConfig();
 
     assert.isTrue(c.isProductionEnv());
-    assert.equal(c.getPrerendererLogFile(), '');
-    assert.equal(c.getChromiumExecutable(), '');
+    assert.strictEqual(c.getCacheMaxAge(), 7);
+    assert.deepEqual(c.getIgnoredQueryParameters(), DEFAULT_IGNORED_QUERY_PARAMETERS);
+    assert.strictEqual(c.getPrerendererLogFile(), '');
+    assert.strictEqual(c.getChromiumExecutable(), '');
     assert.deepEqual(c.getPrerenderablePathRegExps(), [/.*/]);
     assert.deepEqual(c.getPrerenderableExtensions(), DEFAULT_PRERENDERABLE_EXTENSIONS);
     assert.deepEqual(c.getBotUserAgents(), DEFAULT_BOT_USER_AGENTS);
-    assert.equal(c.getTimeout(), 10000);
+    assert.strictEqual(c.getTimeout(), 10000);
     assert.deepEqual(c.getWhitelistedRequestURLs(), []);
     assert.deepEqual(c.getBlacklistedRequestURLs(), DEFAULT_BLACKLISTED_REQUEST_URLS);
   });

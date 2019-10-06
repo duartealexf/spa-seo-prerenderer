@@ -1,6 +1,6 @@
 const { join } = require('path');
 const { existsSync, readFileSync, statSync } = require('fs');
-const { Prerenderer } = require('../../../dist/lib/prerenderer');
+const { parseRequestURL } = require('../../../dist/lib/request');
 
 /**
  * Hardcoded redirects for testing.
@@ -35,7 +35,7 @@ module.exports = {
    * @param {(err?: any) => void} next
    */
   serveStatic: (req, res, next) => {
-    const parsedUrl = Prerenderer.parseUrl(req);
+    const parsedUrl = parseRequestURL(req);
 
     if (redirects[parsedUrl.pathname]) {
       return res.redirect(301, redirects[parsedUrl.pathname]);

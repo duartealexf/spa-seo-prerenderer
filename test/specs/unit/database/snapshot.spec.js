@@ -5,9 +5,7 @@ const { v4: uuidv4 } = require('uuid');
 const { PrerendererService } = require('../../../../dist/lib/service');
 const { Snapshot } = require('../../../../dist/lib/snapshot');
 
-require('../../hooks.spec');
-
-describe('database unit tests', () => {
+describe('snapshot entity unit tests', () => {
   const makeUrl = () => `http://${uuidv4()}.com`;
 
   /**
@@ -30,7 +28,7 @@ describe('database unit tests', () => {
    * @type {import('../../../../dist/types/snapshot').PrerendererHeaders}
    */
   const headers = {
-    'X-Prerendered-Ms': '5376',
+    'X-Response-Time': '5376',
     'X-Original-Location': 'http://example.com',
   };
 
@@ -44,7 +42,8 @@ describe('database unit tests', () => {
     snapshot.url = makeUrl();
     snapshot.body = uuidv4();
     snapshot.status = 200;
-    snapshot.headers = headers;
+    snapshot.tags = ['test'];
+    snapshot.responseTime = 1234;
 
     await p.start();
     await snapshot.save();
@@ -59,14 +58,18 @@ describe('database unit tests', () => {
   it('should retrieve a saved snapshot to database by URL.', async () => {
     const retrievedSnapshot = await Snapshot.findByUrl(snapshot.url);
     assert.ok(retrievedSnapshot);
-    assert.equal(retrievedSnapshot.url, snapshot.url);
-    assert.equal(retrievedSnapshot.body, snapshot.body);
-    assert.equal(retrievedSnapshot.status, snapshot.status);
-    assert.deepEqual(retrievedSnapshot.headers, snapshot.headers);
+    assert.equal(retrievedSnapshot.getBodyForResponse(), snapshot.body);
+    assert.equal(retrievedSnapshot.getStatusForResponse(), snapshot.status);
+    assert.deepEqual(retrievedSnapshot.getHeadersForResponse(), {
+      'X-Response-Time': snapshot.responseTime.toString(),
+      'X-Original-Location': snapshot.url,
+    });
   });
 
   it('saved snapshot should have an updatedAt date.', async () => {
     const retrievedSnapshot = await Snapshot.findByUrl(snapshot.url);
     assert.instanceOf(retrievedSnapshot.updatedAt, Date);
   });
+
+  // TODO: test needsRefresh
 });

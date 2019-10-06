@@ -26,6 +26,20 @@ export interface PrerendererConfig {
   databaseOptions: DatabaseOptions;
 
   /**
+   * Time (in days) before considering a cached snapshot "old",
+   * after which it should be refreshed (recached).
+   * @default 7 (seven days)
+   */
+  cacheMaxAge?: number;
+
+  /**
+   * Query parameters to be discarded before prerendering. Should be query parameters
+   * that do not affect page rendering (e.g. UTM params and gclid).
+   * @default DEFAULT_IGNORED_QUERY_PARAMETERS
+   */
+  ignoredQueryParameters?: string[];
+
+  /**
    * Prerenderer log file location. Not specifying any will make it not log to any file.
    * @default ''
    */
@@ -84,6 +98,15 @@ export interface PrerendererConfig {
    */
   blacklistedRequestURLs?: string[];
 }
+
+export const DEFAULT_IGNORED_QUERY_PARAMETERS = [
+  'utm_source',
+  'utm_campaign',
+  'utm_medium',
+  'utm_content',
+  'utm_term',
+  'gclid',
+];
 
 export const DEFAULT_BOT_USER_AGENTS = [
   'googlebot',

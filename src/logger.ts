@@ -1,5 +1,6 @@
 /* eslint-disable no-console */
 import { WriteStream, createWriteStream } from 'fs';
+import { stringify } from 'flatted';
 import debug from 'debug';
 
 import { Config } from './config';
@@ -91,6 +92,24 @@ export class Logger {
     if (this.logFile) {
       await this.logFile.close();
     }
+  }
+
+  /**
+   * Stringify given parameter so that it is loggable.
+   * @param thing
+   */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  public static stringify(thing: any): string {
+    if (typeof thing === 'undefined') {
+      return '';
+    }
+    if (typeof thing.toString === 'function' && thing.toString() !== '[object Object]') {
+      return thing.toString();
+    }
+    if (typeof thing.message === 'string') {
+      return thing.message;
+    }
+    return stringify(thing);
   }
 
   /**

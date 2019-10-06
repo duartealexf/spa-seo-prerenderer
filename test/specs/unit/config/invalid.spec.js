@@ -51,6 +51,37 @@ describe('invalid config', () => {
     }
   });
 
+  it('should throw an error when cacheMaxAge is not a number.', () => {
+    buggedConfig = { cacheMaxAge: 'abc', databaseOptions };
+
+    try {
+      new PrerendererService(buggedConfig);
+      assert.ok(false);
+    } catch (e) {
+      assert.instanceOf(e, InvalidConfigException);
+      assert.include(e.message, 'cacheMaxAge');
+      assert.include(e.message, 'must be a number');
+    }
+  });
+
+  it('should throw an error when ignoredQueryParameters is not string[].', () => {
+    try {
+      new PrerendererService({ ignoredQueryParameters: 'abc', databaseOptions });
+      assert.ok(false);
+    } catch (e) {
+      assert.instanceOf(e, InvalidConfigException);
+      assert.include(e.message, 'ignoredQueryParameters');
+    }
+
+    try {
+      new PrerendererService({ ignoredQueryParameters: ['abc', 123], databaseOptions });
+      assert.ok(false);
+    } catch (e) {
+      assert.instanceOf(e, InvalidConfigException);
+      assert.include(e.message, 'ignoredQueryParameters');
+    }
+  });
+
   it('should throw an error when prerendererLogFile is not a string.', () => {
     buggedConfig = { prerendererLogFile: 123, databaseOptions };
 

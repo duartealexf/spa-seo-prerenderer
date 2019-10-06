@@ -9,7 +9,6 @@ module.exports = {
   configPrerendererMiddleware: async (config) => {
     const service = new PrerendererService(config);
     await service.start();
-    const prerenderer = service.getPrerenderer();
 
     return {
       service,
@@ -22,16 +21,19 @@ module.exports = {
        * @param {(err?: any) => void} next
        */
       middleware: (req, res, next) => {
-        if (!prerenderer.shouldPrerender(req)) {
+        if (!service.shouldHandleRequest(req)) {
           return next();
         }
-        prerenderer
-          .prerenderAndGetSnapshot(req)
+
+        service
+          .handleRequest(req)
           .then((/** @type {import('../../../dist/types/snapshot').Snapshot} */ snapshot) => {
             res
-              .status(snapshot.status)
-              .set(snapshot.headers)
-              .send(snapshot.body);
+              .status(snapshot.getStatusForResponse())
+              .set(snapshot.getHeadersForResponse())
+              .send(snapshot.getBodyForResponse());
+
+            return snapshot.save();
           })
           .catch((err) => {
             next(err);
@@ -63,9 +65,9 @@ module.exports = {
           .prerenderAndGetSnapshot(req)
           .then((/** @type {import('../../../dist/types/snapshot').Snapshot} */ snapshot) => {
             res
-              .status(snapshot.status)
-              .set(snapshot.headers)
-              .send(snapshot.body);
+              .status(snapshot.getStatusForResponse())
+              .set(snapshot.getHeadersForResponse())
+              .send(snapshot.getBodyForResponse());
           })
           .catch((err) => {
             next(err);
