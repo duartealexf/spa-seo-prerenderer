@@ -11,8 +11,7 @@
 - [x] Filter user agents
 - [x] Filter extensions
 - [x] Blacklisting tracking scripts
-- [ ] Simple prerenderer, save local file
-- [ ] Save to database after sending response
+- [x] Save to database after sending response
 - [x] Add to docker, set tests in docker with nginx
 - [x] Create a nginx proxy test
 - [x] Preserve status codes (deliver 404, 500, etc)
@@ -22,15 +21,11 @@
 
 ## E2E testing
 
-- [ ] Check database that it has non-expired cache
-  - [ ] Deliver cache if it does
-  - [ ] Otherwise prerender and generate response
-    - [ ] Update database
-    - [ ] Make sure that response reaches before anything else
-      - [ ] If it does, ok
-      - [ ] If it does not, store in memory
-        - [ ] Queue it in memory
-        - [ ] Update database
+- [x] Check database that it has non-expired cache
+  - [x] Deliver cache if it does
+  - [x] Otherwise prerender and generate response
+    - [x] Update database
+    - [x] Make sure that response reaches before updating database
 
 ## Creating an use-case
 
@@ -45,16 +40,14 @@
 ## Need-to-have
 
 - [ ] Test with HTTP 2.0
-- [ ] Set a ttl of cached files
-- [ ] See how to automatically clear prerendered pages (by commit, or something)
+- [ ] See how to automatically clear prerendered pages using tags
 - [ ] Create recipes for using it with nginx, apache and as an express middleware
 - [ ] **Add to public NPM registry - release as 1.0.0**
-- [ ] **Publish a docker image**
 
 ## Nice-to-have
 
 - [x] Create integration tests: https NodeJS requests
 - [x] Create integration tests: Apache requests
-- [ ] Link prerenderer's clearance of cached pages to Github actions
+- [ ] Link prerenderer's clearance of cached pages to Github actions using tags
 - [ ] Debug remotely
 - [ ] Add usage of server-timing API
