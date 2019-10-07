@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.13](https://github.com/duartealexf/spa-seo-prerenderer/compare/v0.0.12...v0.0.13) (2019-10-07)
+
+
+### Bug Fixes
+
+* bugfixes to avoid always updating a snapshot ([54d03ca](https://github.com/duartealexf/spa-seo-prerenderer/commit/54d03ca))
+* fix database connection issues ([0ac1550](https://github.com/duartealexf/spa-seo-prerenderer/commit/0ac1550))
+* fixes when refreshing snapshot cache ([3f38a01](https://github.com/duartealexf/spa-seo-prerenderer/commit/3f38a01))
+
+
+### Features
+
+* add snapshots as a model to be saved in database ([9594ef8](https://github.com/duartealexf/spa-seo-prerenderer/commit/9594ef8))
+
 ### [0.0.12](https://github.com/duartealexf/spa-seo-prerenderer/compare/v0.0.11...v0.0.12) (2019-10-04)
 
 
