@@ -1,3 +1,4 @@
+/* eslint-disable no-underscore-dangle */
 import 'reflect-metadata';
 
 import { Entity, ObjectID, ObjectIdColumn, Column, BaseEntity, UpdateDateColumn } from 'typeorm';
@@ -75,6 +76,23 @@ export class Snapshot extends BaseEntity {
     return this.updatedAt
       ? this.updatedAt.valueOf() + ageInDays * 86400000 <= Date.now().valueOf()
       : false;
+  }
+
+  /**
+   * Absorb body, status and responseTime from another snapshot into this one.
+   * @param anotherSnapshot
+   */
+  public absorb(anotherSnapshot: Snapshot): void {
+    this.body = anotherSnapshot.body;
+    this.status = anotherSnapshot.status;
+    this.responseTime = anotherSnapshot.responseTime;
+  }
+
+  /**
+   * Entity _id getter.
+   */
+  public getId(): ObjectID | undefined {
+    return this._id;
   }
 
   /**

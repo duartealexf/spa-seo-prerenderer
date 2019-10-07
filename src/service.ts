@@ -70,13 +70,26 @@ export class PrerendererService {
   public async handleRequest(request: IncomingMessage): Promise<Snapshot> {
     const url = parseRequestURL(request);
 
+    /**
+     * Remove query parameters that should be ignored and sort them alphabetically.
+     */
     this.config.getIgnoredQueryParameters().forEach((p) => url.searchParams.delete(p));
     url.searchParams.sort();
 
-    let snapshot = await Snapshot.findByUrl(url.toString());
+    /**
+     * Remove hash to avoid duplicate urls (hash should have no effect on route and prerender).
+     */
+    url.hash = '';
 
-    if (!snapshot || snapshot.needsRefresh(this.config.getCacheMaxAge())) {
-      snapshot = await this.prerenderer.prerenderAndGetSnapshot(url.toString());
+    const stringUrl = url.toString();
+
+    let snapshot = await Snapshot.findByUrl(stringUrl);
+
+    if (!snapshot) {
+      snapshot = await this.prerenderer.prerenderAndGetSnapshot(stringUrl);
+    } else if (snapshot.needsRefresh(this.config.getCacheMaxAge())) {
+      const refreshed = await this.prerenderer.prerenderAndGetSnapshot(stringUrl);
+      snapshot.absorb(refreshed);
     }
 
     return snapshot;
