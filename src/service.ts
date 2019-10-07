@@ -87,7 +87,7 @@ export class PrerendererService {
 
     if (!snapshot) {
       snapshot = await this.prerenderer.prerenderAndGetSnapshot(stringUrl);
-    } else if (snapshot.needsRefresh(this.config.getCacheMaxAge())) {
+    } else if (snapshot.isOld(this.config.getCacheMaxAge())) {
       const refreshed = await this.prerenderer.prerenderAndGetSnapshot(stringUrl);
       snapshot.absorb(refreshed);
     }

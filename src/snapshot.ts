@@ -1,7 +1,15 @@
 /* eslint-disable no-underscore-dangle */
 import 'reflect-metadata';
 
-import { Entity, ObjectID, ObjectIdColumn, Column, BaseEntity, UpdateDateColumn } from 'typeorm';
+import {
+  Entity,
+  ObjectID,
+  ObjectIdColumn,
+  Column,
+  BaseEntity,
+  UpdateDateColumn,
+  SaveOptions,
+} from 'typeorm';
 
 @Entity('snapshots')
 export class Snapshot extends BaseEntity {
@@ -44,6 +52,11 @@ export class Snapshot extends BaseEntity {
   @UpdateDateColumn()
   private updatedAt?: Date;
 
+  /**
+   * Whether snapshot has data changed.
+   */
+  private isDirty = false;
+
   constructor(
     url: string,
     body: string,
@@ -70,9 +83,21 @@ export class Snapshot extends BaseEntity {
   }
 
   /**
-   * Whether snapshot should be refreshed, according to given age.
+   * Save snapshot only if has been refreshed.
+   * @param options
    */
-  public needsRefresh(ageInDays: number): boolean {
+  public async saveIfNeeded(options?: SaveOptions): Promise<this> {
+    if (!this.hasId() || this.isDirty) {
+      await super.save(options);
+      return this;
+    }
+    return this;
+  }
+
+  /**
+   * Whether snapshot is old and should be refreshed, according to given age.
+   */
+  public isOld(ageInDays: number): boolean {
     return this.updatedAt
       ? this.updatedAt.valueOf() + ageInDays * 86400000 <= Date.now().valueOf()
       : false;
@@ -86,6 +111,7 @@ export class Snapshot extends BaseEntity {
     this.body = anotherSnapshot.body;
     this.status = anotherSnapshot.status;
     this.responseTime = anotherSnapshot.responseTime;
+    this.isDirty = true;
   }
 
   /**
@@ -139,5 +165,6 @@ export class Snapshot extends BaseEntity {
    */
   public setTags(tags: string[]): void {
     this.tags = tags;
+    this.isDirty = true;
   }
 }
