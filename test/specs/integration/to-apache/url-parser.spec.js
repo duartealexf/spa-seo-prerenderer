@@ -1,8 +1,8 @@
 const { describe, it } = require('mocha');
 const { assert } = require('chai');
 
-const { createDumbApacheProxyHttpGetRequest } = require('../../../client');
-const { Prerenderer } = require('../../../../dist/lib/prerenderer');
+const { createCommonApacheProxyHttpGetRequest } = require('../../../client');
+const { parseRequestURL } = require('../../../../dist/lib/request');
 
 describe("prerenderer's URL parser with Apache's X-Forwarded-* headers.", () => {
   /**
@@ -16,11 +16,11 @@ describe("prerenderer's URL parser with Apache's X-Forwarded-* headers.", () => 
   let parsedUrl;
 
   const requestUri = 'index.html?letters=abc&numbers=123&space=%50';
-  const host = process.env.TEST_DUMB_APACHE_CONTAINER_HOST;
+  const host = process.env.TEST_COMMON_APACHE_CONTAINER_HOST;
 
   before(async () => {
-    request = (await createDumbApacheProxyHttpGetRequest(requestUri)).request;
-    parsedUrl = Prerenderer.parseUrl(request);
+    request = (await createCommonApacheProxyHttpGetRequest(requestUri)).request;
+    parsedUrl = parseRequestURL(request);
   });
 
   it('should correctly parse host.', async () => {

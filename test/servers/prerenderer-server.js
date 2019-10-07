@@ -8,15 +8,15 @@ const express = require('express');
 const killPort = require('kill-port');
 
 const { captureRequests, requests } = require('./middleware/request-capture');
-const { initializePrerenderer } = require('./middleware/prerenderer');
+const { startPrerenderer } = require('./middleware/prerenderer');
 
 const app = express();
 
 /** @type {import('http').Server} */
 let server;
 
-/** @type {import('../../dist/lib/prerenderer').Prerenderer} */
-let prerenderer;
+/** @type {import('../../dist/lib/service').PrerendererService} */
+let service;
 
 module.exports = {
   /**
@@ -48,20 +48,18 @@ module.exports = {
     if (server) {
       await new Promise((resolve) => server.close(resolve));
     }
-    if (prerenderer) {
-      await prerenderer.stop();
+    if (service) {
+      await service.stop();
     }
   },
 
   /**
-   * @param {import('../../dist/types/config/defaults').PrerendererConfigParams} config
+   * @param {import('../../dist/types/config/defaults').PrerendererConfig} config
    */
   attachPrerenderWithConfig: async (config) => {
-    const { prerenderer: p, middleware: prerendererMiddleware } = await initializePrerenderer(
-      config,
-    );
+    const { service: s, middleware: prerendererMiddleware } = await startPrerenderer(config);
 
-    prerenderer = p;
+    service = s;
     app.use(captureRequests('prerender'));
     app.use(prerendererMiddleware);
   },

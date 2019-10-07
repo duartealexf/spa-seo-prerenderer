@@ -2,7 +2,7 @@ const { describe, it } = require('mocha');
 const { assert } = require('chai');
 
 const { createDirectHttpsGetRequest } = require('../../../client');
-const { Prerenderer } = require('../../../../dist/lib/prerenderer');
+const { parseRequestURL } = require('../../../../dist/lib/request');
 
 describe("prerenderer's URL parser using https, without X-Forwarded-* headers.", () => {
   /**
@@ -22,7 +22,7 @@ describe("prerenderer's URL parser using https, without X-Forwarded-* headers.",
   before(async () => {
     const clientRequestInfo = await createDirectHttpsGetRequest(requestUri);
     request = clientRequestInfo.request;
-    parsedUrl = Prerenderer.parseUrl(request);
+    parsedUrl = parseRequestURL(request);
   });
 
   it('should correctly parse hostname and port.', async () => {

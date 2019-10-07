@@ -1,13 +1,26 @@
 version: '2.2'
 
 services:
+  mongo:
+    image: mongo
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${TEST_DB_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${TEST_DB_PASSWORD}
+      MONGO_INITDB_DATABASE: ${TEST_DB_DATABASE}
+    volumes:
+      - ./db:/data/db
+    networks:
+      prerenderer:
+        ipv4_address: 173.20.0.50
+        ipv6_address: 2002:ac14:0:0:0:0:0:50
+
   apache:
     build:
       context: .
       dockerfile: docker/apache/2.4/apache.dockerfile
       args:
         TEST_SMART_APACHE_CONTAINER_HOST: ${TEST_SMART_APACHE_CONTAINER_HOST}
-        TEST_DUMB_APACHE_CONTAINER_HOST: ${TEST_DUMB_APACHE_CONTAINER_HOST}
+        TEST_COMMON_APACHE_CONTAINER_HOST: ${TEST_COMMON_APACHE_CONTAINER_HOST}
         TEST_PRERENDERER_NODEJS_SERVER_PORT: ${TEST_PRERENDERER_NODEJS_SERVER_PORT}
         TEST_STATIC_NODEJS_SERVER_PORT: ${TEST_STATIC_NODEJS_SERVER_PORT}
         TEST_APP_NODEJS_SERVER_PORT: ${TEST_APP_NODEJS_SERVER_PORT}
@@ -27,7 +40,7 @@ services:
       dockerfile: docker/nginx/nginx.dockerfile
       args:
         TEST_SMART_NGINX_CONTAINER_HOST: ${TEST_SMART_NGINX_CONTAINER_HOST}
-        TEST_DUMB_NGINX_CONTAINER_HOST: ${TEST_DUMB_NGINX_CONTAINER_HOST}
+        TEST_COMMON_NGINX_CONTAINER_HOST: ${TEST_COMMON_NGINX_CONTAINER_HOST}
         TEST_PRERENDERER_NODEJS_SERVER_PORT: ${TEST_PRERENDERER_NODEJS_SERVER_PORT}
         TEST_STATIC_NODEJS_SERVER_PORT: ${TEST_STATIC_NODEJS_SERVER_PORT}
         TEST_APP_NODEJS_SERVER_PORT: ${TEST_APP_NODEJS_SERVER_PORT}
@@ -43,19 +56,21 @@ services:
 
   tests:
     depends_on:
-      - nginx
+      - mongo
       - apache
+      - nginx
     build:
       context: .
       dockerfile: docker/tests/tests-node-12.dockerfile
     extra_hosts:
+      - ${TEST_DB_HOST}:173.20.0.50
       - ${TEST_SMART_APACHE_CONTAINER_HOST}:173.20.0.100
-      - ${TEST_DUMB_APACHE_CONTAINER_HOST}:173.20.0.100
+      - ${TEST_COMMON_APACHE_CONTAINER_HOST}:173.20.0.100
       - ${TEST_SMART_NGINX_CONTAINER_HOST}:173.20.0.101
-      - ${TEST_DUMB_NGINX_CONTAINER_HOST}:173.20.0.101
+      - ${TEST_COMMON_NGINX_CONTAINER_HOST}:173.20.0.101
       - ${TEST_NODEJS_CONTAINER_HOST}:127.0.0.1
       - ${TEST_SMART_NGINX_CONTAINER_HOST}:2002:ac14:0:0:0:0:0:101
-      - ${TEST_DUMB_NGINX_CONTAINER_HOST}:2002:ac14:0:0:0:0:0:101
+      - ${TEST_COMMON_NGINX_CONTAINER_HOST}:2002:ac14:0:0:0:0:0:101
       - ${TEST_NODEJS_CONTAINER_HOST}:::1
     volumes:
       - ./logs/node:/var/www/logs
@@ -64,12 +79,13 @@ services:
       - ./test:/var/www/test
     ports:
       - 9229:9229
+    environment:
+      - TESTFILE
     networks:
       prerenderer:
         ipv4_address: 173.20.0.102
         ipv6_address: 2002:ac14:0:0:0:0:0:102
-    command: npm run test:debug
-    # command: node --inspect=0.0.0.0:9229 ./node_modules/mocha/bin/_mocha -- -w -t 8640000 --colors test/specs/integration/to-apache/*.spec.js
+    command: npm run dev
 
 networks:
   prerenderer:

@@ -1,57 +1,29 @@
 const { describe, it } = require('mocha');
 const { assert } = require('chai');
 
-const { Prerenderer } = require('../../../../dist/lib/prerenderer');
+const { PrerendererService } = require('../../../../dist/lib/service');
 const {
   PrerendererNotReadyException,
 } = require('../../../../dist/lib/exceptions/prerenderer-not-ready-exception');
 
-describe('non-initialization errors', () => {
-  it('should throw an error if starting server without initialization.', async () => {
-    const p = new Prerenderer();
+describe('non-startup errors', () => {
+  it('should throw an error if trying to prerender without starting first.', async () => {
+    const p = new PrerendererService({
+      databaseOptions: {
+        authSource: 'admin',
+        host: process.env.TEST_DB_HOST,
+        username: process.env.TEST_DB_USERNAME,
+        password: process.env.TEST_DB_PASSWORD,
+        database: process.env.TEST_DB_DATABASE,
+      },
+    });
 
     try {
-      await p.start();
+      // @ts-ignore
+      await p.getPrerenderer().prerenderAndGetSnapshot(null);
       assert.ok(false);
     } catch (e) {
       assert.instanceOf(e, PrerendererNotReadyException);
     }
-    await p.stop();
-  });
-
-  it('should throw an error if logging something without initialization.', async () => {
-    const p = new Prerenderer();
-
-    try {
-      await p.getLogger();
-      assert.ok(false);
-    } catch (e) {
-      assert.instanceOf(e, PrerendererNotReadyException);
-    }
-    await p.stop();
-  });
-
-  it('should throw an error if trying to start without initialization.', async () => {
-    const p = new Prerenderer();
-
-    try {
-      await p.start();
-      assert.ok(false);
-    } catch (e) {
-      assert.instanceOf(e, PrerendererNotReadyException);
-    }
-    await p.stop();
-  });
-
-  it('should throw an error if trying to prerender without start.', async () => {
-    const p = new Prerenderer();
-
-    try {
-      await p.prerender(null);
-      assert.ok(false);
-    } catch (e) {
-      assert.instanceOf(e, PrerendererNotReadyException);
-    }
-    await p.stop();
   });
 });

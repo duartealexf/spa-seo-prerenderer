@@ -12,8 +12,11 @@ const { join } = require('path');
 const { createServer } = require('https');
 
 const { captureRequests, requests } = require('./middleware/request-capture');
-const { configPrerendererMiddleware } = require('./middleware/prerenderer');
 const { serveStatic } = require('./middleware/serve-static');
+const {
+  configPrerendererMiddleware,
+  ensureSnapshotFromRequestIsSaved,
+} = require('./middleware/prerenderer');
 
 const app = express();
 
@@ -23,14 +26,21 @@ let httpServer;
 /** @type {import('https').Server} */
 let httpsServer;
 
-/** @type {import('../../dist/lib/prerenderer').Prerenderer} */
-let prerenderer;
+/** @type {import('../../dist/lib/service').PrerendererService} */
+let service;
 
 module.exports = {
+  ensureSnapshotFromRequestIsSaved,
+
   /**
    * Requests that have been captured.
    */
   requests,
+
+  /**
+   * Prerenderer service
+   */
+  getService: () => service,
 
   /**
    * Start test app server.
@@ -76,19 +86,19 @@ module.exports = {
     if (httpsServer) {
       await new Promise((resolve) => httpsServer.close(resolve));
     }
-    if (prerenderer) {
-      await prerenderer.stop();
+    if (service) {
+      await service.stop();
     }
   },
 
   /**
-   * @param {import('../../dist/types/config/defaults').PrerendererConfigParams} config
+   * @param {import('../../dist/types/config/defaults').PrerendererConfig} config
    */
   attachMiddlewares: async (config) => {
-    const { prerenderer: p, middleware: prerendererMiddleware } = await configPrerendererMiddleware(
+    const { service: s, middleware: prerendererMiddleware } = await configPrerendererMiddleware(
       config,
     );
-    prerenderer = p;
+    service = s;
 
     app.use(captureRequests('app'));
     app.use(prerendererMiddleware);

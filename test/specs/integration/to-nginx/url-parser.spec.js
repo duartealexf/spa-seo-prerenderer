@@ -2,7 +2,7 @@ const { describe, it } = require('mocha');
 const { assert } = require('chai');
 
 const { createSmartNginxProxyHttpGetRequest } = require('../../../client');
-const { Prerenderer } = require('../../../../dist/lib/prerenderer');
+const { parseRequestURL } = require('../../../../dist/lib/request');
 
 describe("prerenderer's URL parser with Nginx's X-Forwarded-* headers.", () => {
   /**
@@ -20,7 +20,7 @@ describe("prerenderer's URL parser with Nginx's X-Forwarded-* headers.", () => {
 
   before(async () => {
     request = (await createSmartNginxProxyHttpGetRequest(requestUri)).request;
-    parsedUrl = Prerenderer.parseUrl(request);
+    parsedUrl = parseRequestURL(request);
   });
 
   it('should correctly parse host.', async () => {

@@ -1,9 +1,10 @@
 /* eslint-disable no-console */
 import { WriteStream, createWriteStream } from 'fs';
+import { stringify } from 'flatted';
 import debug from 'debug';
 
 import { Config } from './config';
-import { PrerendererNotReadyException } from './exceptions/prerenderer-not-ready-exception';
+import { Filesystem } from './filesystem';
 
 export class Logger {
   private static readonly LOG_LEVELS = [
@@ -55,12 +56,6 @@ export class Logger {
       ? Logger.LOG_LEVEL_WARNING
       : Logger.LOG_LEVEL_DEBUG;
 
-    if (!this.config.isInitialized()) {
-      throw new PrerendererNotReadyException(
-        'Prerenderer config has not been initialized. Did you run prerenderer.initialize()?',
-      );
-    }
-
     if (this.config.getPrerendererLogFile()) {
       this.logFile = createWriteStream(config.getPrerendererLogFile(), {
         encoding: 'utf-8',
@@ -73,6 +68,48 @@ export class Logger {
         this.error(`Error writing to log file: ${error.message}`, 'logger');
       });
     }
+  }
+
+  /**
+   * Start logged by creating log file, if needed.
+   */
+  public async start(): Promise<void> {
+    if (!this.config.getPrerendererLogFile()) {
+      return;
+    }
+
+    await Filesystem.ensureFile(this.config.getPrerendererLogFile());
+  }
+
+  /**
+   * Stop logger by closing log file write stream.
+   */
+  public async stop(): Promise<void> {
+    if (!this.config.getPrerendererLogFile()) {
+      return;
+    }
+
+    if (this.logFile) {
+      await this.logFile.close();
+    }
+  }
+
+  /**
+   * Stringify given parameter so that it is loggable.
+   * @param thing
+   */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  public static stringify(thing: any): string {
+    if (typeof thing === 'undefined') {
+      return '';
+    }
+    if (typeof thing.toString === 'function' && thing.toString() !== '[object Object]') {
+      return thing.toString();
+    }
+    if (typeof thing.message === 'string') {
+      return thing.message;
+    }
+    return stringify(thing);
   }
 
   /**

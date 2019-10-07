@@ -1,30 +1,13 @@
-import puppeteer, { Browser, Response as PuppeteerResponse, LaunchOptions, Page } from 'puppeteer';
-import { extname } from 'path';
+import puppeteer, { Browser, Response, LaunchOptions, Page } from 'puppeteer';
 import { IncomingMessage } from 'http';
-import { URL } from 'url';
+import { extname } from 'path';
 
-import { TLSSocket } from 'tls';
+import { PrerendererNotReadyException } from './exceptions/prerenderer-not-ready-exception';
+import { PuppeteerException } from './exceptions/puppeteer-exception';
+import { Snapshot } from './snapshot';
 import { Config } from './config';
 import { Logger } from './logger';
-import { PrerendererConfigParams } from './config/defaults';
-import { PrerendererNotReadyException } from './exceptions/prerenderer-not-ready-exception';
-import { PrerendererResponseError } from './error';
-
-export interface PrerendererResponse {
-  /**
-   * Rendered HTML.
-   */
-  body: string;
-
-  /**
-   * Headers from Prerenderer.
-   */
-  headers: {
-    status: number;
-    'X-Prerendered-Ms': number;
-    [header: string]: string | number;
-  };
-}
+import { getRequestHeader, parseRequestURL } from './request';
 
 /**
  * Reasons why the Prerender rejects prerendering a request, on shouldPrerender() method.
@@ -80,24 +63,14 @@ export class Prerenderer {
   private browser?: Browser;
 
   /**
-   * Prerenderer configuration singleton.
+   * Prerenderer service configuration singleton.
    */
   private config: Config;
 
   /**
-   * Prerenderer logger singleton.
+   * Prerenderer service logger singleton.
    */
-  private logger?: Logger;
-
-  /**
-   * Whether prerenderer has been initialized.
-   */
-  private initialized = false;
-
-  /**
-   * Last prerender response object.
-   */
-  private lastResponse?: PrerendererResponse;
+  private logger: Logger;
 
   /**
    * Reason why it has decided to not prerender last time.
@@ -109,48 +82,16 @@ export class Prerenderer {
    */
   public static readonly USER_AGENT = 'Mozilla/5.0 (compatible; prerenderer/{{version}})';
 
-  constructor(config: PrerendererConfigParams) {
-    this.config = new Config(config);
-  }
-
-  /**
-   * Initialize prerenderer setup, which is required before starting it.
-   */
-  public async initialize(): Promise<void> {
-    await this.config.initialize();
-    this.logger = new Logger(this.config);
-    this.initialized = true;
-  }
-
-  /**
-   * Getter for prerenderer configuration singleton.
-   */
-  public getConfig(): Config {
-    return this.config;
-  }
-
-  /**
-   * Getter for prerenderer logger singleton.
-   */
-  public getLogger(): Logger {
-    if (!this.logger) {
-      this.logger = new Logger(this.config);
-    }
-
-    return this.logger;
+  constructor(config: Config, logger: Logger) {
+    this.config = config;
+    this.logger = logger;
   }
 
   /**
    * Start prerenderer headless browser.
    */
   public async start(): Promise<void> {
-    if (!this.initialized) {
-      throw new PrerendererNotReadyException(
-        'Prerenderer needs to be initialized before starting. Did you call prerenderer.initialize()?',
-      );
-    }
-
-    this.getLogger().info('Launching Puppeteer...', 'prerenderer');
+    this.logger.info('Launching Puppeteer...', 'prerenderer');
     const options: LaunchOptions = {
       args: ['--no-sandbox'],
       ignoreHTTPSErrors: true,
@@ -161,7 +102,7 @@ export class Prerenderer {
     }
 
     this.browser = await puppeteer.launch(options);
-    this.getLogger().info('Launched Puppeteer!', 'prerenderer');
+    this.logger.info('Launched Puppeteer!', 'prerenderer');
   }
 
   /**
@@ -169,17 +110,10 @@ export class Prerenderer {
    */
   public async stop(): Promise<void> {
     if (this.browser) {
-      this.getLogger().info('Stopping Puppeteer...', 'prerenderer');
+      this.logger.info('Stopping Puppeteer...', 'prerenderer');
       await this.browser.close();
-      this.getLogger().info('Stopped Puppeteer!', 'prerenderer');
+      this.logger.info('Stopped Puppeteer!', 'prerenderer');
     }
-  }
-
-  /**
-   * Get response from last call to prerender().
-   */
-  public getLastResponse(): PrerendererResponse | undefined {
-    return this.lastResponse;
   }
 
   /**
@@ -213,7 +147,7 @@ export class Prerenderer {
       return false;
     }
 
-    let userAgent = Prerenderer.getRequestHeader(request, 'user-agent');
+    let userAgent = getRequestHeader(request, 'user-agent');
 
     /**
      * No user agent, don't prerender.
@@ -233,7 +167,7 @@ export class Prerenderer {
       return false;
     }
 
-    const parsedUrl = Prerenderer.parseUrl(request);
+    const parsedUrl = parseRequestURL(request);
 
     const path = parsedUrl.pathname || '';
     const extension = extname(path)
@@ -260,10 +194,14 @@ export class Prerenderer {
     return true;
   }
 
-  public async prerender(request: IncomingMessage): Promise<void> {
+  /**
+   * Prerender given request and return a snapshot, that can be stored later.
+   * @param request Original incoming request.
+   */
+  public async prerenderAndGetSnapshot(url: string): Promise<Snapshot> {
     if (!this.browser) {
       throw new PrerendererNotReadyException(
-        'Prerenderer needs to be started before prerendering an url. Did you call prerenderer.start()?',
+        "Prerenderer service needs to be started before prerendering an url. Did you call prerenderer service's start()?",
       );
     }
 
@@ -271,39 +209,26 @@ export class Prerenderer {
 
     const renderStart = Date.now();
 
-    await this.navigatePageWithRequest(page, request)
-      .then((puppeteerResponse) => {
-        this.lastResponse = puppeteerResponse;
-      })
-      .catch(async (error) => {
-        let message: string;
-        let status = 400;
+    try {
+      const snapshot = await this.navigatePageAndGetSnapshot(page, url);
+      return snapshot;
+    } catch (error) {
+      let message: string;
+      let status = 400;
 
-        if (error instanceof PrerendererResponseError) {
-          status = error.statusCode;
-          message = error.message;
-        } else if (error instanceof Error) {
-          message = error.message;
-        } else if (typeof error === 'object') {
-          message = JSON.stringify(error);
-        } else {
-          message = error;
-        }
+      if (error instanceof PuppeteerException) {
+        status = error.statusCode;
+        message = error.message;
+      } else {
+        message = Logger.stringify(error);
+      }
 
-        this.getLogger().error(message, 'puppeteer');
+      this.logger.error(message, 'puppeteer');
 
-        await page.close();
-        const url = Prerenderer.parseUrl(request);
+      await page.close();
 
-        this.lastResponse = {
-          headers: {
-            status,
-            'X-Original-Location': url.toString(),
-            'X-Prerendered-Ms': Date.now() - renderStart,
-          },
-          body: '',
-        };
-      });
+      return new Snapshot(url, '', status, Date.now() - renderStart);
+    }
   }
 
   /**
@@ -311,11 +236,7 @@ export class Prerenderer {
    * @param page
    * @param request
    */
-  private async navigatePageWithRequest(
-    page: Page,
-    request: IncomingMessage,
-  ): Promise<PrerendererResponse> {
-    const url = Prerenderer.parseUrl(request);
+  private async navigatePageAndGetSnapshot(page: Page, url: string): Promise<Snapshot> {
     const renderStart = Date.now();
 
     page.setUserAgent(Prerenderer.USER_AGENT);
@@ -341,22 +262,29 @@ export class Prerenderer {
     /**
      * Add shadow dom shim.
      */
-    page.evaluateOnNewDocument('if (window.customElements) customElements.forcePolyfill = true;');
-    page.evaluateOnNewDocument('ShadyDOM = { force: true }');
-    page.evaluateOnNewDocument('ShadyCSS = { shimcssproperties: true }');
+    try {
+      await page.evaluateOnNewDocument(
+        'if (window.customElements) customElements.forcePolyfill = true;',
+      );
+      await page.evaluateOnNewDocument('ShadyDOM = { force: true }');
+      await page.evaluateOnNewDocument('ShadyCSS = { shimcssproperties: true }');
+    } catch (e) {
+      const message = Logger.stringify(e);
+      this.logger.warning(`Could not inject needed page scripts: ${message}`, 'puppeteer');
+    }
 
-    let puppeteerResponse: PuppeteerResponse | null = null;
+    let puppeteerResponse: Response | null = null;
 
     /**
      * Navigate to page and wait for network to be idle.
      */
-    puppeteerResponse = await page.goto(url.toString(), {
+    puppeteerResponse = await page.goto(url, {
       timeout: this.config.getTimeout(),
       waitUntil: 'networkidle0',
     });
 
     if (!puppeteerResponse) {
-      throw new PrerendererResponseError(400, 'Puppeteer received no response.');
+      throw new PuppeteerException(400, 'Puppeteer received no response.');
     }
 
     let status = puppeteerResponse.status();
@@ -371,72 +299,6 @@ export class Prerenderer {
     const body = await page.content();
     await page.close();
 
-    return {
-      body,
-      headers: {
-        status,
-        'X-Original-Location': url.toString(),
-        'X-Prerendered-Ms': Date.now() - renderStart,
-      },
-    };
-  }
-
-  /**
-   * Get given header from given request.
-   * @param request
-   * @param header
-   */
-  private static getRequestHeader(request: IncomingMessage, header: string): string {
-    const headerEntry = Object.entries(request.headers).find(([k]) => k.toLowerCase() === header);
-
-    if (!headerEntry) {
-      return '';
-    }
-
-    return headerEntry[1] as string;
-  }
-
-  /**
-   * Parse URL from given request.
-   * @param request
-   */
-  public static parseUrl(request: IncomingMessage): URL {
-    let protocol = Prerenderer.getRequestHeader(request, 'x-forwarded-proto');
-    let host = Prerenderer.getRequestHeader(request, 'x-forwarded-host');
-    let port = Prerenderer.getRequestHeader(request, 'x-forwarded-port');
-
-    const path = request.url || '/';
-
-    if (!protocol) {
-      protocol =
-        request.connection instanceof TLSSocket && request.connection.encrypted ? 'https' : 'http';
-    }
-
-    /**
-     * Adapted from express hostname getter.
-     */
-    const hostAndMaybePort = Prerenderer.getRequestHeader(request, 'host');
-    const offset = hostAndMaybePort[0] === '[' ? hostAndMaybePort.indexOf(']') + 1 : 0;
-    const index = hostAndMaybePort.indexOf(':', offset);
-
-    if (!host) {
-      host = index !== -1 ? hostAndMaybePort.substring(0, index) : hostAndMaybePort;
-    }
-
-    if (!port) {
-      port = index !== -1 ? hostAndMaybePort.substring(index + 1) : port;
-
-      if (!port) {
-        port = request.connection.localPort.toString();
-      }
-    }
-
-    if (port === '80' || port === '433') {
-      port = '';
-    } else {
-      port = `:${port}`;
-    }
-
-    return new URL(`${protocol}://${host}${port}${path}`);
+    return new Snapshot(url, body, status, Date.now() - renderStart);
   }
 }

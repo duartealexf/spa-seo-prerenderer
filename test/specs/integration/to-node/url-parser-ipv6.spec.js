@@ -2,7 +2,7 @@ const { describe, it } = require('mocha');
 const { assert } = require('chai');
 
 const { createDirectHttpGetRequest } = require('../../../client');
-const { Prerenderer } = require('../../../../dist/lib/prerenderer');
+const { parseRequestURL } = require('../../../../dist/lib/request');
 
 describe("prerenderer's URL parser based on IPv6, without X-Forwarded-* headers.", () => {
   /**
@@ -21,7 +21,7 @@ describe("prerenderer's URL parser based on IPv6, without X-Forwarded-* headers.
 
   before(async () => {
     request = (await createDirectHttpGetRequest(requestUri, {}, true, 'ipv6')).request;
-    parsedUrl = Prerenderer.parseUrl(request);
+    parsedUrl = parseRequestURL(request);
   });
 
   it('should correctly parse fragment.', async () => {

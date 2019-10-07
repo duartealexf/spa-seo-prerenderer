@@ -86,9 +86,27 @@ const createRequest = async (method, isSecure, host, port, path, customHeaders, 
 
 module.exports = {
   /**
+   * Create a HTTP GET request directly to NodeJS static server, which does not prerender.
+   * @param {string} path
+   * @param {any} customHeaders
+   * @returns {ReturnType<typeof createRequest>}
+   */
+  createStaticHttpGetRequest: (path = '', customHeaders = {}) => {
+    return createRequest(
+      'GET',
+      false,
+      '127.0.0.1',
+      process.env.TEST_STATIC_NODEJS_SERVER_PORT,
+      path,
+      customHeaders,
+      true,
+    );
+  },
+
+  /**
    * Create a HTTP POST request directly to NodeJS server. Note that there are not
    * many options to make a post request. This is because we don't need to focus
-   * on them as much, as the Prerenderer only create snapshots for GET requests.
+   * on them as much, as the Prerenderer only prerenders GET requests.
    * @returns {ReturnType<typeof createRequest>}
    */
   createDirectHttpPostRequest: () =>
@@ -107,20 +125,20 @@ module.exports = {
    * @param {string} path
    * @param {any} customHeaders
    * @param {boolean} botUserAgent
-   * @param {'hostname' | 'ipv4' | 'ipv6'} useTarget
+   * @param {'hostname' | 'ipv4' | 'ipv6'} hostMode
    * @returns {ReturnType<typeof createRequest>}
    */
   createDirectHttpGetRequest: (
     path = '',
     customHeaders = {},
     botUserAgent = true,
-    useTarget = 'hostname',
+    hostMode = 'hostname',
   ) => {
     let host;
 
-    if (useTarget === 'ipv4') {
+    if (hostMode === 'ipv4') {
       host = '127.0.0.1';
-    } else if (useTarget === 'ipv6') {
+    } else if (hostMode === 'ipv6') {
       host = '::1';
     } else {
       host = process.env.TEST_NODEJS_CONTAINER_HOST;
@@ -163,11 +181,11 @@ module.exports = {
    * @param {boolean} botUserAgent
    * @returns {ReturnType<typeof createRequest>}
    */
-  createDumbApacheProxyHttpGetRequest: (path = '', customHeaders = {}, botUserAgent = true) =>
+  createCommonApacheProxyHttpGetRequest: (path = '', customHeaders = {}, botUserAgent = true) =>
     createRequest(
       'GET',
       false,
-      process.env.TEST_DUMB_APACHE_CONTAINER_HOST,
+      process.env.TEST_COMMON_APACHE_CONTAINER_HOST,
       80,
       path,
       customHeaders,
@@ -201,11 +219,11 @@ module.exports = {
    * @param {boolean} botUserAgent
    * @returns {ReturnType<typeof createRequest>}
    */
-  createDumbNginxProxyHttpGetRequest: (path = '', customHeaders = {}, botUserAgent = true) =>
+  createCommonNginxProxyHttpGetRequest: (path = '', customHeaders = {}, botUserAgent = true) =>
     createRequest(
       'GET',
       false,
-      process.env.TEST_DUMB_NGINX_CONTAINER_HOST,
+      process.env.TEST_COMMON_NGINX_CONTAINER_HOST,
       80,
       path,
       customHeaders,
@@ -232,16 +250,16 @@ module.exports = {
     ),
 
   /**
-   * Returns whether request passed through dumb proxy.
+   * Returns whether request passed through common proxy.
    * If it returns false, it passed through smart proxy.
    * @param {import('http').IncomingMessage} request
    * @returns {boolean}
    */
-  requestPassedThroughDumbProxy: (request) => getHeader(request, 'x-proxy-mode') === 'dumb',
+  requestPassedThroughCommonProxy: (request) => getHeader(request, 'x-proxy-mode') === 'common',
 
   /**
    * Returns whether request passed through smart proxy.
-   * If it returns false, it passed through dumb proxy.
+   * If it returns false, it passed through common proxy.
    * @param {import('http').IncomingMessage} request
    * @returns {boolean}
    */
