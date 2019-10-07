@@ -69,6 +69,24 @@ mocha.before(async () => {
     whitelistedRequestURLs: ['ga.js'],
   });
 
+  console.log('Emptying test databases...');
+
+  const connection = appServer.getService().getDatabase().connection;
+  const snapshotRepository = connection.getMongoRepository('Snapshot');
+  try {
+    await snapshotRepository.clear();
+  } catch (e) {}
+
+  const shouldBeEmpty = await snapshotRepository.find();
+
+  if (shouldBeEmpty.length > 0) {
+    throw new Error(
+      'Tried to clear snapshots before testing but some entities still remain in database.',
+    );
+  }
+
+  console.log('Emptying tmp test folders...');
+
   /**
    * Empty tmp dir.
    */

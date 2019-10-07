@@ -12,8 +12,11 @@ const { join } = require('path');
 const { createServer } = require('https');
 
 const { captureRequests, requests } = require('./middleware/request-capture');
-const { configPrerendererMiddleware } = require('./middleware/prerenderer');
 const { serveStatic } = require('./middleware/serve-static');
+const {
+  configPrerendererMiddleware,
+  ensureSnapshotFromRequestIsSaved,
+} = require('./middleware/prerenderer');
 
 const app = express();
 
@@ -27,10 +30,17 @@ let httpsServer;
 let service;
 
 module.exports = {
+  ensureSnapshotFromRequestIsSaved,
+
   /**
    * Requests that have been captured.
    */
   requests,
+
+  /**
+   * Prerenderer service
+   */
+  getService: () => service,
 
   /**
    * Start test app server.

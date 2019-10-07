@@ -71,5 +71,16 @@ describe('snapshot entity unit tests', () => {
     assert.instanceOf(retrievedSnapshot.updatedAt, Date);
   });
 
-  // TODO: test needsRefresh
+  it('should need refresh .', async () => {
+    const retrievedSnapshot = await Snapshot.findByUrl(snapshot.url);
+
+    await new Promise((r) => setTimeout(() => r(), 100));
+
+    assert.isTrue(retrievedSnapshot.isOld(0));
+  });
+
+  it('should not need refresh .', async () => {
+    const retrievedSnapshot = await Snapshot.findByUrl(snapshot.url);
+    assert.isFalse(retrievedSnapshot.isOld(7));
+  });
 });
