@@ -91,6 +91,11 @@ module.exports = {
    */
   startPrerenderer: async (config) => {
     const service = new PrerendererService(config);
+
+    console.log('Waiting for database availability...');
+
+    await service.getDatabase().waitForDatabaseAvailability();
+
     await service.start();
     const prerenderer = service.getPrerenderer();
 

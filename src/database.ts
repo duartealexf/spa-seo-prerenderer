@@ -20,23 +20,28 @@ export class Database {
    */
   private logger: Logger;
 
+  /**
+   * Database connection options merged with constructor's config.
+   */
+  private connectionOptions: ConnectionOptions;
+
   constructor(config: Config, logger: Logger) {
     this.config = config;
     this.logger = logger;
-  }
 
-  /**
-   * Start database connection.
-   */
-  public async connect(): Promise<void> {
-    const connectionOptions: ConnectionOptions = {
+    this.connectionOptions = {
       ...this.config.getDatabaseOptions(),
       type: 'mongodb',
       name: 'default',
       dropSchema: false,
       entities: [Snapshot],
     };
+  }
 
+  /**
+   * Start database connection.
+   */
+  public async connect(): Promise<void> {
     if (this.connection && this.connection.isConnected) {
       return;
     }
@@ -50,7 +55,7 @@ export class Database {
     }
 
     this.logger.info('Starting MongoDB connection...', 'database');
-    this.connection = await createConnection(connectionOptions);
+    this.connection = await createConnection(this.connectionOptions);
     this.logger.info('Started MongoDB connection.', 'database');
   }
 
@@ -63,5 +68,17 @@ export class Database {
       await this.connection.close();
       this.logger.info('Stopped MongoDB connection.', 'database');
     }
+  }
+
+  /**
+   * Wait until database is available.
+   */
+  public waitForDatabaseAvailability(): Promise<void> {
+    return new Promise((resolve) => {
+      createConnection(this.connectionOptions)
+        .then(() => resolve())
+        .catch(() => setTimeout(() => this.waitForDatabaseAvailability().then(resolve), 2000),
+        );
+    });
   }
 }
