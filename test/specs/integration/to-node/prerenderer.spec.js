@@ -4,8 +4,6 @@ const cheerio = require('cheerio');
 
 const { createDirectHttpGetRequest, createDirectHttpsGetRequest } = require('../../../client');
 
-require('../../hooks.spec');
-
 describe("features that are in Prerenderer's Puppeteer", () => {
   it('should have test requests flowing to the expected context.', async () => {
     const { context } = await createDirectHttpGetRequest('index.html');
