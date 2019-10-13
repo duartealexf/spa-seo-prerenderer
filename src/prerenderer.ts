@@ -289,6 +289,11 @@ export class Prerenderer {
 
     let status = puppeteerResponse.status();
 
+    // TODO: process.on('uncaughtException', logUncaughtError);
+    // TODO: process.on('unhandledRejection', logUnhandledRejection);
+    // https://github.com/GoogleChrome/rendertron/blob/master/src/rendertron.ts#L150
+
+
     /**
      * If browser uses cache and sees 304, consider 200.
      */
@@ -296,9 +301,46 @@ export class Prerenderer {
       status = 200;
     }
 
+    /**
+     * If there's a meta-tag with a custom status, deliver that status instead of 200.
+     */
+    const customStatus = await Prerenderer.getCustomStatus(page);
+
+    if (status === 200 && customStatus) {
+      status = customStatus;
+    }
+
+    Prerenderer.stripTags(page);
+
     const body = await page.content();
     await page.close();
 
     return new Snapshot(url, body, status, Date.now() - renderStart);
+  }
+
+
+  /**
+   * Get custom status do be delivered, if any.
+   * Based on Google's Rendertron.
+   * @param page
+   */
+  public static async getCustomStatus(page: puppeteer.Page): Promise<number | undefined> {
+    return page
+      .$eval(
+        'meta[name="prerenderer:status"]',
+        (element) => parseInt(element.getAttribute('content') || '', 10))
+      .catch(() => undefined);
+  }
+
+  /**
+   * Strip unecessary tags after prerender.
+   * Based on Google's Rendertron.
+   * @param page
+   */
+  public static stripTags(page: puppeteer.Page): Promise<void> {
+    return page.evaluate(() => {
+      // eslint-disable-next-line no-undef
+      Array.from(document.querySelectorAll('script:not([type]), script[type*="javascript"], link[rel=import]')).forEach((e) => e.remove());
+    });
   }
 }

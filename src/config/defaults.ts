@@ -82,7 +82,7 @@ export interface PrerendererConfig {
   /**
    * Case insensitive list with parts of URL that Puppeteer will allow the prerendered page to
    * make network requests to (e.g. resources). Defaults to an empty array. It makes sense to
-   * use the this when setting the blacklist to all URLs, and specify which specific URLs to
+   * use this when setting the blacklist to all URLs, and specify which specific URLs to
    * allow. Only do this if you are sure which URLs your pages make requests to.
    * @default []
    */
