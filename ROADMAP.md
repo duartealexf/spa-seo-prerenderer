@@ -23,6 +23,8 @@
 - [ ] Create recipes for Prerenderer's clearance of cached pages via Github Actions
 - [ ] HTTP 2.0
 - [ ] Add recipe to use with server-timing API
+- [ ] Automatically recache old cache
+- [ ] Create a dashboard
 
 ## Notes to self - creating an use-case
 

@@ -47,7 +47,7 @@ Plug it [as a middleware](https://github.com/duartealexf/seo-prerenderer/blob/ma
 
 If you don't find the recipe you are looking for, please do create an issue or you are welcome to create a PR
 
-The Prerenderer only prerenders pages on-demand. It does not include a crawler to auto-refresh old cached pages.
+Currently the Prerenderer only prerenders pages on-demand. It does not include a crawler to auto-refresh old cached pages (this and other features are in the [roadmap](https://github.com/duartealexf/seo-prerenderer/blob/master/ROADMAP.md)).
 
 ## Configurable features
 
