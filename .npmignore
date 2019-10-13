@@ -1,5 +1,4 @@
 *
 !/dist
-!/scripts
 !/*.md
 !/package.json
