@@ -38,9 +38,7 @@ mocha.before(async () => {
     database: process.env.TEST_DB_DATABASE,
   };
 
-  console.log('Waiting for database availability...');
-
-  await waitForDatabaseAvailability(databaseOptions);
+  // await waitForDatabaseAvailability(databaseOptions);
 
   console.log('Starting test servers...');
 
