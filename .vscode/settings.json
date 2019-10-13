@@ -12,6 +12,7 @@
     "editor.formatOnSave": true,
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
+  "markdown.extension.toc.levels": "2..6",
   "typescript.tsdk": "node_modules/typescript/lib",
   "javascript.implicitProjectConfig.checkJs": true
 }
