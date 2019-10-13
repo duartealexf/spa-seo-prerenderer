@@ -3,7 +3,8 @@
   "version": "0.0.13",
   "description": "Pluggable puppeteer prerenderer - make your SPA SEO-friendly.",
   "author": "Alexandre Duarte <duartealexf@gmail.com> (https://github.com/duartealexf)",
-  "main": "dist/index.js",
+  "main": "dist/lib/index.js",
+  "types": "dist/types",
   "maintainers": [
     "Alexandre Duarte <duartealexf@gmail.com> (https://github.com/duartealexf)"
   ],
@@ -16,6 +17,21 @@
   "bugs": {
     "url": "https://github.com/duartealexf/spa-seo-prerenderer/issues"
   },
+  "keywords": [
+    "spa",
+    "seo",
+    "prerenderer",
+    "prerender",
+    "snapshot",
+    "cache",
+    "crawler",
+    "bot",
+    "googlebot",
+    "user-agent",
+    "useragent",
+    "user",
+    "agent"
+  ],
   "scripts": {
     "standard-version": "standard-version",
     "nodemon": "nodemon",
