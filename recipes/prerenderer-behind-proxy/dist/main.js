@@ -128,7 +128,7 @@ const prerendererMiddleware = (req, res, next) => {
    */
   prerendererService
     .handleRequest(req)
-    .then((/** @type {import('spa-seo-prerenderer').Snapshot} */ snapshot) => {
+    .then((snapshot) => {
       res
         .status(snapshot.getStatusForResponse())
         .set(snapshot.getHeadersForResponse())
