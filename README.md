@@ -43,7 +43,7 @@
 
 The Prerenderer runs as a service in NodeJS and uses Google's Puppeteer to prerender pages. It delivers the prerendered response and then caches the snapshot data in MongoDB.
 
-Plug it [as a middleware](https://github.com/duartealexf/seo-prerenderer/blob/master/recipes/prerenderer-middleware). Serve directly from NodeJS or use it behind a proxy (Apache or Nginx). With or without docker. Take a look at the [recipes](https://github.com/duartealexf/seo-prerenderer/blob/master/recipes) available to better fit your use-case.
+Plug it [as a middleware](https://github.com/duartealexf/seo-prerenderer/blob/master/recipes/prerenderer-behind-proxy). Serve directly from NodeJS or use it behind a proxy (Apache or Nginx). With or without docker. Take a look at the [recipes](https://github.com/duartealexf/seo-prerenderer/blob/master/recipes) available to better fit your use-case.
 
 If you don't find the recipe you are looking for, please do create an issue or you are welcome to create a PR
 
