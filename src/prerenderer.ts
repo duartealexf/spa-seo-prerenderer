@@ -289,11 +289,6 @@ export class Prerenderer {
 
     let status = puppeteerResponse.status();
 
-    // TODO: process.on('uncaughtException', logUncaughtError);
-    // TODO: process.on('unhandledRejection', logUnhandledRejection);
-    // https://github.com/GoogleChrome/rendertron/blob/master/src/rendertron.ts#L150
-
-
     /**
      * If browser uses cache and sees 304, consider 200.
      */

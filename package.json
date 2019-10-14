@@ -1,9 +1,10 @@
 {
   "name": "spa-seo-prerenderer",
-  "version": "0.0.13",
+  "version": "1.0.0",
   "description": "Pluggable puppeteer prerenderer - make your SPA SEO-friendly.",
   "author": "Alexandre Duarte <duartealexf@gmail.com> (https://github.com/duartealexf)",
-  "main": "dist/index.js",
+  "main": "dist/lib/index.js",
+  "types": "dist/types",
   "maintainers": [
     "Alexandre Duarte <duartealexf@gmail.com> (https://github.com/duartealexf)"
   ],
@@ -16,6 +17,21 @@
   "bugs": {
     "url": "https://github.com/duartealexf/spa-seo-prerenderer/issues"
   },
+  "keywords": [
+    "spa",
+    "seo",
+    "prerenderer",
+    "prerender",
+    "snapshot",
+    "cache",
+    "crawler",
+    "bot",
+    "googlebot",
+    "user-agent",
+    "useragent",
+    "user",
+    "agent"
+  ],
   "scripts": {
     "standard-version": "standard-version",
     "nodemon": "nodemon",
@@ -28,7 +44,8 @@
     "coverage": "nyc npm run test",
     "build": "tsc",
     "test": "mocha test/specs/**/*.spec.js",
-    "release": "standard-version && git push --follow-tags",
+    "prerelease": "npm run lint && npm run build",
+    "release": "standard-version && git push --follow-tags && npm publish",
     "dev": "npm-run-all -p build:watch test:watch",
     "test:watch": "nodemon --inspect=0.0.0.0:9229 node_modules/mocha/bin/_mocha -- -t 8640000 --colors ${TESTFILE:-test/specs/**/*.spec.js}",
     "build:watch": "nodemon -C -e ts -w src --exec 'npm run build'",

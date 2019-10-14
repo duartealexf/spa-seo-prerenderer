@@ -1,0 +1,22 @@
+version: '3'
+
+services:
+  mongodb:
+    image: mongo
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${DB_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${DB_PASSWORD}
+      MONGO_INITDB_DATABASE: ${DB_DATABASE}
+    volumes:
+      - ./db:/data/db
+
+  prerenderer:
+    depends_on:
+      - mongodb
+    build: .
+    volumes:
+      - ./logs:/var/www/logs
+      - ./dist:/var/www/dist
+      - ./src:/var/www/src
+    ports:
+      - 9000:9000

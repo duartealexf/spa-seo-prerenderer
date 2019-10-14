@@ -1,0 +1,29 @@
+{
+  "name": "prerenderer-behind-proxy",
+  "main": "dist/index.js",
+  "scripts": {
+    "eslint": "eslint",
+    "start": "node dist/main.js"
+  },
+  "dependencies": {
+    "dotenv": "^8.1.0",
+    "express": "^4.17.1",
+    "kill-port": "^1.5.1",
+    "spa-seo-prerenderer": "^1.0.0"
+  },
+  "devDependencies": {
+    "@types/dotenv": "^6.1.1",
+    "@types/express": "^4.17.1",
+    "@typescript-eslint/eslint-plugin": "^2.0.0",
+    "@typescript-eslint/parser": "^2.0.0",
+    "eslint": "^6.5.1",
+    "eslint-config-airbnb-base": "^14.0.0",
+    "eslint-config-prettier": "^6.1.0",
+    "eslint-plugin-import": "^2.18.2",
+    "eslint-plugin-prettier": "^3.1.1",
+    "prettier": "^1.18.2"
+  },
+  "engines": {
+    "node": ">=8.3.0"
+  }
+}
