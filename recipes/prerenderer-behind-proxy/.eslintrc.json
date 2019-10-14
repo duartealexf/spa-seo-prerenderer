@@ -1,0 +1,28 @@
+{
+    "env": {
+        "browser": true,
+        "commonjs": true,
+        "es6": true
+    },
+    "plugins": ["prettier"],
+    "extends": [
+        "airbnb-base"
+    ],
+    "globals": {
+        "Atomics": "readonly",
+        "SharedArrayBuffer": "readonly"
+    },
+    "parserOptions": {
+        "ecmaVersion": 2018
+    },
+    "rules": {
+      "import/prefer-default-export": 0,
+      "prefer-destructuring": 0,
+      "implicit-arrow-linebreak": 0,
+      "function-paren-newline": 0,
+      "operator-linebreak": 0,
+      "object-curly-newline": 0,
+      "no-async-promise-executor": 0,
+      "no-continue": 0
+    }
+}

@@ -15,4 +15,4 @@ Have Nginx to check decide whether to proxy request to the Prerenderer or to del
 
 ## Use it with a running Prerenderer instance
 
-Do check the recipe for creating a [Prerenderer instance](https://github.com/duartealexf/seo-prerenderer/blob/master/recipes/prerenderer-middleware) and make sure this Nginx setup points to it when proxying.
+Do check the recipe for creating a [Prerenderer instance](https://github.com/duartealexf/seo-prerenderer/blob/master/recipes/prerenderer-behind-proxy) and make sure this Nginx setup points to it when proxying.
