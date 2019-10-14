@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.14](https://github.com/duartealexf/spa-seo-prerenderer/compare/v0.0.13...v0.0.14) (2019-10-14)
+
+
+### Features
+
+* add DB method to wait for database availability ([4eb7185](https://github.com/duartealexf/spa-seo-prerenderer/commit/4eb7185))
+* add post processing of page to remove scripts and add custom status ([5cb4704](https://github.com/duartealexf/spa-seo-prerenderer/commit/5cb4704))
+
 ### [0.0.13](https://github.com/duartealexf/spa-seo-prerenderer/compare/v0.0.12...v0.0.13) (2019-10-07)
 
 
