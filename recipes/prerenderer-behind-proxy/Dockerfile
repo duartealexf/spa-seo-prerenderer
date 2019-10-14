@@ -1,4 +1,4 @@
-FROM node:12-slim
+FROM node:12
 
 # These libraries are needed by Puppeteer. Do NOT skip these steps.
 RUN apt update
