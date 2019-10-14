@@ -44,8 +44,8 @@ const main = async () => {
    * Additionally, as MongoDB is in Docker and is started
    * simultaneously, we wait for it to be available.
    */
-  await prerendererService.start();
   await prerendererService.getDatabase().waitForDatabaseAvailability();
+  await prerendererService.start();
 
   const app = express();
 

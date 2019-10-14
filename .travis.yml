@@ -9,7 +9,6 @@ env:
   - NODE_VERSION=9 APACHE_VERSION=2.4
   - NODE_VERSION=10 APACHE_VERSION=2.4
   - NODE_VERSION=11 APACHE_VERSION=2.4
-  - NODE_VERSION=12 APACHE_VERSION=2.4
 before_script:
   - docker-compose -f docker-compose.travis.yml config
   - docker-compose -f docker-compose.travis.yml build
