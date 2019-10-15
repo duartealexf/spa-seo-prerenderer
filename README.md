@@ -9,8 +9,8 @@
 
 - Host it yourself - no paid services involved.
 - Quickly deliver snapshots of pages to bots and crawlers.
-- Fully configurable whitelists, blacklists, cache age, bot list, etc.
 - Delivery proper 40x status by adding status to meta-tags (no more soft 404, avoid duplicate content).
+- Fully configurable whitelists, blacklists, cache age, bot list, etc.
 - Snapshots are stored in MongoDB - fast snapshot querying and delivering.
 - Tag snapshots by route and path patterns to automatically flag them to recache (WIP).
 - Plenty of recipes to use with Apache, Nginx and NodeJS, with or without Docker.
@@ -163,7 +163,8 @@ Some of them require changing your app's code to configure the service, which is
 
 ### Other projects
 
-- [Rendertron](https://github.com/GoogleChrome/rendertron) - from Google, but not as configurable and has features you may not need (like screenshots) - also, not as pluggable nor it has a database to control cache or tagging.
+- [rendertron](https://github.com/GoogleChrome/rendertron) - from Google, but not as configurable and has features you may not need (like screenshots) - also, not as pluggable nor it has a database to control cache or tagging.
+- [prerender-spa-plugin](https://www.npmjs.com/package/prerender-spa-plugin) - prerenders all selected routes on project build time (webpack-compatible only).
 - [bp-pre-puppeteer-node](https://github.com/brijeshpant83/bp-pre-puppeteer-node) - not as configurable, does not include a database to control cache or snapshot tagging, not as well tested as this project, and only works as a middleware.
 
 ## Contributing
