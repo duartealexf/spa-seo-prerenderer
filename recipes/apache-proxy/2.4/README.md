@@ -18,7 +18,11 @@ The following modules need to enabled (they are included by default in stardard 
 - `mod_headers`
 - `mod_proxy`
 
-> ⚠️ You will need to change a few values of the `httpd-vhosts.conf` file (e.g. match your domain name, etc). See [its contents](https://github.com/duartealexf/seo-prerenderer/blob/master/recipes/apache-proxy-http/2.2/httpd-vhosts.conf) for further instructions.
+> ⚠️ You will need to change a few values of the `httpd-vhosts.conf` file (e.g. match your domain name, etc). See [its contents](https://github.com/duartealexf/seo-prerenderer/blob/master/recipes/apache-proxy/2.4/httpd-vhosts.conf) for further instructions.
+
+## Using HTTPS
+
+This setup should work with both HTTP and HTTPS. **Of course** you should add the SSL options and change port to 443 but, regarding the Prerenderer proxy connection, this recipe provides enough information to plug it to the Prerenderer.
 
 ## Use it with a running Prerenderer instance
 
