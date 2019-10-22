@@ -3,6 +3,7 @@ version: '3'
 services:
   mongodb:
     image: mongo
+    restart: on-failure:3
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${DB_USERNAME}
       MONGO_INITDB_ROOT_PASSWORD: ${DB_PASSWORD}
@@ -14,6 +15,7 @@ services:
     depends_on:
       - mongodb
     build: .
+    restart: on-failure:3
     volumes:
       - ./logs:/var/www/logs
       - ./dist:/var/www/dist
