@@ -18,7 +18,7 @@ The following modules need to enabled (they are included by default in stardard 
 - `mod_headers`
 - `mod_proxy`
 
-> ⚠️ You will need to change a few values of the `httpd-vhosts.conf` file (e.g. match your domain name, etc). See [its contents](https://github.com/duartealexf/seo-prerenderer/blob/master/recipes/apache-proxy/2.2/httpd-vhosts.conf) for further instructions.
+> ⚠️ You will need to change a few values of the `httpd-vhosts.conf` file (e.g. match your domain name, etc). See [its contents](https://github.com/duartealexf/seo-prerenderer/blob/master/recipes/apache-proxy-http/2.4/httpd-vhosts.conf) for further instructions.
 
 ## Use it with a running Prerenderer instance
 
