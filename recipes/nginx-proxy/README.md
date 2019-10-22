@@ -1,4 +1,4 @@
-# Plugging Prerenderer to serve a SPA behing Nginx proxy
+# Plugging Prerenderer to serve a SPA behind Nginx proxy
 
 Have Nginx to check decide whether to proxy request to the Prerenderer or to deliver the static SPA to the user. This decision is made based upon:
 
