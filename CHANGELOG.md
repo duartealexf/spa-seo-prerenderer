@@ -2,14 +2,23 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.0.3](https://github.com/duartealexf/spa-seo-prerenderer/compare/v1.0.2...v1.0.3) (2019-10-22)
+
+* docs: add Apache 2.2 and 2.4 proxy recipes
+
 ### [1.0.2](https://github.com/duartealexf/spa-seo-prerenderer/compare/v1.0.0...v1.0.2) (2019-10-15)
+
+* docs: add recipe for Nginx proxy
 
 ### [1.0.1](https://github.com/duartealexf/spa-seo-prerenderer/compare/v1.0.0...v1.0.1) (2019-10-15)
 
+* docs: add recipe for prerenderer behind proxy
+
 ### [1.0.0](https://github.com/duartealexf/spa-seo-prerenderer/compare/v0.0.14...v1.0.1) (2019-10-14)
 
-### [0.0.14](https://github.com/duartealexf/spa-seo-prerenderer/compare/v0.0.13...v0.0.14) (2019-10-14)
+* stable release, publish as npm package
 
+### [0.0.14](https://github.com/duartealexf/spa-seo-prerenderer/compare/v0.0.13...v0.0.14) (2019-10-14)
 
 ### Features
 

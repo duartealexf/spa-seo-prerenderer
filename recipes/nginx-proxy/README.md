@@ -1,4 +1,4 @@
-# Plugging Prerenderer to serve a SPA behing Nginx proxy
+# Plugging Prerenderer to serve a SPA behind Nginx proxy
 
 Have Nginx to check decide whether to proxy request to the Prerenderer or to deliver the static SPA to the user. This decision is made based upon:
 
@@ -12,6 +12,10 @@ Have Nginx to check decide whether to proxy request to the Prerenderer or to del
 - One `maps` directory with files that are imported by `default.conf`.
 
 > ⚠️ You will need to change a few values of the `default.conf` file (e.g. match your domain name, etc). See [its contents](https://github.com/duartealexf/seo-prerenderer/blob/master/recipes/nginx-proxy/default.conf) for further instructions.
+
+## Using HTTPS
+
+This setup should work with both HTTP and HTTPS. **Of course** you should add the SSL options and change port to 443 but, regarding the Prerenderer proxy connection, this recipe provides enough information to plug it to the Prerenderer.
 
 ## Use it with a running Prerenderer instance
 
