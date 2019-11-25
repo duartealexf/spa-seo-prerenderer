@@ -210,7 +210,9 @@ export class Prerenderer {
     const renderStart = Date.now();
 
     try {
+      this.logger.info(`Prerendering ${url}`, 'prerenderer');
       const snapshot = await this.navigatePageAndGetSnapshot(page, url);
+      this.logger.info(`Prerendered ${url}`, 'prerenderer');
       return snapshot;
     } catch (error) {
       let message: string;
@@ -313,7 +315,6 @@ export class Prerenderer {
     return new Snapshot(url, body, status, Date.now() - renderStart);
   }
 
-
   /**
    * Get custom status do be delivered, if any.
    * Based on Google's Rendertron.
@@ -321,9 +322,9 @@ export class Prerenderer {
    */
   public static async getCustomStatus(page: puppeteer.Page): Promise<number | undefined> {
     return page
-      .$eval(
-        'meta[name="prerenderer:status"]',
-        (element) => parseInt(element.getAttribute('content') || '', 10))
+      .$eval('meta[name="prerenderer:status"]', (element) =>
+        parseInt(element.getAttribute('content') || '', 10),
+      )
       .catch(() => undefined);
   }
 
@@ -335,7 +336,11 @@ export class Prerenderer {
   public static stripTags(page: puppeteer.Page): Promise<void> {
     return page.evaluate(() => {
       // eslint-disable-next-line no-undef
-      Array.from(document.querySelectorAll('script:not([type]), script[type*="javascript"], link[rel=import]')).forEach((e) => e.remove());
+      Array.from(
+        document.querySelectorAll(
+          'script:not([type]), script[type*="javascript"], link[rel=import]',
+        ),
+      ).forEach((e) => e.remove());
     });
   }
 }
