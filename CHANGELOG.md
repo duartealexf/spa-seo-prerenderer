@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.0.0](https://github.com/duartealexf/spa-seo-prerenderer/compare/v1.0.3...v2.0.0) (2019-11-25)
+
+
+### ⚠ BREAKING CHANGES
+
+* On Puppeteer errors the status coded of response used to be 400. Now it is changed
+to 500 and snapshot is not saveable anymore.
+
+### Bug Fixes
+
+* add further checks on whether snapshot can be saved ([1682db1](https://github.com/duartealexf/spa-seo-prerenderer/commit/1682db1))
+* change default error status from 400 to 500 ([1ffcb8e](https://github.com/duartealexf/spa-seo-prerenderer/commit/1ffcb8e))
+
 ### [1.0.3](https://github.com/duartealexf/spa-seo-prerenderer/compare/v1.0.2...v1.0.3) (2019-10-22)
 
 * docs: add Apache 2.2 and 2.4 proxy recipes

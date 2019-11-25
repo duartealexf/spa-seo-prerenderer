@@ -83,11 +83,22 @@ export class Snapshot extends BaseEntity {
   }
 
   /**
-   * Save snapshot only if has been refreshed.
+   * Get whether model instance can be saved to database.
+   */
+  private canBeSaved(): boolean {
+    if (typeof this.body !== 'string' || typeof this.status !== 'number') {
+      return false;
+    }
+
+    return this.body.length > 0 && this.status < 500 && (!this.hasId() || this.isDirty);
+  }
+
+  /**
+   * Save snapshot only if has been refreshed and has a body.
    * @param options
    */
   public async saveIfNeeded(options?: SaveOptions): Promise<this> {
-    if (!this.hasId() || this.isDirty) {
+    if (this.canBeSaved()) {
       await super.save(options);
       return this;
     }

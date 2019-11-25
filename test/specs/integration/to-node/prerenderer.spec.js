@@ -41,10 +41,10 @@ describe("features that are in Prerenderer's Puppeteer", () => {
     assert.equal($('body').length, 1);
   });
 
-  it('should see response with status 400 for aborted request, empty response.', async () => {
+  it('should see response with status 500 for aborted request, empty response.', async () => {
     const { response } = await createDirectHttpGetRequest('status/304.html');
     assert.isEmpty(response.body);
-    assert.equal(response.statusCode, 400);
+    assert.equal(response.statusCode, 500);
   });
 
   it('should see response with status 400.', async () => {

@@ -21,11 +21,11 @@ snapshotEventEmitter.on('saved', ({ request, snapshot }) => {
 });
 
 /**
- * Ensure that the snapshot from given request id is saved.
+ * Ensure that the snapshot from given request id is saved (if needed).
  * @param {import('http').IncomingMessage} userRequest
  * @returns {Promise<void>}
  */
-const ensureSnapshotFromRequestIsSaved = (userRequest) =>
+const ensureSnapshotFromRequestIsMaybeSaved = (userRequest) =>
   new Promise((resolve) => {
     if (savedSnapshotsByRequestId.has(getHeader(userRequest, 'x-request-id'))) {
       return resolve();
@@ -39,7 +39,7 @@ const ensureSnapshotFromRequestIsSaved = (userRequest) =>
   });
 
 module.exports = {
-  ensureSnapshotFromRequestIsSaved,
+  ensureSnapshotFromRequestIsMaybeSaved,
 
   /**
    * Attach prerenderer middleware, which evaluates whether it should prerender.

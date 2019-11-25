@@ -175,7 +175,9 @@ Preferably use npm, as all scripts in package.json are run through npm.
 
 - Clone this repo
 - Install dependencies: `npm i`
-
+- Copy `.env.example` to `.env` and set valus accordingly.
+- Run all tests through Docker: `docker-compose up --build`
+  
 ### Commiting
 
 To commit, use commitizen: `git cz` (you will need to have installed commitizen: `npm i -g commitizen`).

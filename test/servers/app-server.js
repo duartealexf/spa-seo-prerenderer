@@ -15,7 +15,7 @@ const { captureRequests, requests } = require('./middleware/request-capture');
 const { serveStatic } = require('./middleware/serve-static');
 const {
   configPrerendererMiddleware,
-  ensureSnapshotFromRequestIsSaved,
+  ensureSnapshotFromRequestIsMaybeSaved: ensureSnapshotFromRequestIsMaybeSaved,
 } = require('./middleware/prerenderer');
 
 const app = express();
@@ -30,7 +30,7 @@ let httpsServer;
 let service;
 
 module.exports = {
-  ensureSnapshotFromRequestIsSaved,
+  ensureSnapshotFromRequestIsMaybeSaved,
 
   /**
    * Requests that have been captured.
