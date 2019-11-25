@@ -216,7 +216,7 @@ export class Prerenderer {
       return snapshot;
     } catch (error) {
       let message: string;
-      let status = 400;
+      let status = 500;
 
       if (error instanceof PuppeteerException) {
         status = error.statusCode;
@@ -286,7 +286,7 @@ export class Prerenderer {
     });
 
     if (!puppeteerResponse) {
-      throw new PuppeteerException(400, 'Puppeteer received no response.');
+      throw new PuppeteerException(500, 'Puppeteer received no response.');
     }
 
     let status = puppeteerResponse.status();

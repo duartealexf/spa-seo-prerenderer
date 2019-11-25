@@ -5,7 +5,12 @@ const { createDirectHttpGetRequest } = require('../../../client');
 const { DEFAULT_IGNORED_QUERY_PARAMETERS } = require('../../../../dist/lib/config/defaults');
 const { Snapshot } = require('../../../../dist/lib/snapshot');
 const { parseRequestURL } = require('../../../../dist/lib/request');
-const { getService, ensureSnapshotFromRequestIsSaved } = require('../../../servers/app-server');
+const {
+  getService,
+  ensureSnapshotFromRequestIsMaybeSaved,
+} = require('../../../servers/app-server');
+
+// require('../../hooks.spec');
 
 describe('service request handling', () => {
   it('should use a cached snapshot from database.', async () => {
@@ -13,12 +18,12 @@ describe('service request handling', () => {
 
     const { request: request1 } = await createDirectHttpGetRequest('copies/1.html');
     const url = parseRequestURL(request1);
-    await ensureSnapshotFromRequestIsSaved(request1);
+    await ensureSnapshotFromRequestIsMaybeSaved(request1);
     const snapshot1 = await Snapshot.findByUrl(url.toString());
     assert.ok(snapshot1);
 
     const { request: request2 } = await createDirectHttpGetRequest('copies/1.html');
-    await ensureSnapshotFromRequestIsSaved(request2);
+    await ensureSnapshotFromRequestIsMaybeSaved(request2);
     const snapshot2 = await Snapshot.findByUrl(url.toString());
 
     assert.strictEqual(snapshot1.getUpdatedAt().valueOf(), snapshot2.getUpdatedAt().valueOf());
@@ -30,7 +35,7 @@ describe('service request handling', () => {
 
     url.searchParams.sort();
 
-    await ensureSnapshotFromRequestIsSaved(request);
+    await ensureSnapshotFromRequestIsMaybeSaved(request);
     const snapshot = await Snapshot.findByUrl(url.toString());
     assert.ok(snapshot);
   });
@@ -44,7 +49,7 @@ describe('service request handling', () => {
     url.searchParams.sort();
     DEFAULT_IGNORED_QUERY_PARAMETERS.forEach((p) => url.searchParams.delete(p));
 
-    await ensureSnapshotFromRequestIsSaved(request);
+    await ensureSnapshotFromRequestIsMaybeSaved(request);
     const snapshot = await Snapshot.findByUrl(url.toString());
     assert.ok(snapshot);
   });
@@ -55,7 +60,7 @@ describe('service request handling', () => {
 
     url.hash = '';
 
-    await ensureSnapshotFromRequestIsSaved(request);
+    await ensureSnapshotFromRequestIsMaybeSaved(request);
     const snapshot = await Snapshot.findByUrl(url.toString());
     assert.ok(snapshot);
   });
@@ -70,7 +75,7 @@ describe('service request handling', () => {
     DEFAULT_IGNORED_QUERY_PARAMETERS.forEach((p) => url.searchParams.delete(p));
     url.hash = '';
 
-    await ensureSnapshotFromRequestIsSaved(request);
+    await ensureSnapshotFromRequestIsMaybeSaved(request);
     const snapshot = await Snapshot.findByUrl(url.toString());
     assert.ok(snapshot);
   });
@@ -91,11 +96,46 @@ describe('service request handling', () => {
 
     assert.strictEqual(snapshot1.getUpdatedAt().valueOf(), snapshot2.getUpdatedAt().valueOf());
 
-    await ensureSnapshotFromRequestIsSaved(request2);
+    await ensureSnapshotFromRequestIsMaybeSaved(request2);
 
     const snapshot3 = await Snapshot.findByUrl(url.toString());
     assert.notEqual(snapshot2.getUpdatedAt().valueOf(), snapshot3.getUpdatedAt().valueOf());
 
     getService().getConfig().cacheMaxAge = 7;
+  });
+
+  it('should save response with status 400.', async () => {
+    const { request } = await createDirectHttpGetRequest('status/400.html');
+    const url = parseRequestURL(request);
+
+    await ensureSnapshotFromRequestIsMaybeSaved(request);
+
+    const snapshot = await Snapshot.findByUrl(url.toString());
+    assert.isOk(snapshot);
+  });
+
+  it('should not save response with status 500.', async () => {
+    const { request, response } = await createDirectHttpGetRequest('status/500.html');
+    assert.strictEqual(response.statusCode, 500);
+
+    const url = parseRequestURL(request);
+
+    await ensureSnapshotFromRequestIsMaybeSaved(request);
+
+    const snapshot = await Snapshot.findByUrl(url.toString());
+    assert.isNotOk(snapshot);
+  });
+
+  it('should not save response with empty body.', async () => {
+    const { request, response } = await createDirectHttpGetRequest('status/304.html');
+    assert.strictEqual(response.statusCode, 500);
+    assert.isEmpty(response.body);
+
+    const url = parseRequestURL(request);
+
+    await ensureSnapshotFromRequestIsMaybeSaved(request);
+
+    const snapshot = await Snapshot.findByUrl(url.toString());
+    assert.isNotOk(snapshot);
   });
 });
