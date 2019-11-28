@@ -282,7 +282,7 @@ export class Prerenderer {
      */
     puppeteerResponse = await page.goto(url, {
       timeout: this.config.getTimeout(),
-      waitUntil: 'networkidle0',
+      waitUntil: 'load',
     });
 
     if (!puppeteerResponse) {
