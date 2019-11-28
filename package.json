@@ -1,6 +1,6 @@
 {
   "name": "spa-seo-prerenderer",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Pluggable, flexible and agnostic prerenderer for sites and SPAs, optimized for SEO. No code changes required.",
   "author": "Alexandre Duarte <duartealexf@gmail.com> (https://github.com/duartealexf)",
   "main": "dist/lib/index.js",
@@ -45,7 +45,8 @@
     "build": "tsc",
     "test": "mocha test/specs/**/*.spec.js",
     "prerelease": "npm run lint && npm run build",
-    "release": "standard-version && git push --follow-tags && npm publish",
+    "release": "npm publish",
+    "version": "standard-version && git push --follow-tags",
     "dev": "npm-run-all -p build:watch test:watch",
     "test:watch": "nodemon --inspect=0.0.0.0:9229 node_modules/mocha/bin/_mocha -- -t 8640000 --colors ${TESTFILE:-test/specs/**/*.spec.js}",
     "build:watch": "nodemon -C -e ts -w src --exec 'npm run build'",
