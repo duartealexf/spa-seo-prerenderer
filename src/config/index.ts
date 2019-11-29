@@ -1,3 +1,4 @@
+import { LoadEvent } from 'puppeteer';
 import { join } from 'path';
 
 import { InvalidConfigException } from '../exceptions/invalid-config-exception';
@@ -69,6 +70,11 @@ export class Config {
    * Puppeteer's timeout (in ms).
    */
   private timeout = 10000;
+
+  /**
+   * Which event for Puppeteer to consider page loaded.
+   */
+  private puppeteerLoadEvent: LoadEvent = 'networkidle2';
 
   /**
    * Network URL part whitelist set from config.
@@ -218,6 +224,18 @@ export class Config {
       this.timeout = timeout;
     }
 
+    if (typeof c.puppeteerLoadEvent !== 'undefined') {
+      const event = c.puppeteerLoadEvent as LoadEvent;
+
+      if (!['load', 'domcontentloaded', 'networkidle0', 'networkidle2'].includes(event)) {
+        throw new InvalidConfigException(
+          "puppeteerLoadEvent given in constructor must be one of 'load', 'domcontentloaded', 'networkidle0', 'networkidle2'!",
+        );
+      }
+
+      this.puppeteerLoadEvent = event;
+    }
+
     if (typeof c.whitelistedRequestURLs !== 'undefined') {
       const whitelist = c.whitelistedRequestURLs as string[];
 
@@ -311,6 +329,13 @@ export class Config {
    */
   public getTimeout(): number {
     return this.timeout;
+  }
+
+  /**
+   * Get configured Puppeteer timeout.
+   */
+  public getPuppeteerLoadEvent(): LoadEvent {
+    return this.puppeteerLoadEvent;
   }
 
   /**

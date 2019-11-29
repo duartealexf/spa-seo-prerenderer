@@ -17,11 +17,10 @@
   - [x] Otherwise prerender and generate response
     - [x] Update database
     - [x] Make sure that response reaches before updating database
-- [ ] Lower the cache age for error pages - tag them with error
-- [ ] Add collection index on url.
 - [ ] Set to automatically invalidate prerendered pages using tags (create an API for this)
 - [ ] Create recipes for Prerenderer's clearance of cached pages via Github Actions
 - [ ] HTTP 2.0
 - [ ] Add recipe to use with server-timing API
 - [ ] Automatically recache old cache
-- [ ] Create a dashboard
+- [ ] Create an UI
+- [ ] Create a preview from different load events, to help decide which one is best

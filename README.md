@@ -27,6 +27,7 @@
   - [`prerenderableExtensions` (Prerenderable extensions)](#prerenderableextensions-prerenderable-extensions)
   - [`botUserAgents` (Bot user-agent list)](#botuseragents-bot-user-agent-list)
   - [`timeout` (Puppeteer timeout)](#timeout-puppeteer-timeout)
+  - [`puppeteerLoadEvent` (Puppeteer's `waitUntil` property)](#puppeteerloadevent-puppeteers-waituntil-property)
   - [`whitelistedRequestURLs` (Whitelisted request URLs)](#whitelistedrequesturls-whitelisted-request-urls)
   - [`blacklistedRequestURLs` (Blacklisted request URLs)](#blacklistedrequesturls-blacklisted-request-urls)
   - [Custom status code](#custom-status-code)
@@ -100,6 +101,12 @@ A list of case-insensitive substrings of user-agents. If the request user-agent 
 Default value: `10` (seconds).
 
 Time to wait for receving page response when prerendering, before considering error 500.
+
+### `puppeteerLoadEvent` (Puppeteer's `waitUntil` property)
+
+Default value: `networkidle2`.
+
+Event to consider that the page is loaded. This value is passed on to Puppeteer's navigation options, specifically the `waitUntil` property. For more information refer to [Puppeteer's official doc](https://github.com/puppeteer/puppeteer/blob/v1.19.0/docs/api.md#pagegoforwardoptions). Possible values are that mentioned there.
 
 ### `whitelistedRequestURLs` (Whitelisted request URLs)
 
