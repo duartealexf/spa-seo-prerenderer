@@ -202,6 +202,30 @@ describe('invalid config', () => {
     }
   });
 
+  it('should throw an error when puppeteerLoadEvent is not a string.', () => {
+    buggedConfig = { puppeteerLoadEvent: 123, databaseOptions };
+
+    try {
+      new PrerendererService(buggedConfig);
+      assert.ok(false);
+    } catch (e) {
+      assert.instanceOf(e, InvalidConfigException);
+      assert.include(e.message, 'puppeteerLoadEvent');
+    }
+  });
+
+  it('should throw an error when puppeteerLoadEvent is not one of the valid events.', () => {
+    buggedConfig = { puppeteerLoadEvent: 'invalidconfig', databaseOptions };
+
+    try {
+      new PrerendererService(buggedConfig);
+      assert.ok(false);
+    } catch (e) {
+      assert.instanceOf(e, InvalidConfigException);
+      assert.include(e.message, 'puppeteerLoadEvent');
+    }
+  });
+
   it('should throw an error when whitelistedRequestURLs is not an array.', () => {
     buggedConfig = { whitelistedRequestURLs: 123, databaseOptions };
 

@@ -57,6 +57,7 @@ describe('config start up', () => {
       prerenderableExtensions: ['.test'],
       botUserAgents: ['testbot'],
       timeout: 5000,
+      puppeteerLoadEvent: 'load',
       whitelistedRequestURLs: ['.test-1.'],
       blacklistedRequestURLs: ['.test-2.'],
     };
@@ -75,6 +76,7 @@ describe('config start up', () => {
     assert.equal(c.getPrerenderableExtensions()[0], config.prerenderableExtensions[0]);
     assert.equal(c.getBotUserAgents()[0], config.botUserAgents[0]);
     assert.equal(c.getTimeout(), config.timeout);
+    assert.equal(c.getPuppeteerLoadEvent(), 'load');
     assert.deepEqual(c.getWhitelistedRequestURLs(), config.whitelistedRequestURLs);
     assert.deepEqual(c.getBlacklistedRequestURLs(), config.blacklistedRequestURLs);
   });

@@ -1,4 +1,5 @@
 import { MongoConnectionOptions } from 'typeorm/driver/mongodb/MongoConnectionOptions';
+import { LoadEvent } from 'puppeteer';
 
 /**
  * NodeJS environment config.
@@ -78,6 +79,12 @@ export interface PrerendererConfig {
    * @default 10000
    */
   timeout?: number;
+
+  /**
+   * Which event for Puppeteer to consider page loaded.
+   * @default 'networkidle2'
+   */
+  puppeteerLoadEvent?: LoadEvent;
 
   /**
    * Case insensitive list with parts of URL that Puppeteer will allow the prerendered page to
