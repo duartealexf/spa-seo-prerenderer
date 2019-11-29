@@ -1,6 +1,6 @@
 {
   "name": "spa-seo-prerenderer",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "description": "Pluggable, flexible and agnostic prerenderer for sites and SPAs, optimized for SEO. No code changes required.",
   "author": "Alexandre Duarte <duartealexf@gmail.com> (https://github.com/duartealexf)",
   "main": "dist/lib/index.js",
