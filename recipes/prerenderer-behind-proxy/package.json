@@ -7,7 +7,7 @@
   },
   "dependencies": {
     "dotenv": "^8.1.0",
-    "express": "^4.17.1",
+    "express": "^4.17.3",
     "kill-port": "^1.5.1",
     "spa-seo-prerenderer": "^1.0.0"
   },
